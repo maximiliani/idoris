@@ -2,7 +2,7 @@
 autoCloseIssue: true
 
 # Override the source branch 
-defaultBranch: 'development'
+defaultBranch: 'dev'
 
 #Skip branch creation based on issue label 'question'
 branches:
