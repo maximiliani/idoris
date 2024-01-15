@@ -1,15 +1,28 @@
 plugins {
-    id 'java'
     id 'org.springframework.boot' version '3.2.1'
     id 'io.spring.dependency-management' version '1.1.4'
-    id 'org.asciidoctor.jvm.convert' version '3.3.2'
+    id 'io.freefair.lombok' version '8.4'
+    id 'io.freefair.maven-publish-java' version '8.4'
+    id 'org.owasp.dependencycheck' version '9.0.8'
+    id 'org.asciidoctor.jvm.convert' version '4.0.1'
+    id 'net.ltgt.errorprone' version '3.1.0'
+    id 'net.researchgate.release' version '3.0.2'
+    id 'com.gorylenko.gradle-git-properties' version '2.4.1'
+    id 'java'
+    id 'jacoco'
 }
 
+description = 'IDORIS - An Integrated Data Type and Operations Registry with Inheritance System'
 group = 'edu.kit.datamanager'
 version = '0.0.1-SNAPSHOT'
 
+println "Running gradle version: $gradle.gradleVersion"
+println "Building ${name} version: ${version}"
+println "JDK version: ${JavaVersion.current()}"
+
 java {
     sourceCompatibility = '21'
+    targetCompatibility = '21'
 }
 
 configurations {
@@ -19,11 +32,17 @@ configurations {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
 ext {
-    set('snippetsDir', file("build/generated-snippets"))
+    // versions of dependencies
+    springDocVersion = '2.3.0'
+    javersVersion = '7.3.7'
+    errorproneVersion = '2.24.1'
+    // directory for generated code snippets during tests
+    snippetsDir = file("build/generated-snippets")
 }
 
 dependencies {
@@ -33,14 +52,52 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-hateoas'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
+
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework:spring-webflux'
     testImplementation 'org.springframework.graphql:spring-graphql-test'
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
     testImplementation 'org.springframework.security:spring-security-test'
+
+    // errorprone
+    errorprone "com.google.errorprone:error_prone_core:${errorproneVersion}"
+}
+
+compileJava {
+    options.errorprone.disableWarningsInGeneratedCode = true
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation" << "-Xmaxwarns" << "200"
+}
+
+compileTestJava {
+    // disable errorprone for tests
+    options.errorprone.disableWarningsInGeneratedCode = true
+    options.errorprone.enabled = false // change it to true to enable
+}
+
+test {
+    finalizedBy jacocoTestReport
+    environment "spring.config.location", "classpath:/test-config/"
+
+    maxHeapSize = "8192m"
+    testLogging {
+        outputs.upToDateWhen { false }
+        showStandardStreams = true
+    }
+}
+
+tasks.withType(Test).configureEach {
+    testLogging {
+        events 'started', 'passed'
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.10"
 }
 
 tasks.named('test') {
@@ -51,4 +108,66 @@ tasks.named('test') {
 tasks.named('asciidoctor') {
     inputs.dir snippetsDir
     dependsOn test
+}
+
+import java.text.SimpleDateFormat
+
+tasks.register('testForSnippetsDir') {
+    doFirst {
+        println 'snippetsDir exists: ' + snippetsDir.exists()
+        if (!snippetsDir.exists()) {
+            println 'Create snippets dir...'
+            println 'WARNING: Don\'t skip tests for building production ready jar file!'
+            snippetsDir.mkdirs()
+        }
+    }
+}
+
+asciidoctor {
+    dependsOn testForSnippetsDir
+    attributes "snippets": snippetsDir,
+            "version": jar.archiveVersion,
+            "date": new SimpleDateFormat("yyyy-MM-dd").format(new Date())
+    inputs.dir snippetsDir
+    dependsOn test
+    sourceDir "docs/"
+    outputDir "build/docs/html5"
+    executionMode = JAVA_EXEC
+    forkOptions {
+        jvmArgs "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens", "java.base/java.io=ALL-UNNAMED"
+    }
+}
+
+jar {
+    // disable plain jar file
+    enabled = false
+}
+
+springBoot {
+    buildInfo()
+}
+
+bootJar {
+    println 'Create bootable jar...'
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes 'Main-Class': 'org.springframework.boot.loader.launch.PropertiesLauncher'
+    }
+    dependsOn asciidoctor
+    from("${asciidoctor.outputDir}") {
+        into 'static/docs'
+    }
+    launchScript()
+}
+
+release {
+    tagTemplate = 'v${version}'
+}
+
+// task for printing project name.
+tasks.register('printProjectName') {
+    doLast {
+        println "${project.name}"
+    }
 }
