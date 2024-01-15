@@ -81,7 +81,7 @@ compileTestJava {
 
 test {
     finalizedBy jacocoTestReport
-    environment "spring.config.location", "classpath:/test-config/"
+    environment "spring.config.location", "optional:classpath:/test-config/"
 
     maxHeapSize = "8192m"
     testLogging {
