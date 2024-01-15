@@ -1,5 +1,21 @@
-.idea/
-.idea/*
+.idea/misc.xml
+!/.idea/
+
+# Ignore Gradle project-specific cache directory
+nbproject
+
+# Ignore backup files
+**/*~
+**/*.bak
+
+# Ignore internal specific settings
+**/application.properties
+
+# Ignore Gradle build output directory
+build
+config
+
+
 
 # Created by https://www.toptal.com/developers/gitignore/api/intellij+all,macos,java,gradle,webstorm+all,git
 # Edit at https://www.toptal.com/developers/gitignore?templates=intellij+all,macos,java,gradle,webstorm+all,git
