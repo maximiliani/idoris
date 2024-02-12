@@ -14,7 +14,7 @@ plugins {
 
 description = 'IDORIS - An Integrated Data Type and Operations Registry with Inheritance System'
 group = 'edu.kit.datamanager'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.1'
 
 println "Running gradle version: $gradle.gradleVersion"
 println "Building ${name} version: ${version}"
@@ -46,25 +46,25 @@ ext {
 }
 
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-neo4j'
-    implementation 'org.springframework.boot:spring-boot-starter-data-rest'
-    implementation 'org.springframework.boot:spring-boot-starter-graphql'
+//    implementation 'org.springframework.boot:spring-boot-starter-graphql'
     implementation 'org.springframework.boot:spring-boot-starter-hateoas'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation "org.springframework.boot:spring-boot-starter-actuator"
+    implementation 'org.springframework.data:spring-data-rest-hal-explorer'
+    implementation 'org.springframework.boot:spring-boot-starter-data-rest'
+//    implementation 'com.netflix.graphql.dgs.codegen:graphql-dgs-codegen-gradle:6.0.3'
+//    testImplementation 'org.springframework:spring-webflux'
 
     compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework:spring-webflux'
-    testImplementation 'org.springframework.graphql:spring-graphql-test'
+//    testImplementation 'org.springframework.graphql:spring-graphql-test'
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
     testImplementation 'org.springframework.security:spring-security-test'
 
-    // errorprone
     errorprone "com.google.errorprone:error_prone_core:${errorproneVersion}"
 }
 

@@ -16,14 +16,26 @@
 
 package edu.kit.datamanager.idoris;
 
+import org.neo4j.cypherdsl.core.renderer.Configuration;
+import org.neo4j.cypherdsl.core.renderer.Dialect;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.neo4j.config.EnableNeo4jAuditing;
+import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
+@EnableNeo4jRepositories
+@EnableNeo4jAuditing
+@EnableTransactionManagement
 public class IdorisApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(IdorisApplication.class, args);
     }
 
+    @Bean
+    Configuration cypherDslConfiguration() {
+        return Configuration.newConfig().withDialect(Dialect.NEO4J_5).build();
+    }
 }
