@@ -1,10 +1,11 @@
 package edu.kit.datamanager.idoris.domain;
 
-import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.annotation.Version;
-import org.springframework.data.neo4j.core.schema.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Property;
+import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.rest.core.config.Projection;
 
 import java.time.Instant;
@@ -14,28 +15,9 @@ import java.util.Set;
 @Node("DataType")
 @Getter
 @Setter
-@AllArgsConstructor
-@RequiredArgsConstructor
-@With
-public class DataType implements IValueSpecification {
-    @Id
-    @GeneratedValue
-    private String pid;
-
-    @CreatedDate
-    private Instant createdAt;
+public class DataType extends GenericIDORISEntity implements IValueSpecification {
     @Relationship(value = "inheritsFrom", direction = Relationship.Direction.OUTGOING)
     private Set<DataType> inheritsFrom;
-    @Relationship(value = "contributors", direction = Relationship.Direction.OUTGOING)
-    private Set<Person> contributors;
-    @Relationship(value = "standards", direction = Relationship.Direction.OUTGOING)
-    private Set<Standard> standards;
-    @Relationship(value = "license", direction = Relationship.Direction.OUTGOING)
-    private License license;
-    @LastModifiedDate
-    private Instant lastModifiedAt;
-    @Version
-    private Long version;
 
     private String name;
     private String description;
@@ -56,28 +38,31 @@ public class DataType implements IValueSpecification {
     @Property("enum")
     private String[] valueEnum;
 
+    public DataType(PID pid, Long version, Instant createdAt, Instant lastModifiedAt, Set<User> contributors, License license, Set<DataType> inheritsFrom, String name, String description, List<String> expectedUses, PrimitiveDataType primitiveDataType, Category category, String unitName, String unitSymbol, String definedBy, String standard_uncertainty, String restrictions, String regex, String regexFlavour, String defaultValue, String[] valueEnum) {
+        super(pid, version, createdAt, lastModifiedAt, contributors, license);
+        this.inheritsFrom = inheritsFrom;
+        this.name = name;
+        this.description = description;
+        this.expectedUses = expectedUses;
+        this.primitiveDataType = primitiveDataType;
+        this.category = category;
+        this.unitName = unitName;
+        this.unitSymbol = unitSymbol;
+        this.definedBy = definedBy;
+        this.standard_uncertainty = standard_uncertainty;
+        this.restrictions = restrictions;
+        this.regex = regex;
+        this.regexFlavour = regexFlavour;
+        this.defaultValue = defaultValue;
+        this.valueEnum = valueEnum;
+    }
+
     public void addInheritsFrom(DataType superType) {
         inheritsFrom.add(superType);
     }
 
-    public void addContributor(Person contributor) {
-        contributors.add(contributor);
-    }
-
-    public void addStandard(Standard standard) {
-        standards.add(standard);
-    }
-
     public void removeInheritsFrom(DataType superType) {
         inheritsFrom.remove(superType);
-    }
-
-    public void removeContributor(Person contributor) {
-        contributors.remove(contributor);
-    }
-
-    public void removeStandard(Standard standard) {
-        standards.remove(standard);
     }
 
     @AllArgsConstructor
@@ -110,9 +95,7 @@ public class DataType implements IValueSpecification {
 
         Set<DataType> getInheritsFrom();
 
-        Set<Person> getContributors();
-
-        Set<Standard> getStandards();
+        Set<User> getContributors();
 
         License getLicense();
 

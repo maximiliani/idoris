@@ -15,7 +15,7 @@ import org.springframework.data.neo4j.core.schema.TargetNode;
 @RequiredArgsConstructor
 public class FDOValue {
     @RelationshipId
-    private Long id;
+    private PID pid;
 
     private String value;
 

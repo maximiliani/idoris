@@ -15,7 +15,7 @@ import org.springframework.data.neo4j.core.schema.TargetNode;
 @RequiredArgsConstructor
 public class ValueSpecificationRelation {
     @RelationshipId
-    private final String id;
+    private String id;
 
     @TargetNode
     private IValueSpecification valueSpecification;

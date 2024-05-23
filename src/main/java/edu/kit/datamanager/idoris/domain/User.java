@@ -8,17 +8,15 @@ import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 
-import java.util.Optional;
-
-@Node("Person")
+@Node("User")
 @Getter
 @Setter
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class Person {
+public class User {
     @Id
     @GeneratedValue
-    private long id;
+    private String id;
 
     private Type type;
     private String name;
@@ -26,12 +24,12 @@ public class Person {
     private String details;
     private String url;
 
-    public Person(Type type, Optional<String> name, Optional<String> email, Optional<String> details, Optional<String> url) {
+    public User(Type type, String name, String email, String details, String url) {
         this.type = type;
-        this.name = name.orElse(null);
-        this.email = email.orElse(null);
-        this.details = details.orElse(null);
-        this.url = url.orElse(null);
+        this.name = name;
+        this.email = email;
+        this.details = details;
+        this.url = url;
     }
 
     @AllArgsConstructor

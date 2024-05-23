@@ -1,6 +1,9 @@
 package edu.kit.datamanager.idoris.domain;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
@@ -12,10 +15,9 @@ import java.util.Set;
 @Setter
 @AllArgsConstructor
 @RequiredArgsConstructor
-@With
 public class FDO {
     @Id
-    private String pid;
+    private PID pid;
 
     @Relationship(value = "hasValues", direction = Relationship.Direction.OUTGOING)
     private Set<FDOValue> recordValues;

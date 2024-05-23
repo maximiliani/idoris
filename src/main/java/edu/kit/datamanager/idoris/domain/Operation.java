@@ -1,33 +1,18 @@
 package edu.kit.datamanager.idoris.domain;
 
-import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.annotation.Version;
-import org.springframework.data.neo4j.core.schema.Id;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 @Node("Operation")
 @Getter
 @Setter
-@AllArgsConstructor
-@RequiredArgsConstructor
-@With
-public class Operation {
-    @Id
-    private String pid;
-
-    @CreatedDate
-    private Instant createdAt;
-    @Relationship(value = "contributors", direction = Relationship.Direction.OUTGOING)
-    private List<Person> contributors;
-    @Relationship(value = "license", direction = Relationship.Direction.OUTGOING)
-    private License license;
-
+public class Operation extends GenericIDORISEntity {
 
     @Relationship(value = "executableOn", direction = Relationship.Direction.OUTGOING)
     private List<ValueSpecificationRelation> executableOn;
@@ -37,11 +22,17 @@ public class Operation {
     private List<ValueSpecificationRelation> environment;
     @Relationship(value = "execution", direction = Relationship.Direction.OUTGOING)
     private List<OperationStep> execution;
-    @LastModifiedDate
-    private Instant lastModifiedAt;
-    @Version
-    private Long version;
 
     private String name;
     private String description;
+
+    public Operation(PID pid, Long version, Instant createdAt, Instant lastModifiedAt, Set<User> contributors, License license, List<ValueSpecificationRelation> executableOn, List<ValueSpecificationRelation> returns, List<ValueSpecificationRelation> environment, List<OperationStep> execution, String name, String description) {
+        super(pid, version, createdAt, lastModifiedAt, contributors, license);
+        this.executableOn = executableOn;
+        this.returns = returns;
+        this.environment = environment;
+        this.execution = execution;
+        this.name = name;
+        this.description = description;
+    }
 }

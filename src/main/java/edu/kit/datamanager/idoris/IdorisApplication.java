@@ -17,7 +17,6 @@
 package edu.kit.datamanager.idoris;
 
 import org.neo4j.cypherdsl.core.renderer.Configuration;
-import org.neo4j.cypherdsl.core.renderer.Dialect;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -40,7 +39,7 @@ public class IdorisApplication {
 
     @Bean
     Configuration cypherDslConfiguration() {
-        return Configuration.newConfig().withDialect(Dialect.NEO4J_5).build();
+        return Configuration.defaultConfig();
     }
 
     @Component

@@ -1,43 +1,26 @@
 package edu.kit.datamanager.idoris.domain;
 
-import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.annotation.Version;
-import org.springframework.data.neo4j.core.schema.Id;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Property;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 @Node("TypeProfile")
 @Getter
 @Setter
-@AllArgsConstructor
-@RequiredArgsConstructor
-@With
-public class TypeProfile implements IValueSpecification {
-    @Id
-    private String pid;
+public class TypeProfile extends GenericIDORISEntity implements IValueSpecification {
 
-    @CreatedDate
-    private Instant createdAt;
     @Relationship(value = "inheritsFrom", direction = Relationship.Direction.OUTGOING)
     private List<TypeProfile> inheritsFrom;
-    @Relationship(value = "contributors", direction = Relationship.Direction.OUTGOING)
-    private List<Person> contributors;
-    @Relationship(value = "standards", direction = Relationship.Direction.OUTGOING)
-    private List<Standard> standards;
-    @Relationship(value = "license", direction = Relationship.Direction.OUTGOING)
-    private License license;
+
     @Relationship(value = "attributes", direction = Relationship.Direction.OUTGOING)
     private List<ProfileAttribute> attributes;
-    @LastModifiedDate
-    private Instant lastModifiedAt;
-    @Version
-    private Long version;
 
     private String name;
     private String description;
@@ -45,6 +28,17 @@ public class TypeProfile implements IValueSpecification {
     private SubSchemaRelation subSchemaRelation = SubSchemaRelation.allowAdditionalProperties;
     @Property("default")
     private String defaultValue;
+
+    public TypeProfile(PID pid, Long version, Instant createdAt, Instant lastModifiedAt, Set<User> contributors, License license, List<TypeProfile> inheritsFrom, List<ProfileAttribute> attributes, String name, String description, String restrictions, SubSchemaRelation subSchemaRelation, String defaultValue) {
+        super(pid, version, createdAt, lastModifiedAt, contributors, license);
+        this.inheritsFrom = inheritsFrom;
+        this.attributes = attributes;
+        this.name = name;
+        this.description = description;
+        this.restrictions = restrictions;
+        this.subSchemaRelation = subSchemaRelation;
+        this.defaultValue = defaultValue;
+    }
 
     @AllArgsConstructor
     @Getter
