@@ -15,10 +15,11 @@ import org.springframework.data.neo4j.core.schema.TargetNode;
 @RequiredArgsConstructor
 public class ValueSpecificationRelation {
     @RelationshipId
-    private final Long id;
+    private final String id;
 
     @TargetNode
     private IValueSpecification valueSpecification;
+
     private String description;
     private String internal_reference;
 }

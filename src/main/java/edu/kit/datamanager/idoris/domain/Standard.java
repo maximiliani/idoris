@@ -18,7 +18,7 @@ import java.util.Arrays;
 public class Standard {
     @Id
     @GeneratedValue
-    private Long id;
+    private String pid;
 
     private String name;
     private Issuer issuer;

@@ -27,6 +27,8 @@ public class Operation {
     private List<Person> contributors;
     @Relationship(value = "license", direction = Relationship.Direction.OUTGOING)
     private License license;
+
+
     @Relationship(value = "executableOn", direction = Relationship.Direction.OUTGOING)
     private List<ValueSpecificationRelation> executableOn;
     @Relationship(value = "returns", direction = Relationship.Direction.OUTGOING)

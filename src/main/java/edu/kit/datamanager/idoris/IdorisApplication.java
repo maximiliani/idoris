@@ -23,7 +23,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.neo4j.config.EnableNeo4jAuditing;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
+import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
+import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 @SpringBootApplication
 @EnableNeo4jRepositories
@@ -37,5 +41,16 @@ public class IdorisApplication {
     @Bean
     Configuration cypherDslConfiguration() {
         return Configuration.newConfig().withDialect(Dialect.NEO4J_5).build();
+    }
+
+    @Component
+    public static class SpringDataRestConfig implements RepositoryRestConfigurer {
+
+        @Override
+        public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry cors) {
+            cors.addMapping("/**")
+                    .allowedOrigins("*")
+                    .allowedMethods("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS");
+        }
     }
 }

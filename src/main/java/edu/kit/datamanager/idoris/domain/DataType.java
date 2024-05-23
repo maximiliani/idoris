@@ -5,6 +5,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.neo4j.core.schema.*;
+import org.springframework.data.rest.core.config.Projection;
 
 import java.time.Instant;
 import java.util.List;
@@ -99,5 +100,52 @@ public class DataType implements IValueSpecification {
         Other("Other");
 
         private final String name;
+    }
+
+    @Projection(name = "full", types = DataType.class)
+    public interface FullProjection {
+        String getPid();
+
+        Instant getCreatedAt();
+
+        Set<DataType> getInheritsFrom();
+
+        Set<Person> getContributors();
+
+        Set<Standard> getStandards();
+
+        License getLicense();
+
+        Instant getLastModifiedAt();
+
+        Long getVersion();
+
+        String getName();
+
+        String getDescription();
+
+        List<String> getExpectedUses();
+
+        PrimitiveDataType getPrimitiveDataType();
+
+        Category getCategory();
+
+        String getUnitName();
+
+        String getUnitSymbol();
+
+        String getDefinedBy();
+
+        String getStandard_uncertainty();
+
+        String getRestrictions();
+
+        String getRegex();
+
+        String getRegexFlavour();
+
+        String getDefaultValue();
+
+        String[] getValueEnum();
     }
 }

@@ -31,11 +31,8 @@ public class OperationStep {
     private Map<String, String> attributes;
     private Map<String, String> outputs;
 
-    @Getter
-    @AllArgsConstructor
     public enum ExecutionMode {
-        sync("Synchronous"),
-        async("Asynchronous");
-        private final String name;
+        sync,
+        async
     }
 }

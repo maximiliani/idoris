@@ -15,7 +15,7 @@ import org.springframework.data.neo4j.core.schema.TargetNode;
 @RequiredArgsConstructor
 public class ProfileAttribute {
     @RelationshipId
-    private Long id;
+    private String id;
 
     private String name;
     private String description;
@@ -25,7 +25,7 @@ public class ProfileAttribute {
     private String constantValue;
 
     @TargetNode
-    private IValueSpecification valueSpecification;
+    private IValueSpecification pid;
 
     @Getter
     @AllArgsConstructor
