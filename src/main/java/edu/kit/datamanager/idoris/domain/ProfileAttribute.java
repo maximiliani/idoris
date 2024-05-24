@@ -8,12 +8,14 @@ import org.springframework.data.neo4j.core.schema.RelationshipId;
 import org.springframework.data.neo4j.core.schema.RelationshipProperties;
 import org.springframework.data.neo4j.core.schema.TargetNode;
 
+import java.io.Serializable;
+
 @RelationshipProperties
 @Getter
 @Setter
 @AllArgsConstructor
 @RequiredArgsConstructor
-public class ProfileAttribute {
+public class ProfileAttribute implements Serializable {
     @RelationshipId
     private String id;
 

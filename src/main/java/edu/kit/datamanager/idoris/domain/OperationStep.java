@@ -6,6 +6,7 @@ import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -15,10 +16,10 @@ import java.util.Map;
 @AllArgsConstructor
 @RequiredArgsConstructor
 @With
-public class OperationStep {
+public class OperationStep implements Serializable {
     @Id
     @GeneratedValue
-    private Long id;
+    private String id;
 
     private String title;
     private ExecutionMode mode = ExecutionMode.sync;

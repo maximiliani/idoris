@@ -23,7 +23,7 @@ public class OperationTypeProfile extends GenericIDORISEntity {
     private String name;
     private String description;
 
-    public OperationTypeProfile(PID pid, Long version, Instant createdAt, Instant lastModifiedAt, Set<User> contributors, License license, List<TypeProfile> inheritsFrom, List<ProfileAttribute> attributes, String name, String description) {
+    public OperationTypeProfile(String pid, Long version, Instant createdAt, Instant lastModifiedAt, Set<User> contributors, License license, List<TypeProfile> inheritsFrom, List<ProfileAttribute> attributes, String name, String description) {
         super(pid, version, createdAt, lastModifiedAt, contributors, license);
         this.inheritsFrom = inheritsFrom;
         this.attributes = attributes;

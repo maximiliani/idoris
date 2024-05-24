@@ -8,6 +8,7 @@ import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
+import java.io.Serializable;
 import java.util.Set;
 
 @Node("FDO")
@@ -15,9 +16,9 @@ import java.util.Set;
 @Setter
 @AllArgsConstructor
 @RequiredArgsConstructor
-public class FDO {
+public class FDO implements Serializable {
     @Id
-    private PID pid;
+    private String pid;
 
     @Relationship(value = "hasValues", direction = Relationship.Direction.OUTGOING)
     private Set<FDOValue> recordValues;

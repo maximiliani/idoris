@@ -29,7 +29,7 @@ public class TypeProfile extends GenericIDORISEntity implements IValueSpecificat
     @Property("default")
     private String defaultValue;
 
-    public TypeProfile(PID pid, Long version, Instant createdAt, Instant lastModifiedAt, Set<User> contributors, License license, List<TypeProfile> inheritsFrom, List<ProfileAttribute> attributes, String name, String description, String restrictions, SubSchemaRelation subSchemaRelation, String defaultValue) {
+    public TypeProfile(String pid, Long version, Instant createdAt, Instant lastModifiedAt, Set<User> contributors, License license, List<TypeProfile> inheritsFrom, List<ProfileAttribute> attributes, String name, String description, String restrictions, SubSchemaRelation subSchemaRelation, String defaultValue) {
         super(pid, version, createdAt, lastModifiedAt, contributors, license);
         this.inheritsFrom = inheritsFrom;
         this.attributes = attributes;

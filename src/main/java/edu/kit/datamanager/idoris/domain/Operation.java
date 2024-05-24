@@ -26,7 +26,7 @@ public class Operation extends GenericIDORISEntity {
     private String name;
     private String description;
 
-    public Operation(PID pid, Long version, Instant createdAt, Instant lastModifiedAt, Set<User> contributors, License license, List<ValueSpecificationRelation> executableOn, List<ValueSpecificationRelation> returns, List<ValueSpecificationRelation> environment, List<OperationStep> execution, String name, String description) {
+    public Operation(String pid, Long version, Instant createdAt, Instant lastModifiedAt, Set<User> contributors, License license, List<ValueSpecificationRelation> executableOn, List<ValueSpecificationRelation> returns, List<ValueSpecificationRelation> environment, List<OperationStep> execution, String name, String description) {
         super(pid, version, createdAt, lastModifiedAt, contributors, license);
         this.executableOn = executableOn;
         this.returns = returns;

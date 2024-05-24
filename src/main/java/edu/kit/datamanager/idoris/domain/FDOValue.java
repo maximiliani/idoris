@@ -8,14 +8,16 @@ import org.springframework.data.neo4j.core.schema.RelationshipId;
 import org.springframework.data.neo4j.core.schema.RelationshipProperties;
 import org.springframework.data.neo4j.core.schema.TargetNode;
 
+import java.io.Serializable;
+
 @RelationshipProperties
 @Getter
 @Setter
 @AllArgsConstructor
 @RequiredArgsConstructor
-public class FDOValue {
+public class FDOValue implements Serializable {
     @RelationshipId
-    private PID pid;
+    private String pid;
 
     private String value;
 

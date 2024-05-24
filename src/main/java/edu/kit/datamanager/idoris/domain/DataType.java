@@ -38,7 +38,7 @@ public class DataType extends GenericIDORISEntity implements IValueSpecification
     @Property("enum")
     private String[] valueEnum;
 
-    public DataType(PID pid, Long version, Instant createdAt, Instant lastModifiedAt, Set<User> contributors, License license, Set<DataType> inheritsFrom, String name, String description, List<String> expectedUses, PrimitiveDataType primitiveDataType, Category category, String unitName, String unitSymbol, String definedBy, String standard_uncertainty, String restrictions, String regex, String regexFlavour, String defaultValue, String[] valueEnum) {
+    public DataType(String pid, Long version, Instant createdAt, Instant lastModifiedAt, Set<User> contributors, License license, Set<DataType> inheritsFrom, String name, String description, List<String> expectedUses, PrimitiveDataType primitiveDataType, Category category, String unitName, String unitSymbol, String definedBy, String standard_uncertainty, String restrictions, String regex, String regexFlavour, String defaultValue, String[] valueEnum) {
         super(pid, version, createdAt, lastModifiedAt, contributors, license);
         this.inheritsFrom = inheritsFrom;
         this.name = name;
