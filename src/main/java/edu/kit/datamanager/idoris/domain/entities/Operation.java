@@ -1,17 +1,22 @@
-package edu.kit.datamanager.idoris.domain;
+package edu.kit.datamanager.idoris.domain.entities;
 
+import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
+import edu.kit.datamanager.idoris.domain.relationships.OperationStep;
+import edu.kit.datamanager.idoris.domain.relationships.ValueSpecificationRelation;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
-import java.time.Instant;
 import java.util.List;
-import java.util.Set;
 
 @Node("Operation")
 @Getter
 @Setter
+@AllArgsConstructor
+@RequiredArgsConstructor
 public class Operation extends GenericIDORISEntity {
 
     @Relationship(value = "executableOn", direction = Relationship.Direction.OUTGOING)
@@ -26,13 +31,4 @@ public class Operation extends GenericIDORISEntity {
     private String name;
     private String description;
 
-    public Operation(String pid, Long version, Instant createdAt, Instant lastModifiedAt, Set<User> contributors, License license, List<ValueSpecificationRelation> executableOn, List<ValueSpecificationRelation> returns, List<ValueSpecificationRelation> environment, List<OperationStep> execution, String name, String description) {
-        super(pid, version, createdAt, lastModifiedAt, contributors, license);
-        this.executableOn = executableOn;
-        this.returns = returns;
-        this.environment = environment;
-        this.execution = execution;
-        this.name = name;
-        this.description = description;
-    }
 }

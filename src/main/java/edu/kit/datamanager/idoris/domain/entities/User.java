@@ -1,4 +1,4 @@
-package edu.kit.datamanager.idoris.domain;
+package edu.kit.datamanager.idoris.domain.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,12 +9,13 @@ import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 @Node("User")
 @Getter
 @Setter
-@RequiredArgsConstructor
 @AllArgsConstructor
+@RequiredArgsConstructor
 public class User implements Serializable {
     @Id
     @GeneratedValue
@@ -26,12 +27,12 @@ public class User implements Serializable {
     private String details;
     private String url;
 
-    public User(Type type, String name, String email, String details, String url) {
+    public User(Type type, Optional<String> name, Optional<String> email, Optional<String> details, Optional<String> url) {
         this.type = type;
-        this.name = name;
-        this.email = email;
-        this.details = details;
-        this.url = url;
+        this.name = name.orElse(null);
+        this.email = email.orElse(null);
+        this.details = details.orElse(null);
+        this.url = url.orElse(null);
     }
 
     @AllArgsConstructor

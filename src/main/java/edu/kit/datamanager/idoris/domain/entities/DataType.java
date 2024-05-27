@@ -1,7 +1,9 @@
-package edu.kit.datamanager.idoris.domain;
+package edu.kit.datamanager.idoris.domain.entities;
 
+import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Property;
@@ -15,7 +17,9 @@ import java.util.Set;
 @Node("DataType")
 @Getter
 @Setter
-public class DataType extends GenericIDORISEntity implements IValueSpecification {
+@AllArgsConstructor
+@RequiredArgsConstructor
+public class DataType extends GenericIDORISEntity {
     @Relationship(value = "inheritsFrom", direction = Relationship.Direction.OUTGOING)
     private Set<DataType> inheritsFrom;
 
@@ -38,33 +42,6 @@ public class DataType extends GenericIDORISEntity implements IValueSpecification
     @Property("enum")
     private String[] valueEnum;
 
-    public DataType(String pid, Long version, Instant createdAt, Instant lastModifiedAt, Set<User> contributors, License license, Set<DataType> inheritsFrom, String name, String description, List<String> expectedUses, PrimitiveDataType primitiveDataType, Category category, String unitName, String unitSymbol, String definedBy, String standard_uncertainty, String restrictions, String regex, String regexFlavour, String defaultValue, String[] valueEnum) {
-        super(pid, version, createdAt, lastModifiedAt, contributors, license);
-        this.inheritsFrom = inheritsFrom;
-        this.name = name;
-        this.description = description;
-        this.expectedUses = expectedUses;
-        this.primitiveDataType = primitiveDataType;
-        this.category = category;
-        this.unitName = unitName;
-        this.unitSymbol = unitSymbol;
-        this.definedBy = definedBy;
-        this.standard_uncertainty = standard_uncertainty;
-        this.restrictions = restrictions;
-        this.regex = regex;
-        this.regexFlavour = regexFlavour;
-        this.defaultValue = defaultValue;
-        this.valueEnum = valueEnum;
-    }
-
-    public void addInheritsFrom(DataType superType) {
-        inheritsFrom.add(superType);
-    }
-
-    public void removeInheritsFrom(DataType superType) {
-        inheritsFrom.remove(superType);
-    }
-
     @AllArgsConstructor
     @Getter
     public enum PrimitiveDataType {
@@ -83,7 +60,6 @@ public class DataType extends GenericIDORISEntity implements IValueSpecification
         CharacterSet("Character Set"),
         Encoding("Encoding"),
         Other("Other");
-
         private final String name;
     }
 

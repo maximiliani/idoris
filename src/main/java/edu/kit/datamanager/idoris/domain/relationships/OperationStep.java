@@ -1,5 +1,7 @@
-package edu.kit.datamanager.idoris.domain;
+package edu.kit.datamanager.idoris.domain.relationships;
 
+import edu.kit.datamanager.idoris.domain.entities.Operation;
+import edu.kit.datamanager.idoris.domain.entities.OperationTypeProfile;
 import lombok.*;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;

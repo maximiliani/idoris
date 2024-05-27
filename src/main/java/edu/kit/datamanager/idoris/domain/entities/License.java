@@ -1,4 +1,4 @@
-package edu.kit.datamanager.idoris.domain;
+package edu.kit.datamanager.idoris.domain.entities;
 
 import lombok.*;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;

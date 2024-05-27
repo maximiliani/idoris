@@ -1,5 +1,6 @@
-package edu.kit.datamanager.idoris.domain;
+package edu.kit.datamanager.idoris.domain.entities;
 
+import edu.kit.datamanager.idoris.domain.relationships.FDOValue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +26,4 @@ public class FDO implements Serializable {
 
     @Relationship(value = "confirmsWith", direction = Relationship.Direction.OUTGOING)
     private Set<TypeProfile> typeProfiles;
-
-    public void addTypeProfile(TypeProfile typeProfile) {
-        typeProfiles.add(typeProfile);
-    }
-
-    public void addRecordValue(IValueSpecification valueSpecification, String value) {
-        recordValues.add(new FDOValue(value, valueSpecification));
-    }
 }

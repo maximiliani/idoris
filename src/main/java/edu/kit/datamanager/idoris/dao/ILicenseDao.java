@@ -1,6 +1,6 @@
 package edu.kit.datamanager.idoris.dao;
 
-import edu.kit.datamanager.idoris.domain.License;
+import edu.kit.datamanager.idoris.domain.entities.License;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;

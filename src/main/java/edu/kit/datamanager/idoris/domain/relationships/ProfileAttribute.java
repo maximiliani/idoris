@@ -1,5 +1,6 @@
-package edu.kit.datamanager.idoris.domain;
+package edu.kit.datamanager.idoris.domain.relationships;
 
+import edu.kit.datamanager.idoris.domain.entities.DataType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class ProfileAttribute implements Serializable {
     private String constantValue;
 
     @TargetNode
-    private IValueSpecification pid;
+    private DataType dataType;
 
     @Getter
     @AllArgsConstructor

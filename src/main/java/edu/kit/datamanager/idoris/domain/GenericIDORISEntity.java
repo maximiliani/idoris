@@ -1,5 +1,8 @@
 package edu.kit.datamanager.idoris.domain;
 
+import edu.kit.datamanager.idoris.domain.entities.License;
+import edu.kit.datamanager.idoris.domain.entities.User;
+import edu.kit.datamanager.idoris.domain.relationships.StandardApplicability;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -39,4 +42,7 @@ public abstract class GenericIDORISEntity implements Serializable {
 
     @Relationship(value = "license", direction = Relationship.Direction.OUTGOING)
     License license;
+
+    @Relationship(value = "standards", direction = Relationship.Direction.OUTGOING)
+    Set<StandardApplicability> standards;
 }
