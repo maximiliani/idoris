@@ -1,9 +1,6 @@
 package edu.kit.datamanager.idoris.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Version;
@@ -20,6 +17,7 @@ import java.util.Set;
 @Node("IDORISEntity")
 @Getter
 @Setter
+@EqualsAndHashCode
 @RequiredArgsConstructor
 @AllArgsConstructor
 public abstract class GenericIDORISEntity implements Serializable {
