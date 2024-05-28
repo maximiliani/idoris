@@ -1,7 +1,6 @@
 package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
-import edu.kit.datamanager.idoris.domain.relationships.OperationStep;
 import edu.kit.datamanager.idoris.domain.relationships.ValueSpecificationRelation;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,6 +10,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.util.List;
+import java.util.Set;
 
 @Node("Operation")
 @Getter
@@ -20,11 +20,12 @@ import java.util.List;
 public class Operation extends GenericIDORISEntity {
 
     @Relationship(value = "executableOn", direction = Relationship.Direction.OUTGOING)
-    private List<ValueSpecificationRelation> executableOn;
+    private Set<ValueSpecificationRelation> executableOn;
     @Relationship(value = "returns", direction = Relationship.Direction.OUTGOING)
-    private List<ValueSpecificationRelation> returns;
+    private Set<ValueSpecificationRelation> returns;
     @Relationship(value = "environment", direction = Relationship.Direction.OUTGOING)
-    private List<ValueSpecificationRelation> environment;
+    private Set<ValueSpecificationRelation> environment;
+
     @Relationship(value = "execution", direction = Relationship.Direction.OUTGOING)
     private List<OperationStep> execution;
 

@@ -1,6 +1,7 @@
 package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
+import edu.kit.datamanager.idoris.domain.enums.PrimitiveDataTypes;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class DataType extends GenericIDORISEntity {
     private String name;
     private String description;
     private List<String> expectedUses;
-    private PrimitiveDataType primitiveDataType;
+    private PrimitiveDataTypes primitiveDataType;
     private Category category = Category.Format;
     private String unitName;
     private String unitSymbol;
@@ -40,17 +41,7 @@ public class DataType extends GenericIDORISEntity {
     private String defaultValue;
 
     @Property("enum")
-    private String[] valueEnum;
-
-    @AllArgsConstructor
-    @Getter
-    public enum PrimitiveDataType {
-        string("string", String.class),
-        number("number", Number.class),
-        bool("boolean", Boolean.class);
-        private final String jsonName;
-        private final Class<?> javaClass;
-    }
+    private Set<String> valueEnum;
 
     @AllArgsConstructor
     @Getter
@@ -85,7 +76,7 @@ public class DataType extends GenericIDORISEntity {
 
         List<String> getExpectedUses();
 
-        PrimitiveDataType getPrimitiveDataType();
+        PrimitiveDataTypes getPrimitiveDataType();
 
         Category getCategory();
 

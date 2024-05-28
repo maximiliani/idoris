@@ -9,7 +9,7 @@ import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
-import java.util.List;
+import java.util.Set;
 
 @Node("OperationTypeProfile")
 @Getter
@@ -19,10 +19,13 @@ import java.util.List;
 public class OperationTypeProfile extends GenericIDORISEntity {
 
     @Relationship(value = "inheritsFrom", direction = Relationship.Direction.OUTGOING)
-    private List<TypeProfile> inheritsFrom;
+    private Set<OperationTypeProfile> inheritsFrom;
 
     @Relationship(value = "attributes", direction = Relationship.Direction.OUTGOING)
-    private List<ProfileAttribute> attributes;
+    private Set<ProfileAttribute> attributes;
+
+    @Relationship(value = "adapters", direction = Relationship.Direction.OUTGOING)
+    private Set<FDO> adapters;
 
     private String name;
     private String description;

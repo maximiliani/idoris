@@ -7,9 +7,9 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 @RepositoryRestResource(collectionResourceRel = "users", path = "users")
 public interface IUserDao extends Neo4jRepository<User, String>, CrudRepository<User, String> {
-    Iterable<User> findAllByName(String name);
-
-    Iterable<User> findAllByEmail(String email);
-
-    Iterable<User> findAllByUrl(String url);
+//    Iterable<User> findAllByName(String name);
+//
+//    Iterable<User> findAllByEmail(String email);
+//
+//    Iterable<User> findAllByUrl(String url);
 }

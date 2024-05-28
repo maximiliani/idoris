@@ -10,6 +10,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Set;
 
 @Node("FDO")
@@ -22,7 +23,7 @@ public class FDO implements Serializable {
     private String pid;
 
     @Relationship(value = "hasValues", direction = Relationship.Direction.OUTGOING)
-    private Set<FDOValue> recordValues;
+    private List<FDOValue> recordValues;
 
     @Relationship(value = "confirmsWith", direction = Relationship.Direction.OUTGOING)
     private Set<TypeProfile> typeProfiles;

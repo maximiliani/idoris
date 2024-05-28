@@ -1,8 +1,9 @@
-package edu.kit.datamanager.idoris.domain.relationships;
+package edu.kit.datamanager.idoris.domain.entities;
 
-import edu.kit.datamanager.idoris.domain.entities.Operation;
-import edu.kit.datamanager.idoris.domain.entities.OperationTypeProfile;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
@@ -17,7 +18,6 @@ import java.util.Map;
 @Setter
 @AllArgsConstructor
 @RequiredArgsConstructor
-@With
 public class OperationStep implements Serializable {
     @Id
     @GeneratedValue
@@ -25,10 +25,13 @@ public class OperationStep implements Serializable {
 
     private String title;
     private ExecutionMode mode = ExecutionMode.sync;
+    
     @Relationship(value = "steps", direction = Relationship.Direction.OUTGOING)
     private List<OperationStep> steps;
+
     @Relationship(value = "operation", direction = Relationship.Direction.OUTGOING)
     private Operation operation;
+
     @Relationship(value = "operationTypeProfile", direction = Relationship.Direction.OUTGOING)
     private OperationTypeProfile operationTypeProfile;
     private Map<String, String> attributes;

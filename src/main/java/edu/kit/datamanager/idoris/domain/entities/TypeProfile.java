@@ -11,7 +11,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Property;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
-import java.util.List;
+import java.util.Set;
 
 @Node("TypeProfile")
 @Getter
@@ -21,15 +21,16 @@ import java.util.List;
 public class TypeProfile extends GenericIDORISEntity {
 
     @Relationship(value = "inheritsFrom", direction = Relationship.Direction.OUTGOING)
-    private List<TypeProfile> inheritsFrom;
+    private Set<TypeProfile> inheritsFrom;
 
     @Relationship(value = "attributes", direction = Relationship.Direction.OUTGOING)
-    private List<ProfileAttribute> attributes;
+    private Set<ProfileAttribute> attributes;
 
     private String name;
     private String description;
     private String restrictions;
     private SubSchemaRelation subSchemaRelation = SubSchemaRelation.allowAdditionalProperties;
+
     @Property("default")
     private String defaultValue;
 }
