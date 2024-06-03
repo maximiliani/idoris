@@ -1,5 +1,6 @@
 package edu.kit.datamanager.idoris.domain.entities;
 
+import edu.kit.datamanager.idoris.domain.relationships.AttributeReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,6 @@ import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 
 @Node("OperationStep")
 @Getter
@@ -25,7 +25,7 @@ public class OperationStep implements Serializable {
 
     private String title;
     private ExecutionMode mode = ExecutionMode.sync;
-    
+
     @Relationship(value = "steps", direction = Relationship.Direction.OUTGOING)
     private List<OperationStep> steps;
 
@@ -34,8 +34,12 @@ public class OperationStep implements Serializable {
 
     @Relationship(value = "operationTypeProfile", direction = Relationship.Direction.OUTGOING)
     private OperationTypeProfile operationTypeProfile;
-    private Map<String, String> attributes;
-    private Map<String, String> outputs;
+
+    @Relationship(value = "attributes", direction = Relationship.Direction.INCOMING)
+    private List<AttributeReference> attributes;
+
+    @Relationship(value = "outputs", direction = Relationship.Direction.OUTGOING)
+    private List<AttributeReference> outputs;
 
     public enum ExecutionMode {
         sync,

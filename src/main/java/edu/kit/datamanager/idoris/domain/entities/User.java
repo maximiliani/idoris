@@ -22,7 +22,7 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = ORCiDUser.class, name = "orcid"),
         @JsonSubTypes.Type(value = TextUser.class, name = "text")
 })
-public class User implements Serializable {
+public abstract class User implements Serializable {
     @Id
     @GeneratedValue
     private String id;
