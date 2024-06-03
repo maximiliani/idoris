@@ -2,7 +2,6 @@ package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
 import edu.kit.datamanager.idoris.domain.relationships.AttributeReference;
-import edu.kit.datamanager.idoris.domain.relationships.ValueSpecificationRelation;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,7 @@ public class Operation extends GenericIDORISEntity {
     @Relationship(value = "executableOn", direction = Relationship.Direction.OUTGOING)
     private AttributeReference executableOn;
     @Relationship(value = "returns", direction = Relationship.Direction.INCOMING)
-    private Set<ValueSpecificationRelation> returns;
+    private Set<AttributeReference> returns;
     @Relationship(value = "environment", direction = Relationship.Direction.OUTGOING)
     private Set<AttributeReference> environment;
 

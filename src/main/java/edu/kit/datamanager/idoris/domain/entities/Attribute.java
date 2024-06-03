@@ -1,6 +1,5 @@
 package edu.kit.datamanager.idoris.domain.entities;
 
-import edu.kit.datamanager.idoris.domain.enums.Obligation;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +24,4 @@ public class Attribute {
 
     private String name;
     private String description;
-    private Obligation obligation;
-    private boolean repeatable;
 }

@@ -1,6 +1,7 @@
 package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
+import edu.kit.datamanager.idoris.domain.relationships.AttributeReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -21,10 +22,10 @@ public class OperationTypeProfile extends GenericIDORISEntity {
     private Set<OperationTypeProfile> inheritsFrom;
 
     @Relationship(value = "attributes", direction = Relationship.Direction.INCOMING)
-    private Set<Attribute> attributes;
+    private Set<AttributeReference> attributes;
 
     @Relationship(value = "outputs", direction = Relationship.Direction.OUTGOING)
-    private Set<Attribute> outputs;
+    private Set<AttributeReference> outputs;
 
     @Relationship(value = "adapters", direction = Relationship.Direction.OUTGOING)
     private Set<FDO> adapters;

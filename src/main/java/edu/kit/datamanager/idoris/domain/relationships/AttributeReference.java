@@ -1,6 +1,7 @@
 package edu.kit.datamanager.idoris.domain.relationships;
 
 import edu.kit.datamanager.idoris.domain.entities.Attribute;
+import edu.kit.datamanager.idoris.domain.enums.Obligation;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -22,4 +23,6 @@ public class AttributeReference {
     private Attribute attribute;
     private String value;
     private String internalReference;
+    private Obligation obligation;
+    private boolean repeatable;
 }
