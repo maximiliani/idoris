@@ -1,6 +1,5 @@
 package edu.kit.datamanager.idoris.domain.entities;
 
-import edu.kit.datamanager.idoris.domain.relationships.AttributeReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -36,13 +35,14 @@ public class OperationStep implements Serializable {
     private OperationTypeProfile operationTypeProfile;
 
     @Relationship(value = "attributes", direction = Relationship.Direction.INCOMING)
-    private List<AttributeReference> attributes;
+    private List<AttributeMapping> attributes;
 
     @Relationship(value = "outputs", direction = Relationship.Direction.OUTGOING)
-    private List<AttributeReference> outputs;
+    private List<AttributeMapping> outputs;
 
     public enum ExecutionMode {
         sync,
         async
     }
+
 }
