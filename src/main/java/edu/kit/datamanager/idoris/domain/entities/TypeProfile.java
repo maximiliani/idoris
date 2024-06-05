@@ -40,6 +40,7 @@ public class TypeProfile extends DataType {
     @Relationship(value = "attributes", direction = Relationship.Direction.OUTGOING)
     private Set<ProfileAttribute> attributes;
 
+    private boolean isEmbeddable = true;
     private String restrictions;
     private SubSchemaRelation subSchemaRelation = SubSchemaRelation.allowAdditionalProperties;
 }

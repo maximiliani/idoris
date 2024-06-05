@@ -38,6 +38,7 @@ public class OperationStep implements Serializable {
     @GeneratedValue
     private String id;
 
+    private Integer executionOrderIndex;
     private String title;
     private ExecutionMode mode = ExecutionMode.sync;
 
