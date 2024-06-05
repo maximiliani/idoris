@@ -44,30 +44,5 @@ public abstract class User implements Serializable {
     private String id;
 
     private String type;
-
-//    private Type type;
-//    private String name;
-//    private String email;
-//    private String details;
-//    private String url;
-
-//    public User(Type type, Optional<String> name, Optional<String> email, Optional<String> details, Optional<String> url) {
-//        this.type = type;
-//        this.name = name.orElse(null);
-//        this.email = email.orElse(null);
-//        this.details = details.orElse(null);
-//        this.url = url.orElse(null);
-//    }
-
-//    @AllArgsConstructor
-//    @Getter
-//    public enum Type {
-//        Handle("Handle"),
-//        ORCiD("ORCiD"),
-//        URL("URL"),
-//        Text("Text");
-//
-//        private final String name;
-//    }
 }
 

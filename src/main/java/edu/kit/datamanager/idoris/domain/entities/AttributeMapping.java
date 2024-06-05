@@ -42,7 +42,7 @@ public class AttributeMapping implements Serializable {
 
     private String name;
     private String value;
-    private int index;
+    private Integer index;
 
     @Relationship(value = "output", direction = Relationship.Direction.OUTGOING)
     private Attribute output;

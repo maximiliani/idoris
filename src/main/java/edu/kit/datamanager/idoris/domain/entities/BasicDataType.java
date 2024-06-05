@@ -59,49 +59,4 @@ public class BasicDataType extends DataType {
         Other("Other");
         private final String name;
     }
-
-//    @Projection(name = "full", types = BasicDataType.class)
-//    public interface FullProjection {
-//        String getPid();
-//
-//        Instant getCreatedAt();
-//
-//        Set<BasicDataType> getInheritsFrom();
-//
-//        Set<User> getContributors();
-//
-//        License getLicense();
-//
-//        Instant getLastModifiedAt();
-//
-//        Long getVersion();
-//
-//        String getName();
-//
-//        String getDescription();
-//
-//        List<String> getExpectedUses();
-//
-//        PrimitiveDataTypes getPrimitiveDataType();
-//
-//        Category getCategory();
-//
-//        String getUnitName();
-//
-//        String getUnitSymbol();
-//
-//        String getDefinedBy();
-//
-//        String getStandard_uncertainty();
-//
-//        String getRestrictions();
-//
-//        String getRegex();
-//
-//        String getRegexFlavour();
-//
-//        String getDefaultValue();
-//
-//        String[] getValueEnum();
-//    }
 }

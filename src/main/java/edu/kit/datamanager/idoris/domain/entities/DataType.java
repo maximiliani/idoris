@@ -35,7 +35,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION, property = "type")
 @JsonSubTypes({
-//        @JsonSubTypes.Type(value = BasicDataType.class, name = "DataType"),
         @JsonSubTypes.Type(value = BasicDataType.class, name = "BasicDataType"),
         @JsonSubTypes.Type(value = TypeProfile.class, name = "TypeProfile"),
 })

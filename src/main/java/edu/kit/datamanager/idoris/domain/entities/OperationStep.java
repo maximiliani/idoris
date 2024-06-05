@@ -61,5 +61,4 @@ public class OperationStep implements Serializable {
         sync,
         async
     }
-
 }

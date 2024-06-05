@@ -21,7 +21,6 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-//@Node("StandardIssuer")
 public enum StandardIssuer {
     ISO("ISO"),
     W3C("W3C"),

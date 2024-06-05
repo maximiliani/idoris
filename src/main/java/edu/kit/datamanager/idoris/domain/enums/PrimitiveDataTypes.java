@@ -24,7 +24,8 @@ import lombok.Getter;
 public enum PrimitiveDataTypes {
     string("string", String.class),
     number("number", Number.class),
-    bool("boolean", Boolean.class);
+    bool("boolean", Boolean.class),
+    undefined("undefined", Void.class);
     private final String jsonName;
     private final Class<?> javaClass;
 }

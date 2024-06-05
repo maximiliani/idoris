@@ -41,6 +41,6 @@ public class AttributeReference {
     private String value;
 
     private String internalReference;
-    private Obligation obligation;
-    private boolean repeatable;
+    private Obligation obligation = Obligation.Mandatory;
+    private boolean repeatable = false;
 }

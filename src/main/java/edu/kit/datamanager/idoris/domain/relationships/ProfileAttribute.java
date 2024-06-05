@@ -40,7 +40,7 @@ public class ProfileAttribute implements Serializable {
     private String name;
     private String description;
     private boolean repeatable = false;
-    private Obligation obligation = Obligation.Optional;
+    private Obligation obligation = Obligation.Mandatory;
     private String defaultValue;
     private String constantValue;
 
