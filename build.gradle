@@ -1,4 +1,5 @@
 plugins {
+    id "java"
     id 'org.springframework.boot' version '3.2.1'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'io.freefair.lombok' version '8.4'
@@ -8,13 +9,12 @@ plugins {
     id 'net.ltgt.errorprone' version '3.1.0'
     id 'net.researchgate.release' version '3.0.2'
     id 'com.gorylenko.gradle-git-properties' version '2.4.1'
-    id 'java'
     id 'jacoco'
 }
 
 description = 'IDORIS - An Integrated Data Type and Operations Registry with Inheritance System'
 group = 'edu.kit.datamanager'
-version = '0.0.1'
+version = '0.0.1-SNAPSHOT'
 
 println "Running gradle version: $gradle.gradleVersion"
 println "Building ${name} version: ${version}"
@@ -42,7 +42,7 @@ ext {
     javersVersion = '7.3.7'
     errorproneVersion = '2.24.1'
     // directory for generated code snippets during tests
-    snippetsDir = file("build/generated-snippets")
+    set('snippetsDir', file("build/generated-snippets"))
 }
 
 dependencies {
@@ -53,6 +53,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.data:spring-data-rest-hal-explorer'
     implementation 'org.springframework.boot:spring-boot-starter-data-rest'
+//    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation:2.7.3'
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.7.3'
+    implementation 'org.springdoc:springdoc-openapi-ui:1.6.11'
+    implementation 'org.springdoc:springdoc-openapi-data-rest:1.6.11'
+    implementation 'org.springdoc:springdoc-openapi-webmvc-core:1.6.11'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
 //    implementation 'com.netflix.graphql.dgs.codegen:graphql-dgs-codegen-gradle:6.0.3'
 //    testImplementation 'org.springframework:spring-webflux'
 
@@ -77,6 +84,24 @@ compileTestJava {
     // disable errorprone for tests
     options.errorprone.disableWarningsInGeneratedCode = true
     options.errorprone.enabled = false // change it to true to enable
+}
+
+tasks.named('test') {
+    outputs.dir snippetsDir
+    finalizedBy jacocoTestReport
+    environment "spring.config.location", "optional:classpath:/test-config/"
+
+    maxHeapSize = "8192m"
+    testLogging {
+        outputs.upToDateWhen { false }
+        showStandardStreams = true
+    }
+    useJUnitPlatform()
+}
+
+tasks.named('asciidoctor') {
+    inputs.dir snippetsDir
+    dependsOn test
 }
 
 test {

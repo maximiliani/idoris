@@ -14,11 +14,30 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.dao;
+package edu.kit.datamanager.idoris.domain.entities;
 
-import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import lombok.*;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
 
-@RepositoryRestResource(collectionResourceRel = "typeProfiles", path = "typeProfiles")
-public interface ITypeProfileDao extends IAbstractRepo<TypeProfile, String> {
+import java.io.Serializable;
+
+@Node("License")
+@Getter
+@Setter
+@EqualsAndHashCode
+@AllArgsConstructor
+@RequiredArgsConstructor
+public class License implements Serializable {
+    @Id
+    @GeneratedValue
+    private String pid;
+    private String name;
+    private String url;
+
+    public License(String url) {
+        this.name = url;
+        this.url = url;
+    }
 }

@@ -14,11 +14,23 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.dao;
+package edu.kit.datamanager.idoris.domain.enums;
 
-import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-@RepositoryRestResource(collectionResourceRel = "typeProfiles", path = "typeProfiles")
-public interface ITypeProfileDao extends IAbstractRepo<TypeProfile, String> {
+import java.io.Serializable;
+
+@Getter
+@AllArgsConstructor
+public enum NatureOfApplicability implements Serializable, Comparable<NatureOfApplicability> {
+    Extends("extends"),
+    constrains("constrains"),
+    specifies("specifies"),
+    depends("depends"),
+    previousVersion("is_previous_version_of"),
+    newVersion("is_new_version_of"),
+    semanticallyIdentical("is_semantically_identical"),
+    semanticallySimilar("is_semantically_similar");
+    private final String name;
 }

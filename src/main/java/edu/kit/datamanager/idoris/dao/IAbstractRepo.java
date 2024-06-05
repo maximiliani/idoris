@@ -16,9 +16,11 @@
 
 package edu.kit.datamanager.idoris.dao;
 
-import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.repository.ListCrudRepository;
+import org.springframework.data.repository.NoRepositoryBean;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
-@RepositoryRestResource(collectionResourceRel = "typeProfiles", path = "typeProfiles")
-public interface ITypeProfileDao extends IAbstractRepo<TypeProfile, String> {
+@NoRepositoryBean
+public interface IAbstractRepo<T, ID> extends Neo4jRepository<T, ID>, ListCrudRepository<T, ID>, PagingAndSortingRepository<T, ID> {
 }

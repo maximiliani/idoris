@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.dao;
+package edu.kit.datamanager.idoris.domain.enums;
 
-import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-@RepositoryRestResource(collectionResourceRel = "typeProfiles", path = "typeProfiles")
-public interface ITypeProfileDao extends IAbstractRepo<TypeProfile, String> {
+@AllArgsConstructor
+@Getter
+public enum SubSchemaRelation {
+    denyAdditionalProperties("denyAdditionalProperties"),
+    allowAdditionalProperties("allowAdditionalProperties"),
+    requireAllProperties("requireAllProperties"),
+    requireAnyOfProperties("requireAnyOfProperties"),
+    requireOneOfProperties("requireOneOfProperties"),
+    requireNoneOfProperties("requireNoneOfProperties");
+    private final String name;
 }
