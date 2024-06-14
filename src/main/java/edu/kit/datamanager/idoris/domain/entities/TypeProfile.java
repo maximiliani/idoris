@@ -41,6 +41,6 @@ public class TypeProfile extends DataType {
     private Set<ProfileAttribute> attributes;
 
     private boolean isEmbeddable = true;
-    private String restrictions;
+    private boolean isAbstract = false;
     private SubSchemaRelation subSchemaRelation = SubSchemaRelation.allowAdditionalProperties;
 }

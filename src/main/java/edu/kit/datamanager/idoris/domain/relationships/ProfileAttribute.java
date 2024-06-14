@@ -46,5 +46,4 @@ public class ProfileAttribute implements Serializable {
 
     @TargetNode
     private DataType dataType;
-
 }
