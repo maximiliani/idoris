@@ -20,7 +20,6 @@ import edu.kit.datamanager.idoris.domain.entities.DataType;
 import edu.kit.datamanager.idoris.domain.entities.Operation;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.data.rest.core.annotation.RestResource;
 
 @RepositoryRestResource(collectionResourceRel = "dataTypes", path = "dataTypes")
 public interface IDataTypeDao extends IAbstractRepo<DataType, String> {
@@ -29,7 +28,6 @@ public interface IDataTypeDao extends IAbstractRepo<DataType, String> {
     @Query("MATCH (d:DataType {pid: $pid})-[:inheritsFrom*]->(d2:DataType) RETURN d2")
     Iterable<DataType> findAllInInheritanceChain(String pid);
 
-    @RestResource(path = "operationsRepo", rel = "operationsRepo")
     @Query("Match (:DataType {pid: $pid})-[:attributes|inheritsFrom*]->(:DataType)<-[:dataType]-(:Attribute)<-[:executableOn]-(o:Operation) return o")
     Iterable<Operation> getOperations(String pid);
 }

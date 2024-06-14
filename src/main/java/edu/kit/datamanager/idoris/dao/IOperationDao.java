@@ -22,6 +22,6 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 @RepositoryRestResource(collectionResourceRel = "operations", path = "operations")
 public interface IOperationDao extends IAbstractRepo<Operation, String> {
-    @Query("Match (:DataType {pid: $pid})-[:attributes|inheritsFrom*]->(:DataType)<-[:dataType]-(:Attribute)<-[:executableOn]-(o:Operation) return o")
+    @Query("optional Match (:DataType {pid: $pid})-[:attributes|inheritsFrom*]->(:DataType)<-[:dataType]-(:Attribute)<-[:executableOn]-(o:Operation) return o")
     Iterable<Operation> getOperationsForDataType(String pid);
 }

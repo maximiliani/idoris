@@ -23,9 +23,9 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 @RepositoryRestResource(collectionResourceRel = "typeProfiles", path = "typeProfiles")
 public interface ITypeProfileDao extends IAbstractRepo<TypeProfile, String> {
     @Query("MATCH (d:TypeProfile {pid: $pid})-[i:inheritsFrom*]->(d2:TypeProfile)-[profileAttribute:attributes]->(dataType:DataType) RETURN i, d2, collect(profileAttribute), collect(dataType)")
-    Iterable<TypeProfile> findAllInInheritanceChain(String pid);
+    Iterable<TypeProfile> findAllTypeProfilesWithTheirAttributesInInheritanceChain(String pid);
 //    Iterable<TypeProfile> getAllTypeProfilesWithAttributesInInheritanceChain(String pid);
 
-//    @Query("MATCH (d:TypeProfile {pid: $pid})-[:inheritsFrom*]->(typeProfile:TypeProfile) return typeProfile")
-//    Iterable<TypeProfile> findAllInInheritanceChain(String pid);
+    @Query("MATCH (d:TypeProfile {pid: $pid})-[:inheritsFrom*]->(typeProfile:TypeProfile) return typeProfile")
+    Iterable<TypeProfile> findAllTypeProfilesInInheritanceChain(String pid);
 }
