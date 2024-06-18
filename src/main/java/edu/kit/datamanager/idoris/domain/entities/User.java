@@ -38,7 +38,7 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = ORCiDUser.class, name = "orcid"),
         @JsonSubTypes.Type(value = TextUser.class, name = "text")
 })
-public abstract class User implements Serializable {
+public abstract sealed class User implements Serializable permits ORCiDUser, TextUser {
     @Id
     @GeneratedValue
     private String id;

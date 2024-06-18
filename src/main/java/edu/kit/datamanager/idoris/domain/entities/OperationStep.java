@@ -16,6 +16,8 @@
 
 package edu.kit.datamanager.idoris.domain.entities;
 
+import edu.kit.datamanager.idoris.domain.VisitableElement;
+import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +35,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @RequiredArgsConstructor
-public class OperationStep implements Serializable {
+public class OperationStep extends VisitableElement implements Serializable {
     @Id
     @GeneratedValue
     private String id;
@@ -56,6 +58,11 @@ public class OperationStep implements Serializable {
 
     @Relationship(value = "outputs", direction = Relationship.Direction.OUTGOING)
     private List<AttributeMapping> outputs;
+
+    @Override
+    protected void accept(Visitor<?> visitor, Object... args) {
+        visitor.visit(this, args);
+    }
 
     public enum ExecutionMode {
         sync,

@@ -18,10 +18,13 @@ package edu.kit.datamanager.idoris.validators;
 
 import edu.kit.datamanager.idoris.dao.ITypeProfileDao;
 import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
+import edu.kit.datamanager.idoris.domain.relationships.ProfileAttribute;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
+
+import java.util.List;
 
 @Component("beforeSaveTypeProfileValidator")
 public class TypeProfileValidator implements Validator {
@@ -37,8 +40,7 @@ public class TypeProfileValidator implements Validator {
     public void validate(Object target, Errors errors) {
         TypeProfile typeProfile = (TypeProfile) target;
         validateBasicInformation(typeProfile, errors);
-        validateAttributes(typeProfile, errors);
-        validateInheritance(typeProfile, errors);
+        validateRecursively(typeProfile, errors);
     }
 
     private void validateBasicInformation(TypeProfile typeProfile, Errors errors) {
@@ -50,13 +52,13 @@ public class TypeProfileValidator implements Validator {
         }
     }
 
-    private void validateAttributes(TypeProfile typeProfile, Errors errors) {
-        if (typeProfile.getAttributes() == null || typeProfile.getAttributes().isEmpty()) {
-            errors.rejectValue("attributes", "attributes.empty", "Attributes must not be empty.");
-        }
+    private void validateRecursively(TypeProfile typeProfile, Errors errors) {
     }
 
-    private void validateInheritance(TypeProfile typeProfile, Errors errors) {
-
+    private record ValidationDTO(
+            TypeProfile self,
+            List<ProfileAttribute> inheritedAttributes,
+            List<ValidationDTO> validatedParents
+    ) {
     }
 }

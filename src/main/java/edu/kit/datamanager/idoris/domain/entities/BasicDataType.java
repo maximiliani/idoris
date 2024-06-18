@@ -17,6 +17,7 @@
 package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.enums.PrimitiveDataTypes;
+import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,7 +33,7 @@ import java.util.Set;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class BasicDataType extends DataType {
+public final class BasicDataType extends DataType {
     @Relationship(value = "inheritsFrom", direction = Relationship.Direction.OUTGOING)
     private BasicDataType inheritsFrom;
 
@@ -48,6 +49,11 @@ public class BasicDataType extends DataType {
 
     @Property("enum")
     private Set<String> valueEnum;
+
+    @Override
+    protected void accept(Visitor<?> visitor, Object... args) {
+        visitor.visit(this, args);
+    }
 
     @AllArgsConstructor
     @Getter

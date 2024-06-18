@@ -38,7 +38,7 @@ import java.util.List;
         @JsonSubTypes.Type(value = BasicDataType.class, name = "BasicDataType"),
         @JsonSubTypes.Type(value = TypeProfile.class, name = "TypeProfile"),
 })
-public abstract class DataType extends GenericIDORISEntity {
+public abstract sealed class DataType extends GenericIDORISEntity permits BasicDataType, TypeProfile {
     private String type;
     private String name;
     private String description;

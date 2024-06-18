@@ -28,7 +28,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 @AllArgsConstructor
 @NoArgsConstructor
 @Node("ORCiDUser")
-public class ORCiDUser extends User {
+public final class ORCiDUser extends User {
     @JsonProperty("orcid")
     private String orcid;
 }

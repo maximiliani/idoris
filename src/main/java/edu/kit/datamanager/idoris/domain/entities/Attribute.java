@@ -16,6 +16,8 @@
 
 package edu.kit.datamanager.idoris.domain.entities;
 
+import edu.kit.datamanager.idoris.domain.VisitableElement;
+import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +32,7 @@ import org.springframework.data.neo4j.core.schema.Relationship;
 @RequiredArgsConstructor
 @Getter
 @Setter
-public class Attribute {
+public final class Attribute extends VisitableElement {
     @Id
     @GeneratedValue
     private String id;
@@ -40,4 +42,9 @@ public class Attribute {
 
     private String name;
     private String description;
+
+    @Override
+    protected void accept(Visitor<?> visitor, Object... args) {
+        visitor.visit(this, args);
+    }
 }

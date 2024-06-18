@@ -18,6 +18,7 @@ package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
 import edu.kit.datamanager.idoris.domain.relationships.AttributeReference;
+import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -48,4 +49,9 @@ public class OperationTypeProfile extends GenericIDORISEntity {
 
     private String name;
     private String description;
+
+    @Override
+    protected void accept(Visitor<?> visitor, Object... args) {
+        visitor.visit(this, args);
+    }
 }

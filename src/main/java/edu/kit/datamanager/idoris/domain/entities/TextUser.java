@@ -25,7 +25,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 @Setter
 @AllArgsConstructor
 @Node("TextUser")
-public class TextUser extends User {
+public final class TextUser extends User {
     private String name;
     private String email;
     private String details;

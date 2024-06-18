@@ -16,8 +16,10 @@
 
 package edu.kit.datamanager.idoris.domain.relationships;
 
+import edu.kit.datamanager.idoris.domain.VisitableElement;
 import edu.kit.datamanager.idoris.domain.entities.Attribute;
 import edu.kit.datamanager.idoris.domain.enums.Obligation;
+import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,7 +33,7 @@ import org.springframework.data.neo4j.core.schema.TargetNode;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class AttributeReference {
+public class AttributeReference extends VisitableElement {
     @RelationshipId
     private String id;
 
@@ -43,4 +45,9 @@ public class AttributeReference {
     private String internalReference;
     private Obligation obligation = Obligation.Mandatory;
     private boolean repeatable = false;
+
+    @Override
+    protected void accept(Visitor<?> visitor, Object... args) {
+        visitor.visit(this, args);
+    }
 }

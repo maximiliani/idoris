@@ -38,7 +38,7 @@ import java.util.Set;
 @EqualsAndHashCode
 @RequiredArgsConstructor
 @AllArgsConstructor
-public abstract class GenericIDORISEntity implements Serializable {
+public abstract class GenericIDORISEntity extends VisitableElement implements Serializable {
     @Id
     @GeneratedValue(UUIDStringGenerator.class)
     String pid;
