@@ -50,7 +50,7 @@ public class Operation extends GenericIDORISEntity {
     private String description;
 
     @Override
-    protected void accept(Visitor<?> visitor, Object... args) {
-        visitor.visit(this, args);
+    protected <T> T accept(Visitor<T> visitor, Object... args) {
+        return visitor.visit(this, args);
     }
 }

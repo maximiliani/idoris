@@ -21,6 +21,8 @@ import edu.kit.datamanager.idoris.dao.IOperationDao;
 import edu.kit.datamanager.idoris.dao.ITypeProfileDao;
 import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
 import edu.kit.datamanager.idoris.domain.relationships.ProfileAttribute;
+import edu.kit.datamanager.idoris.visitors.SubSchemaRelationValidator;
+import edu.kit.datamanager.idoris.visitors.ValidationResult;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.RepositoryRestController;
@@ -45,6 +47,18 @@ public class TypeProfileController {
 
     @Autowired
     IDataTypeDao dataTypeDao;
+
+    @GetMapping("typeProfiles/{pid}/validate")
+    public ResponseEntity<?> validate(@PathVariable("pid") String pid) {
+        TypeProfile typeProfile = typeProfileDao.findById(pid).orElseThrow();
+        SubSchemaRelationValidator validator = new SubSchemaRelationValidator();
+        ValidationResult result = typeProfile.execute(validator);
+        if (result.isValid()) {
+            return ResponseEntity.ok(result);
+        } else {
+            return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT).body(result);
+        }
+    }
 
     @GetMapping("typeProfiles/{pid}/attributes")
     public ResponseEntity<?> getAttributes(@PathVariable("pid") String pid) {

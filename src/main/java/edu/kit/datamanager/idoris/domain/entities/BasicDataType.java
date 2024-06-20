@@ -51,8 +51,8 @@ public final class BasicDataType extends DataType {
     private Set<String> valueEnum;
 
     @Override
-    protected void accept(Visitor<?> visitor, Object... args) {
-        visitor.visit(this, args);
+    protected <T> T accept(Visitor<T> visitor, Object... args) {
+        return visitor.visit(this, args);
     }
 
     @AllArgsConstructor

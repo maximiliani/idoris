@@ -46,7 +46,7 @@ public final class TypeProfile extends DataType {
     private SubSchemaRelation subSchemaRelation = SubSchemaRelation.allowAdditionalProperties;
 
     @Override
-    protected void accept(Visitor<?> visitor, Object... args) {
-        visitor.visit(this, args);
+    protected <T> T accept(Visitor<T> visitor, Object... args) {
+        return visitor.visit(this, args);
     }
 }

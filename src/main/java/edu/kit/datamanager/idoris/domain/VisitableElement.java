@@ -17,29 +17,36 @@
 package edu.kit.datamanager.idoris.domain;
 
 import edu.kit.datamanager.idoris.visitors.Visitor;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class VisitableElement {
-    private final List<Visitor<?>> visitedBy = new ArrayList<>();
+    private static final Logger LOG = LoggerFactory.getLogger(VisitableElement.class);
 
-    public void execute(Visitor<?> visitor, Object... args) {
-        visitedBy.add(visitor);
-        accept(visitor, args);
+//    private final Set<String> visitedBy = new HashSet<>();
+
+    public <T> T execute(Visitor<T> visitor, Object... args) {
+//        if (isVisitedBy(visitor)) {
+//            LOG.info("Class {} already visited by visitor {}. ABORTING!", this.getClass().getName(), visitor.getClass().getName());
+//            return null;
+//        } else {
+        LOG.info("Visiting class {} with visitor {}", this.getClass().getName(), visitor.getClass().getName());
+//            visitedBy.add(visitor.getClass().getName());
+        return accept(visitor, args);
+//        }
     }
 
-    protected abstract void accept(Visitor<?> visitor, Object... args);
+    protected abstract <T> T accept(Visitor<T> visitor, Object... args);
 
-    boolean isVisitedBy(Visitor<?> visitor) {
-        return visitedBy.contains(visitor);
-    }
-
-    List<Visitor<?>> getVisitedBy() {
-        return visitedBy;
-    }
-
-    void clearVisitedBy() {
-        visitedBy.clear();
-    }
+//    boolean isVisitedBy(Visitor<?> visitor) {
+//        return visitedBy.contains(visitor.getClass().getName());
+//    }
+//
+//    Set<String> getVisitedBy() {
+//        return visitedBy;
+//    }
+//
+//    void clearVisitedBy() {
+//        visitedBy.clear();
+//    }
 }
