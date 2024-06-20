@@ -30,15 +30,43 @@ import java.util.Map;
 
 @Log
 public class SubSchemaRelationValidator implements Visitor<ValidationResult> {
+    Map<String, ValidationResult> cache = new HashMap<>();
+
+    @Override
+    public ValidationResult visit(AttributeReference attributeReference, Object... args) {
+        ValidationResult result;
+        if ((result = checkCache(attributeReference.getId())) != null) return result;
+
+        log.info("Redirecting from AttributeReference " + attributeReference.getId() + " to Attribute " + attributeReference.getAttribute().getId());
+        return save(attributeReference.getId(), attributeReference.getAttribute().execute(this, args));
+    }
+
+    @Override
+    public ValidationResult visit(ProfileAttribute profileAttribute, Object... args) {
+        ValidationResult result;
+        if ((result = checkCache(profileAttribute.getId())) != null) return result;
+        log.info("Redirecting from ProfileAttribute " + profileAttribute.getId() + " to DataType " + profileAttribute.getDataType().getPid());
+        return save(profileAttribute.getId(), profileAttribute.getDataType().execute(this, args));
+    }
 
     @Override
     public ValidationResult visit(Attribute attribute, Object... args) {
-        return notAllowed(attribute);
+        ValidationResult result;
+        if ((result = checkCache(attribute.getId())) != null) return result;
+        log.info("Redirecting from Attribute " + attribute.getId() + " to DataType " + attribute.getDataType().getPid());
+        return save(attribute.getId(), attribute.getDataType().execute(this, args));
     }
 
     @Override
     public ValidationResult visit(AttributeMapping attributeMapping, Object... args) {
-        return notAllowed(attributeMapping);
+        ValidationResult result = new ValidationResult();
+        if (attributeMapping.getInput() == null && attributeMapping.getOutput() == null) return result;
+
+        Attribute input = attributeMapping.getInput();
+        Attribute output = attributeMapping.getOutput();
+        if (input != null) result.addChild(input.execute(this, args));
+        if (output != null) result.addChild(output.execute(this, args));
+        return save(attributeMapping.getId(), result);
     }
 
     @Override
@@ -49,6 +77,8 @@ public class SubSchemaRelationValidator implements Visitor<ValidationResult> {
     @Override
     public ValidationResult visit(TypeProfile typeProfile, Object... args) {
         ValidationResult result = new ValidationResult();
+        if ((result = checkCache(typeProfile.getPid())) != null) return result;
+
         if (typeProfile.getInheritsFrom().isEmpty()) {
             log.info("TypeProfile " + typeProfile.getPid() + " has no parent TypeProfiles. Skipping validation.");
             return result;
@@ -98,32 +128,49 @@ public class SubSchemaRelationValidator implements Visitor<ValidationResult> {
             }
         }
         log.info("Validation of TypeProfile " + typeProfile.getPid() + " against parent TypeProfiles completed. result=" + result);
-        return result;
+        return save(typeProfile.getPid(), result);
     }
 
     @Override
     public ValidationResult visit(Operation operation, Object... args) {
-        return notAllowed(operation);
+        ValidationResult result = new ValidationResult();
+        if ((result = checkCache(operation.getPid())) != null) return result;
+
+        for (OperationStep step : operation.getExecution()) result.addChild(step.execute(this, args));
+        AttributeReference executableOn = operation.getExecutableOn();
+        if (executableOn != null) result.addChild(executableOn.execute(this, args));
+        for (AttributeReference returns : operation.getReturns()) result.addChild(returns.execute(this, args));
+        for (AttributeReference env : operation.getEnvironment()) result.addChild(env.execute(this, args));
+        return save(operation.getPid(), result);
     }
 
     @Override
     public ValidationResult visit(OperationStep operationStep, Object... args) {
-        return notAllowed(operationStep);
+        ValidationResult result = new ValidationResult();
+        if ((result = checkCache(operationStep.getId())) != null) return result;
+
+        for (AttributeMapping input : operationStep.getAttributes()) result.addChild(input.execute(this, args));
+        for (AttributeMapping output : operationStep.getOutputs()) result.addChild(output.execute(this, args));
+        for (OperationStep step : operationStep.getSteps()) result.addChild(step.execute(this, args));
+        OperationTypeProfile otp = operationStep.getOperationTypeProfile();
+        if (otp != null) result.addChild(otp.execute(this, args));
+        Operation operation = operationStep.getOperation();
+        if (operation != null) result.addChild(operation.execute(this, args));
+        return save(operationStep.getId(), result);
     }
 
     @Override
     public ValidationResult visit(OperationTypeProfile operationTypeProfile, Object... args) {
-        return notAllowed(operationTypeProfile);
-    }
+        ValidationResult result = new ValidationResult();
+        if ((result = checkCache(operationTypeProfile.getPid())) != null) return result;
 
-    @Override
-    public ValidationResult visit(AttributeReference attributeReference, Object... args) {
-        return notAllowed(attributeReference);
-    }
-
-    @Override
-    public ValidationResult visit(ProfileAttribute profileAttribute, Object... args) {
-        return notAllowed(profileAttribute);
+        for (OperationTypeProfile parent : operationTypeProfile.getInheritsFrom())
+            result.addChild(parent.execute(this, args));
+        for (AttributeReference attribute : operationTypeProfile.getAttributes())
+            result.addChild(attribute.execute(this, args));
+        for (AttributeReference outputs : operationTypeProfile.getOutputs())
+            result.addChild(outputs.execute(this, args));
+        return save(operationTypeProfile.getPid(), result);
     }
 
     private ValidationResult notAllowed(@NotNull VisitableElement element) {
@@ -136,6 +183,20 @@ public class SubSchemaRelationValidator implements Visitor<ValidationResult> {
         result.put("this", new elementaryInformation(typeProfile.getPid(), typeProfile.getName(), typeProfile.getSubSchemaRelation()));
         result.put("parent", new elementaryInformation(parent.getPid(), parent.getName(), parent.getSubSchemaRelation()));
         result.put("otherInformation", otherInformation);
+        return result;
+    }
+
+    private ValidationResult checkCache(String id) {
+        if (cache.containsKey(id)) {
+            log.info("Cache hit for TypeProfile " + id);
+            return cache.get(id);
+        }
+        log.info("Cache miss for TypeProfile " + id);
+        return null;
+    }
+
+    private ValidationResult save(String id, ValidationResult result) {
+        cache.put(id, result);
         return result;
     }
 

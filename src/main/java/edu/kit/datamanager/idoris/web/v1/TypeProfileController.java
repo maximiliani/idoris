@@ -56,7 +56,7 @@ public class TypeProfileController {
         if (result.isValid()) {
             return ResponseEntity.ok(result);
         } else {
-            return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT).body(result);
+            return ResponseEntity.status(218).body(result);
         }
     }
 
