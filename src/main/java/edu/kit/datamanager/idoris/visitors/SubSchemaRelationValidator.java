@@ -76,8 +76,9 @@ public class SubSchemaRelationValidator implements Visitor<ValidationResult> {
 
     @Override
     public ValidationResult visit(TypeProfile typeProfile, Object... args) {
-        ValidationResult result = new ValidationResult();
+        ValidationResult result;
         if ((result = checkCache(typeProfile.getPid())) != null) return result;
+        else result = new ValidationResult();
 
         if (typeProfile.getInheritsFrom().isEmpty()) {
             log.info("TypeProfile " + typeProfile.getPid() + " has no parent TypeProfiles. Skipping validation.");
@@ -133,8 +134,9 @@ public class SubSchemaRelationValidator implements Visitor<ValidationResult> {
 
     @Override
     public ValidationResult visit(Operation operation, Object... args) {
-        ValidationResult result = new ValidationResult();
+        ValidationResult result;
         if ((result = checkCache(operation.getPid())) != null) return result;
+        else result = new ValidationResult();
 
         for (OperationStep step : operation.getExecution()) result.addChild(step.execute(this, args));
         AttributeReference executableOn = operation.getExecutableOn();
@@ -146,8 +148,9 @@ public class SubSchemaRelationValidator implements Visitor<ValidationResult> {
 
     @Override
     public ValidationResult visit(OperationStep operationStep, Object... args) {
-        ValidationResult result = new ValidationResult();
+        ValidationResult result;
         if ((result = checkCache(operationStep.getId())) != null) return result;
+        else result = new ValidationResult();
 
         for (AttributeMapping input : operationStep.getAttributes()) result.addChild(input.execute(this, args));
         for (AttributeMapping output : operationStep.getOutputs()) result.addChild(output.execute(this, args));
@@ -161,8 +164,9 @@ public class SubSchemaRelationValidator implements Visitor<ValidationResult> {
 
     @Override
     public ValidationResult visit(OperationTypeProfile operationTypeProfile, Object... args) {
-        ValidationResult result = new ValidationResult();
+        ValidationResult result;
         if ((result = checkCache(operationTypeProfile.getPid())) != null) return result;
+        else result = new ValidationResult();
 
         for (OperationTypeProfile parent : operationTypeProfile.getInheritsFrom())
             result.addChild(parent.execute(this, args));

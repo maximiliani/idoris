@@ -18,6 +18,7 @@ package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.VisitableElement;
 import edu.kit.datamanager.idoris.visitors.Visitor;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public final class Attribute extends VisitableElement {
     private String id;
 
     @Relationship(value = "dataType", direction = Relationship.Direction.OUTGOING)
+    @NotNull
     private DataType dataType;
 
     private String name;
