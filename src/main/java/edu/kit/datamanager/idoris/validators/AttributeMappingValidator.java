@@ -19,14 +19,13 @@ package edu.kit.datamanager.idoris.validators;
 import edu.kit.datamanager.idoris.dao.ITypeProfileDao;
 import edu.kit.datamanager.idoris.domain.entities.AttributeMapping;
 import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import lombok.AllArgsConstructor;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
-@Component("beforeSaveAttributeMappingValidator")
+//@Component("beforeSaveAttributeMappingValidator")
+@AllArgsConstructor
 public class AttributeMappingValidator implements Validator {
-    @Autowired
     ITypeProfileDao typeProfileDao;
 
     @Override

@@ -153,7 +153,7 @@ public class SubSchemaRelationValidator implements Visitor<ValidationResult> {
         else result = new ValidationResult();
 
         for (AttributeMapping input : operationStep.getAttributes()) result.addChild(input.execute(this, args));
-        for (AttributeMapping output : operationStep.getOutputs()) result.addChild(output.execute(this, args));
+        for (AttributeMapping output : operationStep.getOutput()) result.addChild(output.execute(this, args));
         for (OperationStep step : operationStep.getSteps()) result.addChild(step.execute(this, args));
         OperationTypeProfile otp = operationStep.getOperationTypeProfile();
         if (otp != null) result.addChild(otp.execute(this, args));
