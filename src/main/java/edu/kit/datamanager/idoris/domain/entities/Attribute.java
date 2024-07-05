@@ -38,12 +38,13 @@ public final class Attribute extends VisitableElement {
     @GeneratedValue
     private String id;
 
+    private String name;
+    private String description;
+
+
     @Relationship(value = "dataType", direction = Relationship.Direction.OUTGOING)
     @NotNull
     private DataType dataType;
-
-    private String name;
-    private String description;
 
     @Override
     protected <T> T accept(Visitor<T> visitor, Object... args) {

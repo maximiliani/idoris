@@ -34,6 +34,8 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OperationTypeProfile extends GenericIDORISEntity {
+    private String name;
+    private String description;
 
     @Relationship(value = "inheritsFrom", direction = Relationship.Direction.OUTGOING)
     private Set<OperationTypeProfile> inheritsFrom;
@@ -47,8 +49,6 @@ public class OperationTypeProfile extends GenericIDORISEntity {
     @Relationship(value = "adapters", direction = Relationship.Direction.OUTGOING)
     private Set<FDO> adapters;
 
-    private String name;
-    private String description;
 
     @Override
     protected <T> T accept(Visitor<T> visitor, Object... args) {

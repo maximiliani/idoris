@@ -38,11 +38,11 @@ public class AttributeMapping extends VisitableElement implements Serializable {
     @Id
     @GeneratedValue
     private String id;
+    private String name;
 
     @Relationship(value = "input", direction = Relationship.Direction.INCOMING)
     private Attribute input;
 
-    private String name;
     private String value;
     private Integer index;
 

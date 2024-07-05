@@ -22,7 +22,6 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
 
-//@Component("beforeSaveOperationValidator")
 public class OperationValidator implements Validator {
     private final Validator operationStepValidator;
 
@@ -56,7 +55,7 @@ public class OperationValidator implements Validator {
         }
 
         if (operation.getExecution() == null || operation.getExecution().isEmpty()) {
-            errors.rejectValue("execution", "execution.empty", "You MUST specify the steps of the operation.");
+            errors.rejectValue("execution", "execution.empty", "You MUST specify at least one execution step for a valid operation.");
         }
 
         try {

@@ -17,10 +17,11 @@
 package edu.kit.datamanager.idoris.validators;
 
 import edu.kit.datamanager.idoris.domain.entities.OperationStep;
+import lombok.extern.java.Log;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
-//@Component("beforeSaveOperationStepValidator")
+@Log
 public class OperationStepValidator implements Validator {
     @Override
     public boolean supports(Class<?> clazz) {
@@ -30,28 +31,19 @@ public class OperationStepValidator implements Validator {
     @Override
     public void validate(Object target, Errors errors) {
         OperationStep operationStep = (OperationStep) target;
-        System.out.println("OperationStepValidator.validate");
-        System.out.println(operationStep);
+        log.info("Validating operation step: " + operationStep);
 
-//        ValidationUtils.rejectIfEmptyOrWhitespace(errors, "title", "field.required", "For better human readability and understanding, you MUST provide a name for the operation step.");
-//        ValidationUtils.rejectIfEmpty(errors, "executionOrderIndex", "field.required", "You MUST specify the execution order index of the operation step. It must be a non-negative integer.");
-//        ValidationUtils.rejectIfEmpty(errors, "mode", "field.required", "You MUST specify the mode of the operation step.");
-
-        if (operationStep.getTitle() == null || operationStep.getTitle().isEmpty()) {
-            errors.rejectValue(null, "title.unspecified", "For better human readability and understanding, you MUST provide a title for the operation step.");
+        if (operationStep.getName() == null || operationStep.getName().isEmpty()) {
+            errors.rejectValue(null, "name.unspecified", "For better human readability and understanding, you MUST provide a name for the operation step.");
         }
 
         if (operationStep.getExecutionOrderIndex() == null || operationStep.getExecutionOrderIndex() < 0) {
-            System.out.println("OperationStepValidator.validate: executionOrderIndex is null or negative: " + operationStep.getExecutionOrderIndex());
-            errors.rejectValue(
-                    null,
-                    "executionOrderIndex.unspecified",
-                    "You MUST specify the execution order index of the operation step. It must be a non-negative integer.");
+            errors.rejectValue(null, "executionOrderIndex.unspecified", "You MUST specify the execution order index of the operation step. It must be a non-negative integer.");
         }
 
-//        if (operationStep.getMode() == null) {
-//            errors.rejectValue("mode", "mode.empty", "You MUST specify the mode of the operation step.");
-//        }
+        if (operationStep.getMode() == null) {
+            errors.rejectValue(null, "mode.empty", "You MUST specify the mode of the operation step.");
+        }
 
         if (operationStep.getOperation() == null && operationStep.getOperationTypeProfile() == null) {
             errors.rejectValue(null, "operation.unspecified", "You MUST specify an operation or an operation type profile which is executed in this operation step.");

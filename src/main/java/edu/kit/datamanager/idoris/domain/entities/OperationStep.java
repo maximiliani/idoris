@@ -50,7 +50,7 @@ public class OperationStep extends VisitableElement implements Serializable {
     private Integer executionOrderIndex;
 
     @NotBlank(message = "For better human readability, please provide a title for the operation step.")
-    private String title;
+    private String name;
 
     @NotNull(message = "An execution mode must be specified. Default is synchronous execution.")
     private ExecutionMode mode = ExecutionMode.sync;
@@ -80,7 +80,7 @@ public class OperationStep extends VisitableElement implements Serializable {
         return "OperationStep{" +
                 "id=" + id +
                 ", executionOrderIndex=" + executionOrderIndex +
-                ", title='" + title + '\'' +
+                ", name='" + name + '\'' +
                 ", mode=" + mode +
                 ", steps=" + steps +
                 ", operation=" + operation +
