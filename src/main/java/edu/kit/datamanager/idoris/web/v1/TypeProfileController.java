@@ -19,8 +19,8 @@ package edu.kit.datamanager.idoris.web.v1;
 import edu.kit.datamanager.idoris.dao.IDataTypeDao;
 import edu.kit.datamanager.idoris.dao.IOperationDao;
 import edu.kit.datamanager.idoris.dao.ITypeProfileDao;
+import edu.kit.datamanager.idoris.domain.entities.Attribute;
 import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
-import edu.kit.datamanager.idoris.domain.relationships.ProfileAttribute;
 import edu.kit.datamanager.idoris.visitors.SubSchemaRelationValidator;
 import edu.kit.datamanager.idoris.visitors.ValidationResult;
 import jakarta.validation.constraints.NotNull;
@@ -63,13 +63,13 @@ public class TypeProfileController {
     @GetMapping("typeProfiles/{pid}/attributes")
     public ResponseEntity<?> getAttributes(@PathVariable("pid") String pid) {
         TypeProfile typeProfile = typeProfileDao.findById(pid).orElseThrow();
-        List<EntityModel<ProfileAttribute>> attributes = new ArrayList<>();
+        List<EntityModel<Attribute>> attributes = new ArrayList<>();
         typeProfile.getAttributes().forEach(profileAttribute -> {
-            EntityModel<ProfileAttribute> attribute = EntityModel.of(profileAttribute);
+            EntityModel<Attribute> attribute = EntityModel.of(profileAttribute);
             attribute.add(linkTo(IDataTypeDao.class).slash("api").slash("dataTypes").slash(profileAttribute.getDataType().getPid()).withRel("dataType"));
             attributes.add(attribute);
         });
-        CollectionModel<EntityModel<ProfileAttribute>> resources = CollectionModel.of(attributes);
+        CollectionModel<EntityModel<Attribute>> resources = CollectionModel.of(attributes);
         resources.add(linkTo(TypeProfileController.class).slash("api").slash("typeProfiles").slash(pid).slash("attributes").withSelfRel());
         resources.add(linkTo(ITypeProfileDao.class).slash("api").slash("typeProfiles").slash(pid).withRel("typeProfile"));
         return ResponseEntity.ok(resources);
@@ -78,15 +78,15 @@ public class TypeProfileController {
     @GetMapping("typeProfiles/{pid}/inheritedAttributes")
     public ResponseEntity<?> getInheritedAttributes(@PathVariable("pid") String pid) throws NoSuchMethodException {
         Iterable<TypeProfile> inheritanceChain = typeProfileDao.findAllTypeProfilesInInheritanceChain(pid);
-        List<EntityModel<ProfileAttribute>> attributes = new ArrayList<>();
+        List<EntityModel<Attribute>> attributes = new ArrayList<>();
         inheritanceChain.forEach(typeProfile -> {
             typeProfileDao.findById(typeProfile.getPid()).orElseThrow().getAttributes().forEach(profileAttribute -> {
-                EntityModel<ProfileAttribute> attribute = EntityModel.of(profileAttribute);
+                EntityModel<Attribute> attribute = EntityModel.of(profileAttribute);
                 attribute.add(linkTo(IDataTypeDao.class).slash("api").slash("dataTypes").slash(profileAttribute.getDataType().getPid()).withRel("dataType"));
                 attributes.add(attribute);
             });
         });
-        CollectionModel<EntityModel<ProfileAttribute>> resources = CollectionModel.of(attributes);
+        CollectionModel<EntityModel<Attribute>> resources = CollectionModel.of(attributes);
         resources.add(linkTo(TypeProfileController.class).slash("api").slash("typeProfiles").slash(pid).slash("inheritedAttributes").withSelfRel());
         resources.add(linkTo(ITypeProfileDao.class).slash("api").slash("typeProfiles").slash(pid).withRel("typeProfile"));
         return ResponseEntity.ok(resources);
@@ -100,9 +100,9 @@ public class TypeProfileController {
     }
 
     private EntityModel<TypeProfileInheritanceDTO> buildInheritanceTree(TypeProfile typeProfile) {
-        List<EntityModel<ProfileAttribute>> attributes = new ArrayList<>();
+        List<EntityModel<Attribute>> attributes = new ArrayList<>();
         typeProfile.getAttributes().forEach(profileAttribute -> {
-            EntityModel<ProfileAttribute> attribute = EntityModel.of(profileAttribute);
+            EntityModel<Attribute> attribute = EntityModel.of(profileAttribute);
             attribute.add(linkTo(IDataTypeDao.class).slash("api").slash("dataTypes").slash(profileAttribute.getDataType().getPid()).withRel("dataType"));
             attributes.add(attribute);
         });
@@ -158,7 +158,7 @@ public class TypeProfileController {
             String pid,
             String name,
             String description,
-            CollectionModel<EntityModel<ProfileAttribute>> attributes,
+            CollectionModel<EntityModel<Attribute>> attributes,
             CollectionModel<EntityModel<TypeProfileInheritanceDTO>> inheritsFrom) {
     }
 }

@@ -19,8 +19,6 @@ package edu.kit.datamanager.idoris.visitors;
 import edu.kit.datamanager.idoris.domain.VisitableElement;
 import edu.kit.datamanager.idoris.domain.entities.*;
 import edu.kit.datamanager.idoris.domain.enums.SubSchemaRelation;
-import edu.kit.datamanager.idoris.domain.relationships.AttributeReference;
-import edu.kit.datamanager.idoris.domain.relationships.ProfileAttribute;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.java.Log;
 
@@ -33,28 +31,11 @@ public class SubSchemaRelationValidator implements Visitor<ValidationResult> {
     Map<String, ValidationResult> cache = new HashMap<>();
 
     @Override
-    public ValidationResult visit(AttributeReference attributeReference, Object... args) {
-        ValidationResult result;
-        if ((result = checkCache(attributeReference.getId())) != null) return result;
-
-        log.info("Redirecting from AttributeReference " + attributeReference.getId() + " to Attribute " + attributeReference.getAttribute().getId());
-        return save(attributeReference.getId(), attributeReference.getAttribute().execute(this, args));
-    }
-
-    @Override
-    public ValidationResult visit(ProfileAttribute profileAttribute, Object... args) {
-        ValidationResult result;
-        if ((result = checkCache(profileAttribute.getId())) != null) return result;
-        log.info("Redirecting from ProfileAttribute " + profileAttribute.getId() + " to DataType " + profileAttribute.getDataType().getPid());
-        return save(profileAttribute.getId(), profileAttribute.getDataType().execute(this, args));
-    }
-
-    @Override
     public ValidationResult visit(Attribute attribute, Object... args) {
         ValidationResult result;
-        if ((result = checkCache(attribute.getId())) != null) return result;
-        log.info("Redirecting from Attribute " + attribute.getId() + " to DataType " + attribute.getDataType().getPid());
-        return save(attribute.getId(), attribute.getDataType().execute(this, args));
+        if ((result = checkCache(attribute.getPid())) != null) return result;
+        log.info("Redirecting from Attribute " + attribute.getPid() + " to DataType " + attribute.getDataType().getPid());
+        return save(attribute.getPid(), attribute.getDataType().execute(this, args));
     }
 
     @Override
@@ -101,8 +82,8 @@ public class SubSchemaRelationValidator implements Visitor<ValidationResult> {
                     log.info("TypeProfile " + typeProfile.getPid() + " meets all requirements.");
                     break;
                 case requireAllProperties:
-                    for (ProfileAttribute attribute : parent.getAttributes()) {
-                        List<ProfileAttribute> undefinedAttributes = typeProfile.getAttributes().stream().filter(a -> a.getDataType().equals(attribute.getDataType())).toList();
+                    for (Attribute attribute : parent.getAttributes()) {
+                        List<Attribute> undefinedAttributes = typeProfile.getAttributes().stream().filter(a -> a.getDataType().equals(attribute.getDataType())).toList();
                         if (!undefinedAttributes.isEmpty()) {
                             result.addMessage("TypeProfile " + typeProfile.getPid() + " does not define all properties defined in the TypeProfile " + parent.getPid() + " that requires all properties.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, Map.of("numberOfUndefinedAttributes", undefinedAttributes.size(), "undefinedAttributes", undefinedAttributes)), ValidationResult.ValidationMessage.MessageType.ERROR);
                         }
@@ -119,7 +100,7 @@ public class SubSchemaRelationValidator implements Visitor<ValidationResult> {
                     }
                     break;
                 case requireNoneOfProperties:
-                    List<ProfileAttribute> illegallyDefinedAttributes = typeProfile.getAttributes().stream().filter(a -> parent.getAttributes().stream().anyMatch(pa -> pa.getDataType().equals(a.getDataType()))).toList();
+                    List<Attribute> illegallyDefinedAttributes = typeProfile.getAttributes().stream().filter(a -> parent.getAttributes().stream().anyMatch(pa -> pa.getDataType().equals(a.getDataType()))).toList();
                     if (!illegallyDefinedAttributes.isEmpty()) {
                         result.addMessage("TypeProfile " + typeProfile.getPid() + " defines a property defined in the TypeProfile " + parent.getPid() + " that requires no property.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, Map.of("numberOfIllegallyDefinedAttributes", illegallyDefinedAttributes.size(), "illegallyDefinedAttributes", illegallyDefinedAttributes)), ValidationResult.ValidationMessage.MessageType.ERROR);
                     }
@@ -139,10 +120,10 @@ public class SubSchemaRelationValidator implements Visitor<ValidationResult> {
         else result = new ValidationResult();
 
         for (OperationStep step : operation.getExecution()) result.addChild(step.execute(this, args));
-        AttributeReference executableOn = operation.getExecutableOn();
+        Attribute executableOn = operation.getExecutableOn();
         if (executableOn != null) result.addChild(executableOn.execute(this, args));
-        for (AttributeReference returns : operation.getReturns()) result.addChild(returns.execute(this, args));
-        for (AttributeReference env : operation.getEnvironment()) result.addChild(env.execute(this, args));
+        for (Attribute returns : operation.getReturns()) result.addChild(returns.execute(this, args));
+        for (Attribute env : operation.getEnvironment()) result.addChild(env.execute(this, args));
         return save(operation.getPid(), result);
     }
 
@@ -170,9 +151,9 @@ public class SubSchemaRelationValidator implements Visitor<ValidationResult> {
 
         for (OperationTypeProfile parent : operationTypeProfile.getInheritsFrom())
             result.addChild(parent.execute(this, args));
-        for (AttributeReference attribute : operationTypeProfile.getAttributes())
+        for (Attribute attribute : operationTypeProfile.getAttributes())
             result.addChild(attribute.execute(this, args));
-        for (AttributeReference outputs : operationTypeProfile.getOutputs())
+        for (Attribute outputs : operationTypeProfile.getOutputs())
             result.addChild(outputs.execute(this, args));
         return save(operationTypeProfile.getPid(), result);
     }

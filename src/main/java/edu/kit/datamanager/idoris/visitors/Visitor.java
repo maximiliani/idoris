@@ -17,8 +17,6 @@
 package edu.kit.datamanager.idoris.visitors;
 
 import edu.kit.datamanager.idoris.domain.entities.*;
-import edu.kit.datamanager.idoris.domain.relationships.AttributeReference;
-import edu.kit.datamanager.idoris.domain.relationships.ProfileAttribute;
 
 public interface Visitor<T> {
     T visit(Attribute attribute, Object... args);
@@ -34,8 +32,4 @@ public interface Visitor<T> {
     T visit(OperationStep operationStep, Object... args);
 
     T visit(OperationTypeProfile operationTypeProfile, Object... args);
-
-    T visit(AttributeReference attributeReference, Object... args);
-
-    T visit(ProfileAttribute profileAttribute, Object... args);
 }

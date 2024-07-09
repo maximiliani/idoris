@@ -16,20 +16,16 @@
 
 package edu.kit.datamanager.idoris.validators;
 
-import edu.kit.datamanager.idoris.dao.ITypeProfileDao;
+import edu.kit.datamanager.idoris.domain.entities.Attribute;
 import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
-import edu.kit.datamanager.idoris.domain.relationships.ProfileAttribute;
 import lombok.AllArgsConstructor;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
 import java.util.List;
 
-//@Component("beforeSaveTypeProfileValidator")
 @AllArgsConstructor
 public class TypeProfileValidator implements Validator {
-    //    @Autowired
-    ITypeProfileDao typeProfileDao;
 
     @Override
     public boolean supports(Class<?> clazz) {
@@ -57,7 +53,7 @@ public class TypeProfileValidator implements Validator {
 
     private record ValidationDTO(
             TypeProfile self,
-            List<ProfileAttribute> inheritedAttributes,
+            List<Attribute> inheritedAttributes,
             List<ValidationDTO> validatedParents
     ) {
     }

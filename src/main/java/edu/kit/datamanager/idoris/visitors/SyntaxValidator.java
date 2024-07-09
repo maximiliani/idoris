@@ -17,8 +17,6 @@
 package edu.kit.datamanager.idoris.visitors;
 
 import edu.kit.datamanager.idoris.domain.entities.*;
-import edu.kit.datamanager.idoris.domain.relationships.AttributeReference;
-import edu.kit.datamanager.idoris.domain.relationships.ProfileAttribute;
 import lombok.extern.java.Log;
 
 import java.util.HashMap;
@@ -31,7 +29,7 @@ public class SyntaxValidator implements Visitor<ValidationResult> {
     @Override
     public ValidationResult visit(Attribute attribute, Object... args) {
         ValidationResult result;
-        if ((result = checkCache(attribute.getId())) != null) return result;
+        if ((result = checkCache(attribute.getPid())) != null) return result;
         else result = new ValidationResult();
 
         return result;
@@ -81,22 +79,6 @@ public class SyntaxValidator implements Visitor<ValidationResult> {
     public ValidationResult visit(OperationTypeProfile operationTypeProfile, Object... args) {
         ValidationResult result;
         if ((result = checkCache(operationTypeProfile.getPid())) != null) return result;
-        else result = new ValidationResult();
-        return result;
-    }
-
-    @Override
-    public ValidationResult visit(AttributeReference attributeReference, Object... args) {
-        ValidationResult result;
-        if ((result = checkCache(attributeReference.getId())) != null) return result;
-        else result = new ValidationResult();
-        return result;
-    }
-
-    @Override
-    public ValidationResult visit(ProfileAttribute profileAttribute, Object... args) {
-        ValidationResult result;
-        if ((result = checkCache(profileAttribute.getId())) != null) return result;
         else result = new ValidationResult();
         return result;
     }

@@ -17,8 +17,6 @@
 package edu.kit.datamanager.idoris.visitors;
 
 import edu.kit.datamanager.idoris.domain.entities.*;
-import edu.kit.datamanager.idoris.domain.relationships.AttributeReference;
-import edu.kit.datamanager.idoris.domain.relationships.ProfileAttribute;
 
 public class AttributeOverlapValidator implements Visitor<ValidationResult> {
     @Override
@@ -53,16 +51,6 @@ public class AttributeOverlapValidator implements Visitor<ValidationResult> {
 
     @Override
     public ValidationResult visit(OperationTypeProfile operationTypeProfile, Object... args) {
-        return null;
-    }
-
-    @Override
-    public ValidationResult visit(AttributeReference attributeReference, Object... args) {
-        return null;
-    }
-
-    @Override
-    public ValidationResult visit(ProfileAttribute profileAttribute, Object... args) {
         return null;
     }
 }

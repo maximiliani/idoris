@@ -43,6 +43,7 @@ public class AttributeMapping extends VisitableElement implements Serializable {
     @Relationship(value = "input", direction = Relationship.Direction.INCOMING)
     private Attribute input;
 
+    private String replaceCharactersInValueWithInput = "${{input}}";
     private String value;
     private Integer index;
 

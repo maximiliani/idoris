@@ -17,7 +17,6 @@
 package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
-import edu.kit.datamanager.idoris.domain.relationships.AttributeReference;
 import edu.kit.datamanager.idoris.visitors.Visitor;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -46,11 +45,11 @@ public class Operation extends GenericIDORISEntity {
 
     @Relationship(value = "executableOn", direction = Relationship.Direction.OUTGOING)
     @NotNull(message = "Please specify the data type on which the operation can be executed.")
-    private AttributeReference executableOn;
+    private Attribute executableOn;
     @Relationship(value = "returns", direction = Relationship.Direction.INCOMING)
-    private Set<AttributeReference> returns;
+    private Set<Attribute> returns;
     @Relationship(value = "environment", direction = Relationship.Direction.INCOMING)
-    private Set<AttributeReference> environment;
+    private Set<Attribute> environment;
 
     @Relationship(value = "execution", direction = Relationship.Direction.OUTGOING)
     @NotNull(message = "Please specify the steps of the operation.")

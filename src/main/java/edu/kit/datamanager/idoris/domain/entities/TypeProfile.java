@@ -17,7 +17,6 @@
 package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.enums.SubSchemaRelation;
-import edu.kit.datamanager.idoris.domain.relationships.ProfileAttribute;
 import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -39,7 +38,7 @@ public final class TypeProfile extends DataType {
     private Set<TypeProfile> inheritsFrom;
 
     @Relationship(value = "attributes", direction = Relationship.Direction.OUTGOING)
-    private Set<ProfileAttribute> attributes;
+    private Set<Attribute> attributes;
 
     private boolean isEmbeddable = true;
     private boolean isAbstract = false;
