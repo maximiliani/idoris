@@ -17,19 +17,53 @@
 package edu.kit.datamanager.idoris.visitors;
 
 import edu.kit.datamanager.idoris.domain.entities.*;
+import lombok.extern.java.Log;
 
-public interface Visitor<T> {
-    T visit(Attribute attribute, Object... args);
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-    T visit(AttributeMapping attributeMapping, Object... args);
+@Log
+public abstract class Visitor<T> {
+    private final Set<String> visited = new HashSet<>();
+    private final Map<String, ValidationResult> cache = new HashMap<>();
 
-    T visit(BasicDataType basicDataType, Object... args);
+    public abstract T visit(Attribute attribute, Object... args);
 
-    T visit(TypeProfile typeProfile, Object... args);
+    public abstract T visit(AttributeMapping attributeMapping, Object... args);
 
-    T visit(Operation operation, Object... args);
+    public abstract T visit(BasicDataType basicDataType, Object... args);
 
-    T visit(OperationStep operationStep, Object... args);
+    public abstract T visit(TypeProfile typeProfile, Object... args);
 
-    T visit(OperationTypeProfile operationTypeProfile, Object... args);
+    public abstract T visit(Operation operation, Object... args);
+
+    public abstract T visit(OperationStep operationStep, Object... args);
+
+    public abstract T visit(OperationTypeProfile operationTypeProfile, Object... args);
+
+    protected final ValidationResult checkCache(String id) {
+        if (cache.containsKey(id)) {
+            log.info("Cache hit for " + id);
+            return cache.get(id);
+        }
+        log.info("Cache miss for " + id);
+        if (visited.contains(id)) {
+            log.info("Cycle detected for " + id);
+            return handleCircle(id);
+        } else {
+            visited.add(id);
+        }
+        return null;
+    }
+
+    protected ValidationResult handleCircle(String id) {
+        return new ValidationResult().addMessage("Cycle detected for " + id, ValidationResult.ValidationMessage.MessageType.ERROR);
+    }
+
+    protected final ValidationResult save(String id, ValidationResult result) {
+        cache.put(id, result);
+        return result;
+    }
 }

@@ -27,8 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 @Log
-public class SubSchemaRelationValidator implements Visitor<ValidationResult> {
-    Map<String, ValidationResult> cache = new HashMap<>();
+public class SubSchemaRelationValidator extends Visitor<ValidationResult> {
 
     @Override
     public ValidationResult visit(Attribute attribute, Object... args) {
@@ -168,20 +167,6 @@ public class SubSchemaRelationValidator implements Visitor<ValidationResult> {
         result.put("this", new elementaryInformation(typeProfile.getPid(), typeProfile.getName(), typeProfile.getSubSchemaRelation()));
         result.put("parent", new elementaryInformation(parent.getPid(), parent.getName(), parent.getSubSchemaRelation()));
         result.put("otherInformation", otherInformation);
-        return result;
-    }
-
-    private ValidationResult checkCache(String id) {
-        if (cache.containsKey(id)) {
-            log.info("Cache hit for TypeProfile " + id);
-            return cache.get(id);
-        }
-        log.info("Cache miss for TypeProfile " + id);
-        return null;
-    }
-
-    private ValidationResult save(String id, ValidationResult result) {
-        cache.put(id, result);
         return result;
     }
 

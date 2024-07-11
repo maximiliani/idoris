@@ -18,7 +18,7 @@ package edu.kit.datamanager.idoris.visitors;
 
 import edu.kit.datamanager.idoris.domain.entities.*;
 
-public class AttributeOverlapValidator implements Visitor<ValidationResult> {
+public class AttributeOverlapValidator extends Visitor<ValidationResult> {
     @Override
     public ValidationResult visit(Attribute attribute, Object... args) {
         return null;

@@ -43,8 +43,10 @@ public final class BasicDataType extends DataType {
     private String unitSymbol;
     private String definedBy;
     private String standard_uncertainty;
+
     private String restrictions;
     private String regex;
+    // TODO: Make this an enum
     private String regexFlavour = "ecma-262-RegExp";
 
     @Property("enum")
@@ -60,6 +62,7 @@ public final class BasicDataType extends DataType {
     public enum Category {
         MeasurementUnit("Measurement Unit"),
         Format("Format"),
+        Enumeration("Enumeration"),
         CharacterSet("Character Set"),
         Encoding("Encoding"),
         Other("Other");

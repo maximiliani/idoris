@@ -31,16 +31,19 @@ public class ValidationResult {
     private List<ValidationMessage> messages = new ArrayList<>();
     private List<ValidationResult> children = new ArrayList<>();
 
-    public void addMessage(String message, ValidationMessage.MessageType type) {
+    public ValidationResult addMessage(String message, ValidationMessage.MessageType type) {
         messages.add(new ValidationMessage(message, type));
+        return this;
     }
 
-    public void addMessage(String message, Object element, ValidationMessage.MessageType type) {
+    public ValidationResult addMessage(String message, Object element, ValidationMessage.MessageType type) {
         messages.add(new ValidationMessage(message, element, type));
+        return this;
     }
 
-    public void addChild(ValidationResult child) {
+    public ValidationResult addChild(ValidationResult child) {
         if (child != null) children.add(child);
+        return this;
     }
 
     public boolean isValid() {

@@ -20,10 +20,13 @@ import edu.kit.datamanager.idoris.visitors.Visitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+
 public abstract class VisitableElement {
     private static final Logger LOG = LoggerFactory.getLogger(VisitableElement.class);
-
-//    private final Set<String> visitedBy = new HashSet<>();
+    private final Map<String, Instant> visitedBy = new HashMap<>();
 
     public <T> T execute(Visitor<T> visitor, Object... args) {
 //        if (isVisitedBy(visitor)) {
@@ -31,22 +34,22 @@ public abstract class VisitableElement {
 //            return null;
 //        } else {
         LOG.info("Visiting class {} with visitor {}", this.getClass().getName(), visitor.getClass().getName());
-//            visitedBy.add(visitor.getClass().getName());
+        visitedBy.put(visitor.getClass().getName(), Instant.now());
         return accept(visitor, args);
 //        }
     }
 
     protected abstract <T> T accept(Visitor<T> visitor, Object... args);
 
-//    boolean isVisitedBy(Visitor<?> visitor) {
-//        return visitedBy.contains(visitor.getClass().getName());
-//    }
-//
-//    Set<String> getVisitedBy() {
-//        return visitedBy;
-//    }
-//
-//    void clearVisitedBy() {
-//        visitedBy.clear();
-//    }
+    public Instant wasVisistedBy(Visitor<?> visitor) {
+        return visitedBy.get(visitor.getClass().getName());
+    }
+
+    public void clearVisitedByAll() {
+        visitedBy.clear();
+    }
+
+    public void clearVisitedBy(Visitor<?> visitor) {
+        visitedBy.remove(visitor.getClass().getName());
+    }
 }

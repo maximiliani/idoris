@@ -39,11 +39,16 @@ import java.util.List;
         @JsonSubTypes.Type(value = TypeProfile.class, name = "TypeProfile"),
 })
 public abstract sealed class DataType extends GenericIDORISEntity permits BasicDataType, TypeProfile {
-    private String type;
+    private TYPES type;
     private String name;
     private String description;
     private List<String> expectedUses;
 
     @Property("default")
     private String defaultValue;
+
+    public enum TYPES {
+        BasicDataType,
+        TypeProfile
+    }
 }
