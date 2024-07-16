@@ -14,27 +14,20 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.visitors;
+package edu.kit.datamanager.idoris.validators;
 
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
 public class ValidationResult {
     private List<ValidationMessage> messages = new ArrayList<>();
     private List<ValidationResult> children = new ArrayList<>();
-
-//    public ValidationResult addMessage(String message, ValidationMessage.MessageSeverity type) {
-//        messages.add(new ValidationMessage(message, type));
-//        return this;
-//    }
 
     public ValidationResult addMessage(String message, Object element, ValidationMessage.MessageSeverity type) {
         messages.add(new ValidationMessage(message, element, type));
@@ -47,21 +40,25 @@ public class ValidationResult {
     }
 
     public boolean isValid() {
-        boolean noErrorMessages = messages.stream().noneMatch(m -> m.getSeverity() == ValidationMessage.MessageSeverity.ERROR);
+        boolean noErrorMessages = messages.stream().noneMatch(m -> m.severity() == ValidationMessage.MessageSeverity.ERROR);
         boolean childrenValid = children.stream().allMatch(ValidationResult::isValid);
         return noErrorMessages && childrenValid;
     }
 
     public int getErrorCount() {
-        int ownErrors = (int) messages.stream().filter(m -> m.getSeverity() == ValidationMessage.MessageSeverity.ERROR).count();
+        int ownErrors = (int) messages.stream().filter(m -> m.severity() == ValidationMessage.MessageSeverity.ERROR).count();
         int childErrors = children.stream().mapToInt(ValidationResult::getErrorCount).sum();
         return ownErrors + childErrors;
     }
 
     public int getWarningCount() {
-        int ownWarnings = (int) messages.stream().filter(m -> m.getSeverity() == ValidationMessage.MessageSeverity.WARNING).count();
+        int ownWarnings = (int) messages.stream().filter(m -> m.severity() == ValidationMessage.MessageSeverity.WARNING).count();
         int childWarnings = children.stream().mapToInt(ValidationResult::getWarningCount).sum();
         return ownWarnings + childWarnings;
+    }
+
+    public int getInfoCount() {
+        return (int) messages.stream().filter(m -> m.severity() == ValidationMessage.MessageSeverity.INFO).count();
     }
 
     @Override
@@ -75,46 +72,24 @@ public class ValidationResult {
     }
 
     public boolean isEmpty() {
-        boolean noErrorMessages = messages.isEmpty();
-        boolean childrenEmpty = children.stream().allMatch(ValidationResult::isEmpty);
         boolean noErrors = getErrorCount() == 0;
         boolean noWarnings = getWarningCount() == 0;
-        boolean noInfo = messages.stream().noneMatch(m -> m.getSeverity() == ValidationMessage.MessageSeverity.INFO);
-        return noErrorMessages && childrenEmpty && noErrors && noWarnings;
+        boolean noInfo = getInfoCount() == 0;
+        return noErrors && noWarnings && noInfo;
     }
 
-    @Getter
-    public static final class ValidationMessage {
-        private final String message;
-        private final MessageSeverity severity;
-        private final Object element;
+    public List<ValidationMessage> getValidationMessages(ValidationMessage.MessageSeverity severity) {
+        List<ValidationMessage> result = new ArrayList<>();
+        messages.stream().filter(m -> m.severity() == severity).forEach(result::add);
+        children.stream().map(child -> child.getValidationMessages(severity)).forEach(result::addAll);
+        return result;
+    }
 
-//        public ValidationMessage(@NotEmpty String message, @NotNull ValidationResult.ValidationMessage.MessageSeverity severity) {
-//            this(message, null, severity);
-//        }
-
-        public ValidationMessage(@NotEmpty String message, Object element, @NotNull ValidationResult.ValidationMessage.MessageSeverity severity) {
-            this.message = message;
-            this.severity = severity;
-            this.element = element;
-        }
-
-        @Override
-        public String toString() {
-            return "ValidationMessage{" +
-                    "message='" + message + '\'' +
-                    ", type=" + severity +
-                    ", element=" + element +
-                    '}';
-        }
-
-        @AllArgsConstructor
-        @Getter
-        public enum MessageSeverity {
-            INFO("INFO"),
-            WARNING("WARNING"),
-            ERROR("ERROR");
-            private final String value;
-        }
+    public Map<ValidationMessage.MessageSeverity, List<ValidationMessage>> getValidationMessages() {
+        return Map.of(
+                ValidationMessage.MessageSeverity.ERROR, getValidationMessages(ValidationMessage.MessageSeverity.ERROR),
+                ValidationMessage.MessageSeverity.WARNING, getValidationMessages(ValidationMessage.MessageSeverity.WARNING),
+                ValidationMessage.MessageSeverity.INFO, getValidationMessages(ValidationMessage.MessageSeverity.INFO)
+        );
     }
 }

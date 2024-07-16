@@ -18,14 +18,15 @@ package edu.kit.datamanager.idoris.visitors;
 
 import edu.kit.datamanager.idoris.domain.entities.*;
 import edu.kit.datamanager.idoris.domain.enums.SubSchemaRelation;
+import edu.kit.datamanager.idoris.validators.ValidationResult;
 import lombok.extern.java.Log;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static edu.kit.datamanager.idoris.visitors.ValidationResult.ValidationMessage.MessageSeverity.ERROR;
-import static edu.kit.datamanager.idoris.visitors.ValidationResult.ValidationMessage.MessageSeverity.WARNING;
+import static edu.kit.datamanager.idoris.validators.ValidationMessage.MessageSeverity.ERROR;
+import static edu.kit.datamanager.idoris.validators.ValidationMessage.MessageSeverity.WARNING;
 
 @Log
 public class SubSchemaRelationValidator extends Visitor<ValidationResult> {

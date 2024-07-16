@@ -15,6 +15,7 @@
  */
 package edu.kit.datamanager.idoris.configuration;
 
+import edu.kit.datamanager.idoris.validators.ValidationMessage;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,6 +24,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
+
+import static edu.kit.datamanager.idoris.validators.ValidationMessage.MessageSeverity.INFO;
 
 /**
  * This class is used to configure the application.
@@ -38,13 +41,23 @@ import org.springframework.validation.annotation.Validated;
 @EqualsAndHashCode
 public class ApplicationProperties {
 
+    /**
+     * The policy to use for validating the input.
+     *
+     * @see ValidationPolicy
+     */
     @Value("${idoris.validation-policy}")
     @NotNull
     private ValidationPolicy validationPolicy = ValidationPolicy.LAX;
 
+    /**
+     * The lowest severity level that is shown to the user.
+     *
+     * @see ValidationMessage.MessageSeverity
+     */
     @Value("${idoris.validation-level}")
     @NotNull
-    private ValidationLevel validationLevel = ValidationLevel.INFO;
+    private ValidationMessage.MessageSeverity validationLevel = INFO;
 
     /**
      * The policy to use for validating the input.
@@ -55,17 +68,5 @@ public class ApplicationProperties {
      */
     public enum ValidationPolicy {
         STRICT, LAX
-    }
-
-    /**
-     * The lowest level of validation that should be outputted to the user.
-     * <p>
-     * The level can be either ERROR, WARNING or INFO.
-     * Error means that only errors are outputted to the user. e.g. if critical information is missing.
-     * Warning means that errors and warnings are outputted to the user. e.g. if there are minor issues with the input.
-     * Info means that errors, warnings and info messages are outputted to the user. e.g. if the input is correct but there are some additional information or small feedback that could be useful.
-     */
-    public enum ValidationLevel {
-        ERROR, WARNING, INFO
     }
 }

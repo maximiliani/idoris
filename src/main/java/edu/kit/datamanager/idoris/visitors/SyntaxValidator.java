@@ -19,11 +19,12 @@ package edu.kit.datamanager.idoris.visitors;
 import edu.kit.datamanager.idoris.domain.entities.*;
 import edu.kit.datamanager.idoris.domain.enums.PrimitiveDataTypes;
 import edu.kit.datamanager.idoris.domain.enums.SubSchemaRelation;
+import edu.kit.datamanager.idoris.validators.ValidationResult;
 import lombok.extern.java.Log;
 
 import java.util.Arrays;
 
-import static edu.kit.datamanager.idoris.visitors.ValidationResult.ValidationMessage.MessageSeverity.*;
+import static edu.kit.datamanager.idoris.validators.ValidationMessage.MessageSeverity.*;
 
 @Log
 public class SyntaxValidator extends Visitor<ValidationResult> {

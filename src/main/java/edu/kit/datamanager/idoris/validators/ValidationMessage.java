@@ -14,19 +14,25 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.visitors;
+package edu.kit.datamanager.idoris.validators;
 
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 
-import java.util.Map;
+import javax.annotation.Nullable;
 
-@Getter
-@Setter
-public class ValidationException extends IllegalArgumentException {
-    private final Map<String, ValidationResult> validationResults;
+public record ValidationMessage(@NotNull String message, @Nullable Object element, @NotNull MessageSeverity severity) {
+    @AllArgsConstructor
+    @Getter
+    public enum MessageSeverity {
+        INFO("INFO"),
+        WARNING("WARNING"),
+        ERROR("ERROR");
+        private final String value;
 
-    public ValidationException(Map<String, ValidationResult> validationResults) {
-        this.validationResults = validationResults;
+        boolean isHigherOrEqualTo(MessageSeverity other) {
+            return this.ordinal() >= other.ordinal();
+        }
     }
 }

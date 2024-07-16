@@ -18,8 +18,9 @@ package edu.kit.datamanager.idoris.visitors;
 
 import edu.kit.datamanager.idoris.domain.entities.*;
 import edu.kit.datamanager.idoris.domain.enums.Obligation;
+import edu.kit.datamanager.idoris.validators.ValidationResult;
 
-import static edu.kit.datamanager.idoris.visitors.ValidationResult.ValidationMessage.MessageSeverity.ERROR;
+import static edu.kit.datamanager.idoris.validators.ValidationMessage.MessageSeverity.ERROR;
 
 public class InheritanceValidator extends Visitor<ValidationResult> {
     @Override
@@ -101,7 +102,7 @@ public class InheritanceValidator extends Visitor<ValidationResult> {
         if ((result = checkCache(operation.getPid())) != null) return result;
         else result = new ValidationResult();
 
-        result.addChild(operation.getExecutableOn().execute(this, args));
+        if (operation.getExecutableOn() != null) result.addChild(operation.getExecutableOn().execute(this, args));
 
         for (Attribute attribute : operation.getReturns()) {
             result.addChild(attribute.execute(this, args));

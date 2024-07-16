@@ -20,13 +20,19 @@ import edu.kit.datamanager.idoris.dao.IOperationDao;
 import edu.kit.datamanager.idoris.dao.ITypeProfileDao;
 import edu.kit.datamanager.idoris.domain.VisitableElement;
 import edu.kit.datamanager.idoris.domain.entities.*;
+import edu.kit.datamanager.idoris.validators.ValidationException;
+import edu.kit.datamanager.idoris.validators.ValidationMessage;
+import edu.kit.datamanager.idoris.validators.ValidationResult;
 import edu.kit.datamanager.idoris.validators.VisitableElementValidator;
-import edu.kit.datamanager.idoris.visitors.*;
+import edu.kit.datamanager.idoris.visitors.SubSchemaRelationValidator;
+import edu.kit.datamanager.idoris.visitors.SyntaxValidator;
+import edu.kit.datamanager.idoris.visitors.Visitor;
 import io.netty.util.Attribute;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.rest.core.RepositoryConstraintViolationException;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.core.event.ValidatingRepositoryEventListener;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
@@ -75,7 +81,6 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
                 BasicDataType.class,
                 FDO.class,
                 Operation.class,
-                OperationStep.class,
                 OperationTypeProfile.class,
                 TypeProfile.class
         );
@@ -100,7 +105,6 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
             public EntityModel<TypeProfile> process(@NotNull EntityModel<TypeProfile> model) {
                 String pid = Objects.requireNonNull(model.getContent()).getPid();
                 model.add(baseLink.slash(pid).slash("validate").withRel("validate"));
-//                model.add(baseLink.slash(pid).slash("attributes").withRel("attributes"));
                 model.add(baseLink.slash(pid).slash("inheritedAttributes").withRel("inheritedAttributes"));
                 model.add(baseLink.slash(pid).slash("inheritanceTree").withRel("inheritanceTree"));
                 model.add(Link.of(linkTo(IOperationDao.class)
@@ -122,16 +126,18 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
 
                 AtomicInteger errorCount = new AtomicInteger();
                 AtomicInteger warningCount = new AtomicInteger();
+                AtomicInteger infoCount = new AtomicInteger();
 
                 Map<String, ValidationResult> results = validators.stream()
                         .map(visitor -> Map.entry(visitor.getClass().getSimpleName(), element.execute(visitor)))
+                        .filter(entry -> !entry.getValue().isEmpty())
                         .filter(entry -> {
-                            ApplicationProperties.ValidationLevel validationLevel = applicationProperties.getValidationLevel();
-                            if (validationLevel == ApplicationProperties.ValidationLevel.ERROR) {
+                            ValidationMessage.MessageSeverity validationLevel = applicationProperties.getValidationLevel();
+                            if (validationLevel == ValidationMessage.MessageSeverity.ERROR) {
                                 return entry.getValue().getErrorCount() > 0;
-                            } else if (validationLevel == ApplicationProperties.ValidationLevel.WARNING) {
+                            } else if (validationLevel == ValidationMessage.MessageSeverity.WARNING) {
                                 return entry.getValue().getErrorCount() > 0 || entry.getValue().getWarningCount() > 0;
-                            } else if (validationLevel == ApplicationProperties.ValidationLevel.INFO) {
+                            } else if (validationLevel == ValidationMessage.MessageSeverity.INFO) {
                                 return !entry.getValue().isEmpty();
                             }
                             return false;
@@ -139,16 +145,11 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
                         .peek(entry -> {
                             errorCount.addAndGet(entry.getValue().getErrorCount());
                             warningCount.addAndGet(entry.getValue().getWarningCount());
+                            infoCount.addAndGet(entry.getValue().getInfoCount());
                         })
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-//                if (errorCount.get() > 0) {
-//                    throw new ValidationException(results);
-//                }
-
-                if (errorCount.get() > 0 || warningCount.get() > 0) {
-                    return CollectionModel.of(Set.of(results, model));
-                }
+                if (!results.isEmpty()) return CollectionModel.of(Set.of(results, model));
 
             }
             return model;
@@ -158,7 +159,6 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
     @ControllerAdvice
     @Log
     public static class RestResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
-        //        @ExceptionHandler(MethodArgumentNotValidException.class)
         @Override
         protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
             String errors = ex.getAllErrors()
@@ -180,10 +180,15 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
         }
 
         @ExceptionHandler
-        public ResponseEntity<?> handle(ValidationException exception, WebRequest request) {
-//            if (!request.getMethod().equalsIgnoreCase("GET"))
-//            return handleExceptionInternal(exception, exception.getValidationResult(), new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+        public ResponseEntity<?> handle(ValidationException exception) {
             return new ResponseEntity<>(exception.getValidationResults(), HttpStatus.BAD_REQUEST);
+        }
+
+        @ExceptionHandler({RepositoryConstraintViolationException.class})
+        public ResponseEntity<Object> handleAccessDeniedException(Exception ex, WebRequest request) {
+            RepositoryConstraintViolationException nevEx = (RepositoryConstraintViolationException) ex;
+
+            return new ResponseEntity<>(nevEx.getErrors().getAllErrors(), new HttpHeaders(), HttpStatus.NOT_ACCEPTABLE);
         }
     }
 }

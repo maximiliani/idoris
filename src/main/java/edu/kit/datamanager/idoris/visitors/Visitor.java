@@ -18,6 +18,7 @@ package edu.kit.datamanager.idoris.visitors;
 
 import edu.kit.datamanager.idoris.domain.VisitableElement;
 import edu.kit.datamanager.idoris.domain.entities.*;
+import edu.kit.datamanager.idoris.validators.ValidationResult;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.java.Log;
 
@@ -26,7 +27,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static edu.kit.datamanager.idoris.visitors.ValidationResult.ValidationMessage.MessageSeverity.ERROR;
+import static edu.kit.datamanager.idoris.validators.ValidationMessage.MessageSeverity.ERROR;
 
 @Log
 public abstract class Visitor<T> {

@@ -18,13 +18,20 @@ package edu.kit.datamanager.idoris.validators;
 
 import edu.kit.datamanager.idoris.configuration.ApplicationProperties;
 import edu.kit.datamanager.idoris.domain.VisitableElement;
-import edu.kit.datamanager.idoris.visitors.*;
+import edu.kit.datamanager.idoris.visitors.InheritanceValidator;
+import edu.kit.datamanager.idoris.visitors.SubSchemaRelationValidator;
+import edu.kit.datamanager.idoris.visitors.SyntaxValidator;
+import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
+@Log
 @AllArgsConstructor
 public class VisitableElementValidator implements Validator {
     private ApplicationProperties applicationProperties;
@@ -45,16 +52,23 @@ public class VisitableElementValidator implements Validator {
         );
 
         validators.forEach(validator -> {
+            log.info("Executing " + validator.getClass().getName() + " on " + visitableElement.getClass().getName() + "...");
             ValidationResult validationResult = visitableElement.execute(validator);
+            var validationMessages = validationResult.getValidationMessages()
+                    .entrySet()
+                    .stream()
+                    .filter(e -> e.getKey() == ValidationMessage.MessageSeverity.ERROR || e.getKey() == ValidationMessage.MessageSeverity.WARNING)
+                    .toArray();
+
             switch (applicationProperties.getValidationPolicy()) {
                 case STRICT -> {
-                    if (!validationResult.isEmpty()) {
-                        errors.rejectValue(null, validator.getClass().getName() + " failed", new ValidationResult[]{validationResult}, "Validation failed.");
-                    }
+                    log.info("STRICT Validation failed: " + Arrays.toString(List.of(validationResult).toArray()));
+                    errors.rejectValue(null, validator.getClass().getName() + " failed", validationMessages, "Validation failed.");
                 }
                 case LAX -> {
                     if (!validationResult.isValid()) {
-                        errors.rejectValue(null, validator.getClass().getName() + " failed", new ValidationResult[]{validationResult}, "Validation failed.");
+                        log.info("LAX Validation failed: " + validationResult);
+                        errors.rejectValue(null, validator.getClass().getName() + " failed", validationMessages, "Validation failed.");
                     }
                 }
             }
