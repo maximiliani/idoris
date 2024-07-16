@@ -1,4 +1,5 @@
 .idea/
+db/
 
 # Ignore Gradle project-specific cache directory
 nbproject
@@ -19,7 +20,7 @@ config
 
 ### Git ###
 # Created by git for backups. To disable backups in Git:
-# $ git config --global mergetool.keepBackup false
+# $ git configuration --global mergetool.keepBackup false
 *.orig
 
 # Created by git when using merge tools for conflicts
@@ -232,7 +233,7 @@ Temporary Items
 **/build/
 !src/**/build/
 
-# Ignore Gradle GUI config
+# Ignore Gradle GUI configuration
 gradle-app.setting
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
@@ -254,4 +255,4 @@ gradle-app.setting
 # Java heap dump
 *.hprof
 
-# End of https://www.toptal.com/developers/gitignore/api/intellij+all,macos,java,gradle,webstorm+all,git!/.idea/
+# End of https://www.toptal.com/developers/gitignore/api/intellij+all,macos,java,gradle,webstorm+all,git!/.idea/!/db/

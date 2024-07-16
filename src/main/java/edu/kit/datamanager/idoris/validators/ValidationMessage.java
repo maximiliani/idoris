@@ -14,19 +14,25 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.domain.entities;
+package edu.kit.datamanager.idoris.validators;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
-import org.springframework.data.neo4j.core.schema.Node;
 
-@Getter
-@Setter
-@AllArgsConstructor
-@Node("TextUser")
-public final class TextUser extends User {
-    private String name;
-    private String email;
-    private String details;
+import javax.annotation.Nullable;
+
+public record ValidationMessage(@NotNull String message, @Nullable Object element, @NotNull MessageSeverity severity) {
+    @AllArgsConstructor
+    @Getter
+    public enum MessageSeverity {
+        INFO("INFO"),
+        WARNING("WARNING"),
+        ERROR("ERROR");
+        private final String value;
+
+        public boolean isHigherOrEqualTo(MessageSeverity other) {
+            return this.ordinal() >= other.ordinal();
+        }
+    }
 }

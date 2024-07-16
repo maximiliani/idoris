@@ -16,26 +16,35 @@
 
 package edu.kit.datamanager.idoris;
 
+import edu.kit.datamanager.idoris.configuration.ApplicationProperties;
+import lombok.extern.java.Log;
 import org.neo4j.cypherdsl.core.renderer.Configuration;
 import org.neo4j.cypherdsl.core.renderer.Dialect;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.neo4j.config.EnableNeo4jAuditing;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
-import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
-import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 @SpringBootApplication
 @EnableNeo4jRepositories
 @EnableNeo4jAuditing
 @EnableTransactionManagement
+@EntityScan("edu.kit.datamanager")
+@org.springframework.context.annotation.Configuration
+@Log
 public class IdorisApplication {
     public static void main(String[] args) {
         SpringApplication.run(IdorisApplication.class, args);
+    }
+
+    @Bean
+    @ConfigurationProperties("repo")
+    public ApplicationProperties applicationProperties() {
+        return new ApplicationProperties();
     }
 
     @Bean
@@ -44,16 +53,5 @@ public class IdorisApplication {
                 .newConfig()
                 .withDialect(Dialect.NEO4J_5)
                 .build();
-    }
-
-    @Component
-    public static class SpringDataRestConfig implements RepositoryRestConfigurer {
-
-        @Override
-        public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry cors) {
-            cors.addMapping("/**")
-                    .allowedOrigins("*")
-                    .allowedMethods("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS");
-        }
     }
 }

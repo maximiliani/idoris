@@ -17,6 +17,7 @@
 package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.enums.PrimitiveDataTypes;
+import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,7 +33,7 @@ import java.util.Set;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class BasicDataType extends DataType {
+public final class BasicDataType extends DataType {
     @Relationship(value = "inheritsFrom", direction = Relationship.Direction.OUTGOING)
     private BasicDataType inheritsFrom;
 
@@ -42,18 +43,37 @@ public class BasicDataType extends DataType {
     private String unitSymbol;
     private String definedBy;
     private String standard_uncertainty;
+
     private String restrictions;
     private String regex;
+    // TODO: Make this an enum
     private String regexFlavour = "ecma-262-RegExp";
 
     @Property("enum")
     private Set<String> valueEnum;
+
+    @Override
+    protected <T> T accept(Visitor<T> visitor, Object... args) {
+        return visitor.visit(this, args);
+    }
+
+    @Override
+    public boolean inheritsFrom(DataType dataType) {
+        if (dataType instanceof BasicDataType basicDataType) {
+            if (basicDataType.equals(this)) {
+                return true;
+            }
+            return inheritsFrom != null && inheritsFrom.inheritsFrom(basicDataType);
+        }
+        return false;
+    }
 
     @AllArgsConstructor
     @Getter
     public enum Category {
         MeasurementUnit("Measurement Unit"),
         Format("Format"),
+        Enumeration("Enumeration"),
         CharacterSet("Character Set"),
         Encoding("Encoding"),
         Other("Other");

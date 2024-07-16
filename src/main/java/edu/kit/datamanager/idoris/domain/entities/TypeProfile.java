@@ -17,7 +17,7 @@
 package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.enums.SubSchemaRelation;
-import edu.kit.datamanager.idoris.domain.relationships.ProfileAttribute;
+import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,15 +32,31 @@ import java.util.Set;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class TypeProfile extends DataType {
+public final class TypeProfile extends DataType {
 
     @Relationship(value = "inheritsFrom", direction = Relationship.Direction.OUTGOING)
     private Set<TypeProfile> inheritsFrom;
 
     @Relationship(value = "attributes", direction = Relationship.Direction.OUTGOING)
-    private Set<ProfileAttribute> attributes;
+    private Set<Attribute> attributes;
 
     private boolean isEmbeddable = true;
-    private String restrictions;
+    private boolean isAbstract = false;
     private SubSchemaRelation subSchemaRelation = SubSchemaRelation.allowAdditionalProperties;
+
+    @Override
+    protected <T> T accept(Visitor<T> visitor, Object... args) {
+        return visitor.visit(this, args);
+    }
+
+    @Override
+    public boolean inheritsFrom(DataType dataType) {
+        if (dataType instanceof TypeProfile typeProfile) {
+            if (typeProfile.equals(this)) {
+                return true;
+            }
+            return inheritsFrom != null && inheritsFrom.stream().anyMatch(typeProfile::inheritsFrom);
+        }
+        return false;
+    }
 }

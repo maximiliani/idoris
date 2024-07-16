@@ -32,13 +32,12 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.Set;
 
-//@Node("IDORISEntity")
 @Getter
 @Setter
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @RequiredArgsConstructor
 @AllArgsConstructor
-public abstract class GenericIDORISEntity implements Serializable {
+public abstract class GenericIDORISEntity extends VisitableElement implements Serializable {
     @Id
     @GeneratedValue(UUIDStringGenerator.class)
     String pid;

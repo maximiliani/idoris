@@ -16,6 +16,8 @@
 
 package edu.kit.datamanager.idoris.domain.entities;
 
+import edu.kit.datamanager.idoris.domain.VisitableElement;
+import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,18 +34,24 @@ import java.io.Serializable;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class AttributeMapping implements Serializable {
+public class AttributeMapping extends VisitableElement implements Serializable {
     @Id
     @GeneratedValue
     private String id;
+    private String name;
 
     @Relationship(value = "input", direction = Relationship.Direction.INCOMING)
     private Attribute input;
 
-    private String name;
+    private String replaceCharactersInValueWithInput = "${{input}}";
     private String value;
     private Integer index;
 
     @Relationship(value = "output", direction = Relationship.Direction.OUTGOING)
     private Attribute output;
+
+    @Override
+    protected <T> T accept(Visitor<T> visitor, Object... args) {
+        return visitor.visit(this, args);
+    }
 }

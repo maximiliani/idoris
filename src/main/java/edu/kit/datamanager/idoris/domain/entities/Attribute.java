@@ -16,6 +16,10 @@
 
 package edu.kit.datamanager.idoris.domain.entities;
 
+import edu.kit.datamanager.idoris.domain.VisitableElement;
+import edu.kit.datamanager.idoris.domain.enums.Obligation;
+import edu.kit.datamanager.idoris.visitors.Visitor;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -24,20 +28,33 @@ import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
+import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 @Node
 @AllArgsConstructor
 @RequiredArgsConstructor
 @Getter
 @Setter
-public class Attribute {
+public class Attribute extends VisitableElement {
     @Id
-    @GeneratedValue
-    private String id;
-
-    @Relationship(value = "dataType", direction = Relationship.Direction.OUTGOING)
-    private DataType dataType;
-
+    @GeneratedValue(UUIDStringGenerator.class)
+    private String pid;
     private String name;
     private String description;
+
+    private boolean repeatable = false;
+    private Obligation obligation = Obligation.Mandatory;
+    private String value;
+
+    @Relationship(value = "dataType", direction = Relationship.Direction.OUTGOING)
+    @NotNull
+    private DataType dataType;
+
+    @Relationship(value = "override", direction = Relationship.Direction.OUTGOING)
+    private Attribute override;
+
+    @Override
+    protected <T> T accept(Visitor<T> visitor, Object... args) {
+        return visitor.visit(this, args);
+    }
 }

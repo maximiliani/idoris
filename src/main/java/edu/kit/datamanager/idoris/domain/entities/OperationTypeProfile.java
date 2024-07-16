@@ -17,7 +17,7 @@
 package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
-import edu.kit.datamanager.idoris.domain.relationships.AttributeReference;
+import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,19 +33,24 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OperationTypeProfile extends GenericIDORISEntity {
+    private String name;
+    private String description;
 
     @Relationship(value = "inheritsFrom", direction = Relationship.Direction.OUTGOING)
     private Set<OperationTypeProfile> inheritsFrom;
 
     @Relationship(value = "attributes", direction = Relationship.Direction.INCOMING)
-    private Set<AttributeReference> attributes;
+    private Set<Attribute> attributes;
 
     @Relationship(value = "outputs", direction = Relationship.Direction.OUTGOING)
-    private Set<AttributeReference> outputs;
+    private Set<Attribute> outputs;
 
     @Relationship(value = "adapters", direction = Relationship.Direction.OUTGOING)
     private Set<FDO> adapters;
 
-    private String name;
-    private String description;
+
+    @Override
+    protected <T> T accept(Visitor<T> visitor, Object... args) {
+        return visitor.visit(this, args);
+    }
 }

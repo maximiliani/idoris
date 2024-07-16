@@ -22,11 +22,12 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum SubSchemaRelation {
-    denyAdditionalProperties("denyAdditionalProperties"),
-    allowAdditionalProperties("allowAdditionalProperties"),
-    requireAllProperties("requireAllProperties"),
-    requireAnyOfProperties("requireAnyOfProperties"),
-    requireOneOfProperties("requireOneOfProperties"),
-    requireNoneOfProperties("requireNoneOfProperties");
+    denyAdditionalProperties("denyAdditionalProperties", "Implementing FDOs or inheriting TypeProfiles MUST NOT have additional properties to those defined in this TypeProfile."),
+    allowAdditionalProperties("allowAdditionalProperties", "Implementing FDOs or inheriting TypeProfiles MAY have additional properties to those defined in this TypeProfile."),
+    requireAllProperties("requireAllProperties", "Implementing FDOs or inheriting TypeProfiles MUST specify all properties defined in this TypeProfile."),
+    requireAnyOfProperties("requireAnyOfProperties", "Implementing FDOs or inheriting TypeProfiles MUST specify at least one of the properties defined in this TypeProfile."),
+    requireOneOfProperties("requireOneOfProperties", "Implementing FDOs or inheriting TypeProfiles MUST specify exactly one of the properties defined in this TypeProfile."),
+    requireNoneOfProperties("requireNoneOfProperties", "Implementing FDOs or inheriting TypeProfiles MUST NOT specify any of the properties defined in this TypeProfile.");
     private final String name;
+    private final String description;
 }
