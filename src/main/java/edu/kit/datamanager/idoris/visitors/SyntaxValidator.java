@@ -22,10 +22,8 @@ import edu.kit.datamanager.idoris.domain.enums.SubSchemaRelation;
 import lombok.extern.java.Log;
 
 import java.util.Arrays;
-import java.util.Objects;
 
-import static edu.kit.datamanager.idoris.visitors.ValidationResult.ValidationMessage.MessageType.ERROR;
-import static edu.kit.datamanager.idoris.visitors.ValidationResult.ValidationMessage.MessageType.WARNING;
+import static edu.kit.datamanager.idoris.visitors.ValidationResult.ValidationMessage.MessageSeverity.*;
 
 @Log
 public class SyntaxValidator extends Visitor<ValidationResult> {
@@ -36,19 +34,19 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
         else result = new ValidationResult();
 
         if (attribute.getName() == null || attribute.getName().isEmpty()) {
-            result.addMessage("For better human readability and understanding, you MUST provide a name for the attribute.", ERROR);
+            result.addMessage("For better human readability and understanding, you MUST provide a name for the attribute.", attribute, ERROR);
         }
 
         if (attribute.getDescription() == null || attribute.getDescription().isEmpty()) {
-            result.addMessage("For better human readability and understanding, you SHOULD provide a description for the attribute.", WARNING);
+            result.addMessage("For better human readability and understanding, you SHOULD provide a description for the attribute.", attribute, WARNING);
         }
 
         if (attribute.getDataType() == null) {
-            result.addMessage("You MUST provide a data type for the attribute.", ERROR);
+            result.addMessage("You MUST provide a data type for the attribute.", attribute, ERROR);
         }
 
         if (attribute.getObligation() == null) {
-            result.addMessage("You MUST provide an obligation for the attribute. The default value is 'Mandatory'.", ERROR);
+            result.addMessage("You MUST provide an obligation for the attribute. The default value is 'Mandatory'.", attribute, ERROR);
         }
 
         if (attribute.getOverride() != null) {
@@ -65,23 +63,23 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
         else result = new ValidationResult();
 
         if (attributeMapping.getName() == null || attributeMapping.getName().isEmpty()) {
-            result.addMessage("For better human readability and understanding, you SHOULD provide a name for the attribute mapping.", ValidationResult.ValidationMessage.MessageType.WARNING);
+            result.addMessage("For better human readability and understanding, you SHOULD provide a name for the attribute mapping.", attributeMapping, WARNING);
         }
 
-        if (attributeMapping.getIndex() < 0) {
-            result.addMessage("The index is out of range. It has to be a positive number or zero.", ERROR);
+        if (attributeMapping.getIndex() != null && attributeMapping.getIndex() < 0) {
+            result.addMessage("The index is out of range. It has to be a positive number or zero.", attributeMapping, ERROR);
         }
 
         if (attributeMapping.getOutput() == null) {
-            result.addMessage("Output MUST be specified.", ERROR);
+            result.addMessage("Output MUST be specified.", attributeMapping, ERROR);
         }
 
         if (attributeMapping.getInput() == null && attributeMapping.getValue() == null) {
-            result.addMessage("Input and value MUST NOT be unspecified at the same time.", ERROR);
+            result.addMessage("Input and value MUST NOT be unspecified at the same time.", attributeMapping, ERROR);
         }
 
-        if (Objects.requireNonNull(attributeMapping.getInput()).isRepeatable() && !attributeMapping.getOutput().isRepeatable() && attributeMapping.getIndex() == null) {
-            result.addMessage("The input is repeatable, the output is not repeatable and no index is specified.", ERROR);
+        if (attributeMapping.getInput() != null && attributeMapping.getInput().isRepeatable() && attributeMapping.getOutput() != null && !attributeMapping.getOutput().isRepeatable() && attributeMapping.getIndex() == null) {
+            result.addMessage("The input is repeatable, the output is not repeatable and no index is specified.", attributeMapping, ERROR);
         }
 
         return result;
@@ -99,37 +97,37 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
             result.addChild(basicDataType.getInheritsFrom().execute(this, args));
 
         if (basicDataType.getPrimitiveDataType() == null) {
-            result.addMessage("You MUST provide a primitive data type for the basic data type. Please select from: " + Arrays.toString(PrimitiveDataTypes.values()), ERROR);
+            result.addMessage("You MUST provide a primitive data type for the basic data type. Please select from: " + Arrays.toString(PrimitiveDataTypes.values()), basicDataType, ERROR);
         }
 
         if (basicDataType.getCategory() == null) {
-            result.addMessage("You MUST provide a category for the basic data type. Please select from: " + Arrays.toString(BasicDataType.Category.values()), ERROR);
+            result.addMessage("You MUST provide a category for the basic data type. Please select from: " + Arrays.toString(BasicDataType.Category.values()), basicDataType, ERROR);
         } else switch (basicDataType.getCategory()) {
             case MeasurementUnit -> {
                 if (basicDataType.getUnitName() == null || basicDataType.getUnitName().isEmpty()) {
-                    result.addMessage("A measurement unit MUST have a unit name", ERROR);
+                    result.addMessage("A measurement unit MUST have a unit name", basicDataType, ERROR);
                 }
                 if (basicDataType.getUnitSymbol() == null || basicDataType.getUnitSymbol().isEmpty()) {
-                    result.addMessage("A measurement unit MUST have a unit symbol", ERROR);
+                    result.addMessage("A measurement unit MUST have a unit symbol", basicDataType, ERROR);
                 }
                 if (basicDataType.getDefinedBy() == null || basicDataType.getDefinedBy().isEmpty()) {
-                    result.addMessage("A measurement unit SHOULD specify the defined by field", ValidationResult.ValidationMessage.MessageType.WARNING);
+                    result.addMessage("A measurement unit SHOULD specify the defined by field", basicDataType, WARNING);
                 }
                 if (basicDataType.getStandard_uncertainty() == null || basicDataType.getStandard_uncertainty().isEmpty()) {
-                    result.addMessage("A measurement unit SHOULD specify the standard uncertainty", ValidationResult.ValidationMessage.MessageType.WARNING);
+                    result.addMessage("A measurement unit SHOULD specify the standard uncertainty", basicDataType, WARNING);
                 }
             }
             case Format -> {
                 if (basicDataType.getRegex() == null || basicDataType.getRegex().isEmpty()) {
-                    result.addMessage("A format data type MUST have a regex", ERROR);
+                    result.addMessage("A format data type MUST have a regex.", basicDataType, ERROR);
                 }
                 if (basicDataType.getRegexFlavour() == null || basicDataType.getRegexFlavour().isEmpty()) {
-                    result.addMessage("A format data type MUST specify the regex flavour. The encouraged default value is 'ecma-262-RegExp'.'", ERROR);
+                    result.addMessage("A format data type MUST specify the regex flavour. The encouraged default value is 'ecma-262-RegExp'.'", basicDataType, ERROR);
                 }
             }
             case Enumeration -> {
                 if (basicDataType.getValueEnum() == null || basicDataType.getValueEnum().isEmpty()) {
-                    result.addMessage("An enumerated BasicDataType MUST have provide a set of acceptable values", ERROR);
+                    result.addMessage("An enumerated BasicDataType MUST have provide a set of acceptable values", basicDataType, ERROR);
                 }
             }
             default -> {
@@ -155,7 +153,7 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
         }
 
         if (typeProfile.getSubSchemaRelation() == null) {
-            result.addMessage("You MUST provide a sub schema relation for the type profile. Please select from: " + Arrays.toString(SubSchemaRelation.values()), ERROR);
+            result.addMessage("You MUST provide a sub schema relation for the type profile. Please select from: " + Arrays.toString(SubSchemaRelation.values()), typeProfile, ERROR);
         }
 
         return result;
@@ -168,23 +166,23 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
         else result = new ValidationResult();
 
         if (operation.getName() == null || operation.getName().isEmpty()) {
-            result.addMessage("For better human readability and understanding, you MUST provide a name for the operation.", ERROR);
+            result.addMessage("For better human readability and understanding, you MUST provide a name for the operation.", operation, ERROR);
         }
 
         if (operation.getDescription() == null || operation.getDescription().isEmpty()) {
-            result.addMessage("For better human readability and understanding, you SHOULD provide a description for the operation.", ValidationResult.ValidationMessage.MessageType.WARNING);
+            result.addMessage("For better human readability and understanding, you SHOULD provide a description for the operation.", operation, WARNING);
         }
 
         if (operation.getExecutableOn() == null) {
-            result.addMessage("You MUST specify an attribute on which the operation can be executed.", ERROR);
+            result.addMessage("You MUST specify an attribute on which the operation can be executed.", operation, ERROR);
         }
 
         if ((operation.getReturns() == null || operation.getReturns().isEmpty())) {
-            result.addMessage("There are no return values provided for this Operation.", ValidationResult.ValidationMessage.MessageType.INFO);
+            result.addMessage("There are no return values provided for this Operation.", operation, INFO);
         }
 
         if (operation.getExecution() == null || operation.getExecution().isEmpty()) {
-            result.addMessage("You MUST specify at least one execution step for a valid operation.", ERROR);
+            result.addMessage("You MUST specify at least one execution step for a valid operation.", operation, ERROR);
         }
 
         operation.getExecution().stream().map(operationStep -> operationStep.execute(this, args)).forEach(result::addChild);
@@ -199,19 +197,19 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
         else result = new ValidationResult();
 
         if (operationStep.getName() == null || operationStep.getName().isEmpty()) {
-            result.addMessage("For better human readability, you SHOULD provide a name for the operation step.", WARNING);
+            result.addMessage("For better human readability, you SHOULD provide a name for the operation step.", operationStep, WARNING);
         }
 
         if (operationStep.getExecutionOrderIndex() == null) {
-            result.addMessage("Execution order index MUST be specified. If multiple Operation Steps for an Operation have the same index, the execution may happen in random order or be parallelized.", ERROR);
+            result.addMessage("Execution order index MUST be specified. If multiple Operation Steps for an Operation have the same index, the execution may happen in random order or be parallelized.", operationStep, ERROR);
         }
 
         if (operationStep.getMode() == null) {
-            result.addMessage("An execution mode must be specified. Default is synchronous execution. Select from: " + Arrays.toString(OperationStep.ExecutionMode.values()), ERROR);
+            result.addMessage("An execution mode must be specified. Default is synchronous execution. Select from: " + Arrays.toString(OperationStep.ExecutionMode.values()), operationStep, ERROR);
         }
 
         if ((operationStep.getOperation() == null && operationStep.getOperationTypeProfile() == null) || (operationStep.getOperation() != null && operationStep.getOperationTypeProfile() != null)) {
-            result.addMessage("You MUST specify either an operation or an operation type profile for the operation step. You can only specify exactly one!", ERROR);
+            result.addMessage("You MUST specify either an operation or an operation type profile for the operation step. You can only specify exactly one!", operationStep, ERROR);
         }
 
         if (operationStep.getOperation() != null) {
@@ -238,11 +236,11 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
         else result = new ValidationResult();
 
         if (operationTypeProfile.getName() == null || operationTypeProfile.getName().isEmpty()) {
-            result.addMessage("For better human readability and understanding, you MUST provide a name for the operation type profile.", ERROR);
+            result.addMessage("For better human readability and understanding, you MUST provide a name for the operation type profile.", operationTypeProfile, ERROR);
         }
 
         if (operationTypeProfile.getDescription() == null || operationTypeProfile.getDescription().isEmpty()) {
-            result.addMessage("For better human readability and understanding, you SHOULD provide a description for the operation type profile.", ValidationResult.ValidationMessage.MessageType.WARNING);
+            result.addMessage("For better human readability and understanding, you SHOULD provide a description for the operation type profile.", operationTypeProfile, WARNING);
         }
 
         if (operationTypeProfile.getInheritsFrom() != null) {
@@ -267,19 +265,24 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
 
     private void visitDataType(DataType dataType, ValidationResult result) {
         if (dataType.getType() == null) {
-            result.addMessage("You MUST provide a type for the data type. Please select from: " + Arrays.toString(DataType.TYPES.values()), ERROR);
+            result.addMessage("You MUST provide a type for the data type. Please select from: " + Arrays.toString(DataType.TYPES.values()), dataType, ERROR);
         }
 
         if (dataType.getName() == null || dataType.getName().isEmpty()) {
-            result.addMessage("For better human readability and understanding, you MUST provide a name for the data type.", ERROR);
+            result.addMessage("For better human readability and understanding, you MUST provide a name for the data type.", dataType, ERROR);
         }
 
         if (dataType.getDescription() == null || dataType.getDescription().isEmpty()) {
-            result.addMessage("For better human readability and understanding, you SHOULD provide a description for the data type.", ValidationResult.ValidationMessage.MessageType.WARNING);
+            result.addMessage("For better human readability and understanding, you SHOULD provide a description for the data type.", dataType, WARNING);
         }
 
         if (dataType.getExpectedUses() == null || dataType.getExpectedUses().isEmpty()) {
-            result.addMessage("For better human readability and understanding, you SHOULD provide a list of expected uses for the data type.", ValidationResult.ValidationMessage.MessageType.WARNING);
+            result.addMessage("For better human readability and understanding, you SHOULD provide a list of expected uses for the data type.", dataType, WARNING);
         }
+    }
+
+    @Override
+    protected ValidationResult handleCircle(String id) {
+        return new ValidationResult().addMessage("Cycle detected", id, INFO);
     }
 }

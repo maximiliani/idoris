@@ -31,33 +31,37 @@ public class ValidationResult {
     private List<ValidationMessage> messages = new ArrayList<>();
     private List<ValidationResult> children = new ArrayList<>();
 
-    public ValidationResult addMessage(String message, ValidationMessage.MessageType type) {
-        messages.add(new ValidationMessage(message, type));
-        return this;
-    }
+//    public ValidationResult addMessage(String message, ValidationMessage.MessageSeverity type) {
+//        messages.add(new ValidationMessage(message, type));
+//        return this;
+//    }
 
-    public ValidationResult addMessage(String message, Object element, ValidationMessage.MessageType type) {
+    public ValidationResult addMessage(String message, Object element, ValidationMessage.MessageSeverity type) {
         messages.add(new ValidationMessage(message, element, type));
         return this;
     }
 
     public ValidationResult addChild(ValidationResult child) {
-        if (child != null) children.add(child);
+        if (child != null && !child.isEmpty()) children.add(child);
         return this;
     }
 
     public boolean isValid() {
-        boolean noErrorMessages = messages.stream().noneMatch(m -> m.getType() == ValidationMessage.MessageType.ERROR);
+        boolean noErrorMessages = messages.stream().noneMatch(m -> m.getSeverity() == ValidationMessage.MessageSeverity.ERROR);
         boolean childrenValid = children.stream().allMatch(ValidationResult::isValid);
         return noErrorMessages && childrenValid;
     }
 
     public int getErrorCount() {
-        return (int) messages.stream().filter(m -> m.getType() == ValidationMessage.MessageType.ERROR).count();
+        int ownErrors = (int) messages.stream().filter(m -> m.getSeverity() == ValidationMessage.MessageSeverity.ERROR).count();
+        int childErrors = children.stream().mapToInt(ValidationResult::getErrorCount).sum();
+        return ownErrors + childErrors;
     }
 
     public int getWarningCount() {
-        return (int) messages.stream().filter(m -> m.getType() == ValidationMessage.MessageType.WARNING).count();
+        int ownWarnings = (int) messages.stream().filter(m -> m.getSeverity() == ValidationMessage.MessageSeverity.WARNING).count();
+        int childWarnings = children.stream().mapToInt(ValidationResult::getWarningCount).sum();
+        return ownWarnings + childWarnings;
     }
 
     @Override
@@ -70,19 +74,28 @@ public class ValidationResult {
                 '}';
     }
 
+    public boolean isEmpty() {
+        boolean noErrorMessages = messages.isEmpty();
+        boolean childrenEmpty = children.stream().allMatch(ValidationResult::isEmpty);
+        boolean noErrors = getErrorCount() == 0;
+        boolean noWarnings = getWarningCount() == 0;
+        boolean noInfo = messages.stream().noneMatch(m -> m.getSeverity() == ValidationMessage.MessageSeverity.INFO);
+        return noErrorMessages && childrenEmpty && noErrors && noWarnings;
+    }
+
     @Getter
     public static final class ValidationMessage {
         private final String message;
-        private final MessageType type;
+        private final MessageSeverity severity;
         private final Object element;
 
-        public ValidationMessage(@NotEmpty String message, @NotNull MessageType type) {
-            this(message, null, type);
-        }
+//        public ValidationMessage(@NotEmpty String message, @NotNull ValidationResult.ValidationMessage.MessageSeverity severity) {
+//            this(message, null, severity);
+//        }
 
-        public ValidationMessage(@NotEmpty String message, Object element, @NotNull MessageType type) {
+        public ValidationMessage(@NotEmpty String message, Object element, @NotNull ValidationResult.ValidationMessage.MessageSeverity severity) {
             this.message = message;
-            this.type = type;
+            this.severity = severity;
             this.element = element;
         }
 
@@ -90,14 +103,14 @@ public class ValidationResult {
         public String toString() {
             return "ValidationMessage{" +
                     "message='" + message + '\'' +
-                    ", type=" + type +
+                    ", type=" + severity +
                     ", element=" + element +
                     '}';
         }
 
         @AllArgsConstructor
         @Getter
-        public enum MessageType {
+        public enum MessageSeverity {
             INFO("INFO"),
             WARNING("WARNING"),
             ERROR("ERROR");

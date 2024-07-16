@@ -16,13 +16,17 @@
 
 package edu.kit.datamanager.idoris.visitors;
 
+import edu.kit.datamanager.idoris.domain.VisitableElement;
 import edu.kit.datamanager.idoris.domain.entities.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.java.Log;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import static edu.kit.datamanager.idoris.visitors.ValidationResult.ValidationMessage.MessageSeverity.ERROR;
 
 @Log
 public abstract class Visitor<T> {
@@ -59,7 +63,12 @@ public abstract class Visitor<T> {
     }
 
     protected ValidationResult handleCircle(String id) {
-        return new ValidationResult().addMessage("Cycle detected for " + id, ValidationResult.ValidationMessage.MessageType.ERROR);
+        return new ValidationResult().addMessage("Cycle detected", id, ERROR);
+    }
+
+    protected ValidationResult notAllowed(@NotNull VisitableElement element) {
+        log.warning("Element of type " + element.getClass().getSimpleName() + " not allowed in " + this.getClass().getSimpleName() + ". Ignoring...");
+        return new ValidationResult();
     }
 
     protected final ValidationResult save(String id, ValidationResult result) {

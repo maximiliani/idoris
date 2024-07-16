@@ -47,6 +47,8 @@ public abstract sealed class DataType extends GenericIDORISEntity permits BasicD
     @Property("default")
     private String defaultValue;
 
+    public abstract boolean inheritsFrom(DataType dataType);
+
     public enum TYPES {
         BasicDataType,
         TypeProfile

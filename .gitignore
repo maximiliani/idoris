@@ -20,7 +20,7 @@ config
 
 ### Git ###
 # Created by git for backups. To disable backups in Git:
-# $ git config --global mergetool.keepBackup false
+# $ git configuration --global mergetool.keepBackup false
 *.orig
 
 # Created by git when using merge tools for conflicts
@@ -233,7 +233,7 @@ Temporary Items
 **/build/
 !src/**/build/
 
-# Ignore Gradle GUI config
+# Ignore Gradle GUI configuration
 gradle-app.setting
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)

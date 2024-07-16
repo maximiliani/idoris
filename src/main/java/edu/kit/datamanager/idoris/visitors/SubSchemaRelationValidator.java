@@ -16,15 +16,16 @@
 
 package edu.kit.datamanager.idoris.visitors;
 
-import edu.kit.datamanager.idoris.domain.VisitableElement;
 import edu.kit.datamanager.idoris.domain.entities.*;
 import edu.kit.datamanager.idoris.domain.enums.SubSchemaRelation;
-import jakarta.validation.constraints.NotNull;
 import lombok.extern.java.Log;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static edu.kit.datamanager.idoris.visitors.ValidationResult.ValidationMessage.MessageSeverity.ERROR;
+import static edu.kit.datamanager.idoris.visitors.ValidationResult.ValidationMessage.MessageSeverity.WARNING;
 
 @Log
 public class SubSchemaRelationValidator extends Visitor<ValidationResult> {
@@ -74,7 +75,7 @@ public class SubSchemaRelationValidator extends Visitor<ValidationResult> {
             switch (parent.getSubSchemaRelation()) {
                 case denyAdditionalProperties:
                     if (!typeProfile.getAttributes().isEmpty()) {
-                        result.addMessage("TypeProfile " + typeProfile.getPid() + " defines additional properties, but inherits from the TypeProfile " + parent.getPid() + " that denies additional properties.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, Map.of("countOfAttributes", typeProfile.getAttributes().size())), ValidationResult.ValidationMessage.MessageType.ERROR);
+                        result.addMessage("TypeProfile " + typeProfile.getPid() + " defines additional properties, but inherits from the TypeProfile " + parent.getPid() + " that denies additional properties.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, Map.of("countOfAttributes", typeProfile.getAttributes().size())), ERROR);
                     }
                     break;
                 case allowAdditionalProperties:
@@ -84,24 +85,24 @@ public class SubSchemaRelationValidator extends Visitor<ValidationResult> {
                     for (Attribute attribute : parent.getAttributes()) {
                         List<Attribute> undefinedAttributes = typeProfile.getAttributes().stream().filter(a -> a.getDataType().equals(attribute.getDataType())).toList();
                         if (!undefinedAttributes.isEmpty()) {
-                            result.addMessage("TypeProfile " + typeProfile.getPid() + " does not define all properties defined in the TypeProfile " + parent.getPid() + " that requires all properties.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, Map.of("numberOfUndefinedAttributes", undefinedAttributes.size(), "undefinedAttributes", undefinedAttributes)), ValidationResult.ValidationMessage.MessageType.ERROR);
+                            result.addMessage("TypeProfile " + typeProfile.getPid() + " does not define all properties defined in the TypeProfile " + parent.getPid() + " that requires all properties.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, Map.of("numberOfUndefinedAttributes", undefinedAttributes.size(), "undefinedAttributes", undefinedAttributes)), ERROR);
                         }
                     }
                     break;
                 case requireAnyOfProperties:
                     if (typeProfile.getAttributes().stream().noneMatch(a -> parent.getAttributes().stream().anyMatch(pa -> pa.getDataType().equals(a.getDataType())))) {
-                        result.addMessage("TypeProfile " + typeProfile.getPid() + " does not define any property defined in the TypeProfile " + parent.getPid() + " that requires at least one property.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, null), ValidationResult.ValidationMessage.MessageType.ERROR);
+                        result.addMessage("TypeProfile " + typeProfile.getPid() + " does not define any property defined in the TypeProfile " + parent.getPid() + " that requires at least one property.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, null), ERROR);
                     }
                     break;
                 case requireOneOfProperties:
                     if (typeProfile.getAttributes().stream().filter(a -> parent.getAttributes().stream().anyMatch(pa -> pa.getDataType().equals(a.getDataType()))).count() != 1) {
-                        result.addMessage("TypeProfile " + typeProfile.getPid() + " does not define exactly one property defined in the TypeProfile " + parent.getPid() + " that requires exactly one property.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, null), ValidationResult.ValidationMessage.MessageType.ERROR);
+                        result.addMessage("TypeProfile " + typeProfile.getPid() + " does not define exactly one property defined in the TypeProfile " + parent.getPid() + " that requires exactly one property.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, null), ERROR);
                     }
                     break;
                 case requireNoneOfProperties:
                     List<Attribute> illegallyDefinedAttributes = typeProfile.getAttributes().stream().filter(a -> parent.getAttributes().stream().anyMatch(pa -> pa.getDataType().equals(a.getDataType()))).toList();
                     if (!illegallyDefinedAttributes.isEmpty()) {
-                        result.addMessage("TypeProfile " + typeProfile.getPid() + " defines a property defined in the TypeProfile " + parent.getPid() + " that requires no property.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, Map.of("numberOfIllegallyDefinedAttributes", illegallyDefinedAttributes.size(), "illegallyDefinedAttributes", illegallyDefinedAttributes)), ValidationResult.ValidationMessage.MessageType.ERROR);
+                        result.addMessage("TypeProfile " + typeProfile.getPid() + " defines a property defined in the TypeProfile " + parent.getPid() + " that requires no property.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, Map.of("numberOfIllegallyDefinedAttributes", illegallyDefinedAttributes.size(), "illegallyDefinedAttributes", illegallyDefinedAttributes)), ERROR);
                     }
                     break;
                 default:
@@ -157,17 +158,17 @@ public class SubSchemaRelationValidator extends Visitor<ValidationResult> {
         return save(operationTypeProfile.getPid(), result);
     }
 
-    private ValidationResult notAllowed(@NotNull VisitableElement element) {
-        log.warning("Element of type " + element.getClass().getName() + " not allowed in SubSchemaRelationValidator. Ignoring...");
-        return new ValidationResult();
-    }
-
     private Object getTypeProfileAndParentElementaryInformation(TypeProfile typeProfile, TypeProfile parent, Map<String, Object> otherInformation) {
         Map<String, Object> result = new HashMap<>();
         result.put("this", new elementaryInformation(typeProfile.getPid(), typeProfile.getName(), typeProfile.getSubSchemaRelation()));
         result.put("parent", new elementaryInformation(parent.getPid(), parent.getName(), parent.getSubSchemaRelation()));
         result.put("otherInformation", otherInformation);
         return result;
+    }
+
+    @Override
+    protected ValidationResult handleCircle(String id) {
+        return new ValidationResult().addMessage("Cycle detected", id, WARNING);
     }
 
     private record elementaryInformation(String pid, String name, SubSchemaRelation subSchemaRelation) {

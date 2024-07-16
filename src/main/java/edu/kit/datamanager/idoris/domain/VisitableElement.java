@@ -16,17 +16,26 @@
 
 package edu.kit.datamanager.idoris.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.kit.datamanager.idoris.visitors.Visitor;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.neo4j.core.schema.CompositeProperty;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+@Getter
+@Setter
 public abstract class VisitableElement {
     private static final Logger LOG = LoggerFactory.getLogger(VisitableElement.class);
-    private final Map<String, Instant> visitedBy = new HashMap<>();
+
+    @CompositeProperty
+    @JsonIgnore
+    private Map<String, Instant> visitedBy = new HashMap<>();
 
     public <T> T execute(Visitor<T> visitor, Object... args) {
 //        if (isVisitedBy(visitor)) {

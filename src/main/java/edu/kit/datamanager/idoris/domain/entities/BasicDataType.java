@@ -57,6 +57,17 @@ public final class BasicDataType extends DataType {
         return visitor.visit(this, args);
     }
 
+    @Override
+    public boolean inheritsFrom(DataType dataType) {
+        if (dataType instanceof BasicDataType basicDataType) {
+            if (basicDataType.equals(this)) {
+                return true;
+            }
+            return inheritsFrom != null && inheritsFrom.inheritsFrom(basicDataType);
+        }
+        return false;
+    }
+
     @AllArgsConstructor
     @Getter
     public enum Category {

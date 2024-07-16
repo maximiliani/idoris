@@ -48,4 +48,15 @@ public final class TypeProfile extends DataType {
     protected <T> T accept(Visitor<T> visitor, Object... args) {
         return visitor.visit(this, args);
     }
+
+    @Override
+    public boolean inheritsFrom(DataType dataType) {
+        if (dataType instanceof TypeProfile typeProfile) {
+            if (typeProfile.equals(this)) {
+                return true;
+            }
+            return inheritsFrom != null && inheritsFrom.stream().anyMatch(typeProfile::inheritsFrom);
+        }
+        return false;
+    }
 }
