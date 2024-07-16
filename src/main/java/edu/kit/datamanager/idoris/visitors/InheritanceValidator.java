@@ -29,8 +29,8 @@ public class InheritanceValidator extends Visitor<ValidationResult> {
         if ((result = checkCache(attribute.getPid())) != null) return result;
         else result = new ValidationResult();
 
-        result.addChild(attribute.getDataType().execute(this, args));
-        result.addChild(attribute.getOverride().execute(this, args));
+        if (attribute.getDataType() != null) result.addChild(attribute.getDataType().execute(this, args));
+        if (attribute.getOverride() != null) result.addChild(attribute.getOverride().execute(this, args));
 
         if (attribute.getOverride() != null && attribute.getOverride().getDataType() != null) {
             Attribute current = attribute;
@@ -52,8 +52,8 @@ public class InheritanceValidator extends Visitor<ValidationResult> {
         if ((result = checkCache(attributeMapping.getId())) != null) return result;
         else result = new ValidationResult();
 
-        result.addChild(attributeMapping.getInput().execute(this, args));
-        result.addChild(attributeMapping.getOutput().execute(this, args));
+        if (attributeMapping.getInput() != null) result.addChild(attributeMapping.getInput().execute(this, args));
+        if (attributeMapping.getOutput() != null) result.addChild(attributeMapping.getOutput().execute(this, args));
 
         return result;
     }
@@ -125,8 +125,9 @@ public class InheritanceValidator extends Visitor<ValidationResult> {
         if ((result = checkCache(operationStep.getId())) != null) return result;
         else result = new ValidationResult();
 
-        result.addChild(operationStep.getOperation().execute(this, args));
-        result.addChild(operationStep.getOperationTypeProfile().execute(this, args));
+        if (operationStep.getOperation() != null) result.addChild(operationStep.getOperation().execute(this, args));
+        if (operationStep.getOperationTypeProfile() != null)
+            result.addChild(operationStep.getOperationTypeProfile().execute(this, args));
 
         for (AttributeMapping attributeMapping : operationStep.getAttributes()) {
             result.addChild(attributeMapping.execute(this, args));

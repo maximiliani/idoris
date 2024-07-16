@@ -31,7 +31,7 @@ public record ValidationMessage(@NotNull String message, @Nullable Object elemen
         ERROR("ERROR");
         private final String value;
 
-        boolean isHigherOrEqualTo(MessageSeverity other) {
+        public boolean isHigherOrEqualTo(MessageSeverity other) {
             return this.ordinal() >= other.ordinal();
         }
     }

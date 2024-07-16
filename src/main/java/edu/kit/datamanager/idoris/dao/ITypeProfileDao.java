@@ -17,9 +17,11 @@
 package edu.kit.datamanager.idoris.dao;
 
 import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
+@OpenAPIDefinition
 @RepositoryRestResource(collectionResourceRel = "typeProfiles", path = "typeProfiles")
 public interface ITypeProfileDao extends IAbstractRepo<TypeProfile, String> {
     @Query("MATCH (d:TypeProfile {pid: $pid})-[i:inheritsFrom*]->(d2:TypeProfile)-[profileAttribute:attributes]->(dataType:DataType) RETURN i, d2, collect(profileAttribute), collect(dataType)")

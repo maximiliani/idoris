@@ -40,9 +40,7 @@ public class ValidationResult {
     }
 
     public boolean isValid() {
-        boolean noErrorMessages = messages.stream().noneMatch(m -> m.severity() == ValidationMessage.MessageSeverity.ERROR);
-        boolean childrenValid = children.stream().allMatch(ValidationResult::isValid);
-        return noErrorMessages && childrenValid;
+        return getErrorCount() > 1;
     }
 
     public int getErrorCount() {
@@ -58,7 +56,9 @@ public class ValidationResult {
     }
 
     public int getInfoCount() {
-        return (int) messages.stream().filter(m -> m.severity() == ValidationMessage.MessageSeverity.INFO).count();
+        int ownInfo = (int) messages.stream().filter(m -> m.severity() == ValidationMessage.MessageSeverity.INFO).count();
+        int childInfo = children.stream().mapToInt(ValidationResult::getInfoCount).sum();
+        return ownInfo + childInfo;
     }
 
     @Override

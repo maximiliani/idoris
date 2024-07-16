@@ -60,23 +60,8 @@ public class TypeProfileController {
         }
     }
 
-    @GetMapping("typeProfiles/{pid}/attributes")
-    public ResponseEntity<?> getAttributes(@PathVariable("pid") String pid) {
-        TypeProfile typeProfile = typeProfileDao.findById(pid).orElseThrow();
-        List<EntityModel<Attribute>> attributes = new ArrayList<>();
-        typeProfile.getAttributes().forEach(profileAttribute -> {
-            EntityModel<Attribute> attribute = EntityModel.of(profileAttribute);
-            attribute.add(linkTo(IDataTypeDao.class).slash("api").slash("dataTypes").slash(profileAttribute.getDataType().getPid()).withRel("dataType"));
-            attributes.add(attribute);
-        });
-        CollectionModel<EntityModel<Attribute>> resources = CollectionModel.of(attributes);
-        resources.add(linkTo(TypeProfileController.class).slash("api").slash("typeProfiles").slash(pid).slash("attributes").withSelfRel());
-        resources.add(linkTo(ITypeProfileDao.class).slash("api").slash("typeProfiles").slash(pid).withRel("typeProfile"));
-        return ResponseEntity.ok(resources);
-    }
-
     @GetMapping("typeProfiles/{pid}/inheritedAttributes")
-    public ResponseEntity<?> getInheritedAttributes(@PathVariable("pid") String pid) throws NoSuchMethodException {
+    public ResponseEntity<?> getInheritedAttributes(@PathVariable("pid") String pid) {
         Iterable<TypeProfile> inheritanceChain = typeProfileDao.findAllTypeProfilesInInheritanceChain(pid);
         List<EntityModel<Attribute>> attributes = new ArrayList<>();
         inheritanceChain.forEach(typeProfile -> {
@@ -93,13 +78,13 @@ public class TypeProfileController {
     }
 
     @GetMapping("typeProfiles/{pid}/inheritanceTree")
-    public HttpEntity<EntityModel<TypeProfileInheritanceDTO>> getInheritanceTree(@NotNull @PathVariable("pid") String pid) {
-        EntityModel<TypeProfileInheritanceDTO> resources = buildInheritanceTree(typeProfileDao.findById(pid).orElseThrow());
+    public HttpEntity<EntityModel<TypeProfileInheritance>> getInheritanceTree(@NotNull @PathVariable("pid") String pid) {
+        EntityModel<TypeProfileInheritance> resources = buildInheritanceTree(typeProfileDao.findById(pid).orElseThrow());
         resources.add(linkTo(TypeProfileController.class).slash("api").slash("typeProfiles").slash(pid).slash("inheritanceTree").withSelfRel());
         return new ResponseEntity<>(resources, HttpStatus.OK);
     }
 
-    private EntityModel<TypeProfileInheritanceDTO> buildInheritanceTree(TypeProfile typeProfile) {
+    private EntityModel<TypeProfileInheritance> buildInheritanceTree(TypeProfile typeProfile) {
         List<EntityModel<Attribute>> attributes = new ArrayList<>();
         typeProfile.getAttributes().forEach(profileAttribute -> {
             EntityModel<Attribute> attribute = EntityModel.of(profileAttribute);
@@ -107,13 +92,13 @@ public class TypeProfileController {
             attributes.add(attribute);
         });
 
-        List<EntityModel<TypeProfileInheritanceDTO>> inheritsFrom = new ArrayList<>();
+        List<EntityModel<TypeProfileInheritance>> inheritsFrom = new ArrayList<>();
         typeProfile.getInheritsFrom().forEach(inheritedTypeProfile -> {
             inheritsFrom.add(buildInheritanceTree(inheritedTypeProfile));
         });
 
-        EntityModel<TypeProfileInheritanceDTO> node = EntityModel.of(
-                new TypeProfileInheritanceDTO(typeProfile.getPid(),
+        EntityModel<TypeProfileInheritance> node = EntityModel.of(
+                new TypeProfileInheritance(typeProfile.getPid(),
                         typeProfile.getName(),
                         typeProfile.getDescription(),
                         CollectionModel.of(attributes),
@@ -154,11 +139,11 @@ public class TypeProfileController {
         return node;
     }
 
-    public record TypeProfileInheritanceDTO(
+    public record TypeProfileInheritance(
             String pid,
             String name,
             String description,
             CollectionModel<EntityModel<Attribute>> attributes,
-            CollectionModel<EntityModel<TypeProfileInheritanceDTO>> inheritsFrom) {
+            CollectionModel<EntityModel<TypeProfileInheritance>> inheritsFrom) {
     }
 }

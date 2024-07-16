@@ -58,17 +58,20 @@ public class VisitableElementValidator implements Validator {
                     .entrySet()
                     .stream()
                     .filter(e -> e.getKey() == ValidationMessage.MessageSeverity.ERROR || e.getKey() == ValidationMessage.MessageSeverity.WARNING)
+                    .filter(e -> !e.getValue().isEmpty())
                     .toArray();
+
+            if (validationMessages.length == 0) return;
 
             switch (applicationProperties.getValidationPolicy()) {
                 case STRICT -> {
                     log.info("STRICT Validation failed: " + Arrays.toString(List.of(validationResult).toArray()));
-                    errors.rejectValue(null, validator.getClass().getName() + " failed", validationMessages, "Validation failed.");
+                    errors.rejectValue(null, validator.getClass().getSimpleName() + " failed", validationMessages, "Validation failed.");
                 }
                 case LAX -> {
                     if (!validationResult.isValid()) {
                         log.info("LAX Validation failed: " + validationResult);
-                        errors.rejectValue(null, validator.getClass().getName() + " failed", validationMessages, "Validation failed.");
+                        errors.rejectValue(null, validator.getClass().getSimpleName() + " failed", validationMessages, "Validation failed.");
                     }
                 }
             }
