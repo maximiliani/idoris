@@ -40,8 +40,6 @@ import java.util.List;
 })
 public abstract sealed class DataType extends GenericIDORISEntity permits BasicDataType, TypeProfile {
     private TYPES type;
-    private String name;
-    private String description;
     private List<String> expectedUses;
 
     @Property("default")

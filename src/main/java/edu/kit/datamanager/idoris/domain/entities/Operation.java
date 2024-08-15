@@ -18,9 +18,6 @@ package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
 import edu.kit.datamanager.idoris.visitors.Visitor;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -39,12 +36,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Validated
 public class Operation extends GenericIDORISEntity {
-    @NotBlank(message = "For better human readability and understanding, please provide a name for the operation.")
-    private String name;
-    private String description;
-
     @Relationship(value = "executableOn", direction = Relationship.Direction.OUTGOING)
-    @NotNull(message = "Please specify the data type on which the operation can be executed.")
     private Attribute executableOn;
     @Relationship(value = "returns", direction = Relationship.Direction.INCOMING)
     private Set<Attribute> returns;
@@ -52,9 +44,6 @@ public class Operation extends GenericIDORISEntity {
     private Set<Attribute> environment;
 
     @Relationship(value = "execution", direction = Relationship.Direction.OUTGOING)
-    @NotNull(message = "Please specify the steps of the operation.")
-    @Valid
-//    @Min(value = 1, message = "Please specify at least one step for the operation.")
     private List<OperationStep> execution;
 
     @Override

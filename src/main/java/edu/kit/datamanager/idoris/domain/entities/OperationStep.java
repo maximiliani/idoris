@@ -45,7 +45,7 @@ public class OperationStep extends VisitableElement implements Serializable {
     @GeneratedValue
     private String id;
 
-    @NotNull(message = "Execution order index must not be specified otherwise the order of steps is random.")
+    @NotNull(message = "Execution order index is optional to be specified otherwise the order of steps is random.")
     @PositiveOrZero
     private Integer executionOrderIndex;
 

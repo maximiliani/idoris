@@ -41,22 +41,18 @@ public abstract class GenericIDORISEntity extends VisitableElement implements Se
     @Id
     @GeneratedValue(UUIDStringGenerator.class)
     String pid;
-
     @Version
     Long version;
-
     @CreatedDate
     Instant createdAt;
-
     @LastModifiedDate
     Instant lastModifiedAt;
-
     @Relationship(value = "contributors", direction = Relationship.Direction.OUTGOING)
     Set<User> contributors;
-
     @Relationship(value = "license", direction = Relationship.Direction.OUTGOING)
     License license;
-
     @Relationship(value = "standards", direction = Relationship.Direction.OUTGOING)
     Set<StandardApplicability> standards;
+    private String name;
+    private String description;
 }

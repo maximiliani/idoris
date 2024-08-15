@@ -209,8 +209,13 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
             result.addMessage("An execution mode must be specified. Default is synchronous execution. Select from: " + Arrays.toString(OperationStep.ExecutionMode.values()), operationStep, ERROR);
         }
 
-        if ((operationStep.getOperation() == null && operationStep.getOperationTypeProfile() == null) || (operationStep.getOperation() != null && operationStep.getOperationTypeProfile() != null)) {
-            result.addMessage("You MUST specify either an operation or an operation type profile for the operation step. You can only specify exactly one!", operationStep, ERROR);
+        int count = 0;
+        if (operationStep.getOperation() != null) count++;
+        if (operationStep.getOperationTypeProfile() != null) count++;
+        if (!operationStep.getSteps().isEmpty()) count++;
+
+        if (count != 1) {
+            result.addMessage("You MUST specify either an operation, an operation type profile or a set of substeps for the operation step. You MUST only specify exactly one of these options!", operationStep, ERROR);
         }
 
         if (operationStep.getOperation() != null) {
