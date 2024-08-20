@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.visitors;
+package edu.kit.datamanager.idoris.validators;
 
 import edu.kit.datamanager.idoris.domain.entities.*;
 import edu.kit.datamanager.idoris.domain.enums.SubSchemaRelation;
-import edu.kit.datamanager.idoris.validators.ValidationResult;
 import lombok.extern.java.Log;
 
 import java.util.HashMap;

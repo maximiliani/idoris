@@ -19,14 +19,11 @@ package edu.kit.datamanager.idoris.configuration;
 import edu.kit.datamanager.idoris.dao.IOperationDao;
 import edu.kit.datamanager.idoris.dao.ITypeProfileDao;
 import edu.kit.datamanager.idoris.domain.VisitableElement;
-import edu.kit.datamanager.idoris.domain.entities.*;
-import edu.kit.datamanager.idoris.validators.ValidationMessage;
-import edu.kit.datamanager.idoris.validators.ValidationResult;
-import edu.kit.datamanager.idoris.validators.VisitableElementValidator;
-import edu.kit.datamanager.idoris.visitors.InheritanceValidator;
-import edu.kit.datamanager.idoris.visitors.SubSchemaRelationValidator;
-import edu.kit.datamanager.idoris.visitors.SyntaxValidator;
-import edu.kit.datamanager.idoris.visitors.Visitor;
+import edu.kit.datamanager.idoris.domain.entities.BasicDataType;
+import edu.kit.datamanager.idoris.domain.entities.Operation;
+import edu.kit.datamanager.idoris.domain.entities.OperationTypeProfile;
+import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
+import edu.kit.datamanager.idoris.validators.*;
 import io.netty.util.Attribute;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,7 +63,6 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
         config.exposeIdsFor(
                 Attribute.class,
                 BasicDataType.class,
-                FDO.class,
                 Operation.class,
                 OperationTypeProfile.class,
                 TypeProfile.class

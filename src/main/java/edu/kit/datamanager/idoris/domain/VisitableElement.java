@@ -17,7 +17,7 @@
 package edu.kit.datamanager.idoris.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import edu.kit.datamanager.idoris.visitors.Visitor;
+import edu.kit.datamanager.idoris.validators.Visitor;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;

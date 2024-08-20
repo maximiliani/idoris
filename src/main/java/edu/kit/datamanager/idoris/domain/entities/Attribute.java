@@ -18,7 +18,7 @@ package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.VisitableElement;
 import edu.kit.datamanager.idoris.domain.enums.Obligation;
-import edu.kit.datamanager.idoris.visitors.Visitor;
+import edu.kit.datamanager.idoris.validators.Visitor;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

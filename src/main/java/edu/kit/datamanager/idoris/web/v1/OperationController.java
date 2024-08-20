@@ -19,8 +19,8 @@ package edu.kit.datamanager.idoris.web.v1;
 import edu.kit.datamanager.idoris.dao.IDataTypeDao;
 import edu.kit.datamanager.idoris.dao.IOperationDao;
 import edu.kit.datamanager.idoris.domain.entities.Operation;
+import edu.kit.datamanager.idoris.validators.SubSchemaRelationValidator;
 import edu.kit.datamanager.idoris.validators.ValidationResult;
-import edu.kit.datamanager.idoris.visitors.SubSchemaRelationValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.RepositoryRestController;
 import org.springframework.http.ResponseEntity;
@@ -40,10 +40,6 @@ public class OperationController {
         Operation operation = operationDao.findById(pid).orElseThrow();
         SubSchemaRelationValidator validator = new SubSchemaRelationValidator();
         ValidationResult result = operation.execute(validator);
-        if (result.isValid()) {
-            return ResponseEntity.ok(result);
-        } else {
-            return ResponseEntity.status(218).body(result);
-        }
+        return ResponseEntity.ok(result);
     }
 }

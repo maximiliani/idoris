@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.visitors;
+package edu.kit.datamanager.idoris.validators;
 
 import edu.kit.datamanager.idoris.domain.entities.*;
 import edu.kit.datamanager.idoris.domain.enums.Obligation;
-import edu.kit.datamanager.idoris.validators.ValidationResult;
 
 import static edu.kit.datamanager.idoris.validators.ValidationMessage.MessageSeverity.ERROR;
 

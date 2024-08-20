@@ -17,7 +17,7 @@
 package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.VisitableElement;
-import edu.kit.datamanager.idoris.visitors.Visitor;
+import edu.kit.datamanager.idoris.validators.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

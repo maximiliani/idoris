@@ -18,10 +18,6 @@ package edu.kit.datamanager.idoris.validators;
 
 import edu.kit.datamanager.idoris.configuration.ApplicationProperties;
 import edu.kit.datamanager.idoris.domain.VisitableElement;
-import edu.kit.datamanager.idoris.visitors.InheritanceValidator;
-import edu.kit.datamanager.idoris.visitors.SubSchemaRelationValidator;
-import edu.kit.datamanager.idoris.visitors.SyntaxValidator;
-import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.validation.Errors;
