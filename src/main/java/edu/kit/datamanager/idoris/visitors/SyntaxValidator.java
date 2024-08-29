@@ -17,6 +17,7 @@
 package edu.kit.datamanager.idoris.visitors;
 
 import edu.kit.datamanager.idoris.domain.entities.*;
+import edu.kit.datamanager.idoris.domain.enums.Category;
 import edu.kit.datamanager.idoris.domain.enums.PrimitiveDataTypes;
 import edu.kit.datamanager.idoris.domain.enums.SubSchemaRelation;
 import edu.kit.datamanager.idoris.validators.ValidationResult;
@@ -44,6 +45,8 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
 
         if (attribute.getDataType() == null) {
             result.addMessage("You MUST provide a data type for the attribute.", attribute, ERROR);
+        } else {
+            result.addChild(attribute.getDataType().execute(this, args));
         }
 
         if (attribute.getObligation() == null) {
@@ -54,7 +57,7 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
             result.addChild(attribute.getOverride().execute(this, args));
         }
 
-        return result;
+        return save(attribute.getPid(), result);
     }
 
     @Override
@@ -83,7 +86,7 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
             result.addMessage("The input is repeatable, the output is not repeatable and no index is specified.", attributeMapping, ERROR);
         }
 
-        return result;
+        return save(attributeMapping.getId(), result);
     }
 
     @Override
@@ -102,7 +105,7 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
         }
 
         if (basicDataType.getCategory() == null) {
-            result.addMessage("You MUST provide a category for the basic data type. Please select from: " + Arrays.toString(BasicDataType.Category.values()), basicDataType, ERROR);
+            result.addMessage("You MUST provide a category for the basic data type. Please select from: " + Arrays.toString(Category.values()), basicDataType, ERROR);
         } else switch (basicDataType.getCategory()) {
             case MeasurementUnit -> {
                 if (basicDataType.getUnitName() == null || basicDataType.getUnitName().isEmpty()) {
@@ -135,7 +138,7 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
             }
         }
 
-        return result;
+        return save(basicDataType.getPid(), result);
     }
 
     @Override
@@ -157,7 +160,7 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
             result.addMessage("You MUST provide a sub schema relation for the type profile. Please select from: " + Arrays.toString(SubSchemaRelation.values()), typeProfile, ERROR);
         }
 
-        return result;
+        return save(typeProfile.getPid(), result);
     }
 
     @Override
@@ -188,7 +191,7 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
 
         operation.getExecution().stream().map(operationStep -> operationStep.execute(this, args)).forEach(result::addChild);
 
-        return result;
+        return save(operation.getPid(), result);
     }
 
     @Override
@@ -227,7 +230,7 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
             operationStep.getOutput().stream().map(attributeMapping -> attributeMapping.execute(this, args)).forEach(result::addChild);
         }
 
-        return result;
+        return save(operationStep.getId(), result);
     }
 
     @Override
@@ -261,7 +264,7 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
 //            operationTypeProfile.getAdapters().stream().map(fdo -> fdo.execute(this, args)).forEach(result::addChild);
 //        }
 
-        return result;
+        return save(operationTypeProfile.getPid(), result);
     }
 
     private void visitDataType(DataType dataType, ValidationResult result) {

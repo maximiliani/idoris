@@ -27,8 +27,6 @@ import lombok.extern.java.Log;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 @Log
@@ -57,7 +55,7 @@ public class VisitableElementValidator implements Validator {
             var validationMessages = validationResult.getValidationMessages()
                     .entrySet()
                     .stream()
-                    .filter(e -> e.getKey() == ValidationMessage.MessageSeverity.ERROR || e.getKey() == ValidationMessage.MessageSeverity.WARNING)
+                    .filter(e -> e.getKey().isHigherOrEqualTo(applicationProperties.getValidationLevel()))
                     .filter(e -> !e.getValue().isEmpty())
                     .toArray();
 
@@ -65,13 +63,13 @@ public class VisitableElementValidator implements Validator {
 
             switch (applicationProperties.getValidationPolicy()) {
                 case STRICT -> {
-                    log.info("STRICT Validation failed: " + Arrays.toString(List.of(validationResult).toArray()));
-                    errors.rejectValue(null, validator.getClass().getSimpleName() + " failed", validationMessages, "Validation failed.");
+                    log.warning("STRICT Validation failed: " + validationResult);
+                    errors.rejectValue(null, validator.getClass().getSimpleName(), validationMessages, "Validation with " + validator.getClass().getSimpleName() + " failed.");
                 }
                 case LAX -> {
                     if (!validationResult.isValid()) {
-                        log.info("LAX Validation failed: " + validationResult);
-                        errors.rejectValue(null, validator.getClass().getSimpleName() + " failed", validationMessages, "Validation failed.");
+                        log.warning("LAX Validation failed: " + validationResult);
+                        errors.rejectValue(null, validator.getClass().getSimpleName(), validationMessages, "Validation with " + validator.getClass().getSimpleName() + " failed.");
                     }
                 }
             }

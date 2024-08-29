@@ -33,17 +33,16 @@ public class InheritanceValidator extends Visitor<ValidationResult> {
         if (attribute.getOverride() != null) result.addChild(attribute.getOverride().execute(this, args));
 
         if (attribute.getOverride() != null && attribute.getOverride().getDataType() != null) {
-            Attribute current = attribute;
             Attribute override = attribute.getOverride();
 
-            if (!current.getDataType().inheritsFrom(override.getDataType()))
-                result.addMessage("The data type of an attribute MUST be inherited from the data type of the attribute that was overwritten.", current, ERROR);
+            if (!attribute.getDataType().inheritsFrom(override.getDataType()))
+                result.addMessage("The data type of an attribute MUST be inherited from the data type of the attribute that was overwritten.", attribute, ERROR);
 
-            if (current.getObligation() == Obligation.Optional && override.getObligation() == Obligation.Mandatory)
-                result.addMessage("The obligation of an attribute MUST be more or equally restrictive than the obligation of the attribute that was overwritten. Overriding a mandatory attribute as an optional attribute is NOT possible.", current, ERROR);
+            if (attribute.getObligation() == Obligation.Optional && override.getObligation() == Obligation.Mandatory)
+                result.addMessage("The obligation of an attribute MUST be more or equally restrictive than the obligation of the attribute that was overwritten. Overriding a mandatory attribute as an optional attribute is NOT possible.", attribute, ERROR);
         }
 
-        return result;
+        return save(attribute.getPid(), result);
     }
 
     @Override
@@ -55,7 +54,7 @@ public class InheritanceValidator extends Visitor<ValidationResult> {
         if (attributeMapping.getInput() != null) result.addChild(attributeMapping.getInput().execute(this, args));
         if (attributeMapping.getOutput() != null) result.addChild(attributeMapping.getOutput().execute(this, args));
 
-        return result;
+        return save(attributeMapping.getId(), result);
     }
 
     @Override
@@ -72,11 +71,11 @@ public class InheritanceValidator extends Visitor<ValidationResult> {
             if (!basicDataType.getCategory().equals(parent.getCategory()))
                 result.addMessage("Category does not match parent", basicDataType, ERROR);
 
-            if (!parent.getValueEnum().isEmpty() && !basicDataType.getValueEnum().isEmpty() && !parent.getValueEnum().containsAll(basicDataType.getValueEnum()))
+            if ((parent.getValueEnum() != null && basicDataType.getValueEnum() != null) && !parent.getValueEnum().isEmpty() && !parent.getValueEnum().containsAll(basicDataType.getValueEnum()))
                 result.addMessage("Value enum does not match parent", basicDataType, ERROR);
         }
 
-        return result;
+        return save(basicDataType.getPid(), result);
     }
 
     @Override
@@ -85,15 +84,19 @@ public class InheritanceValidator extends Visitor<ValidationResult> {
         if ((result = checkCache(typeProfile.getPid())) != null) return result;
         else result = new ValidationResult();
 
-        for (TypeProfile parent : typeProfile.getInheritsFrom()) {
-            result.addChild(parent.execute(this));
+        if (typeProfile.getInheritsFrom() != null) {
+            for (TypeProfile parent : typeProfile.getInheritsFrom()) {
+                result.addChild(parent.execute(this));
+            }
         }
 
-        for (Attribute attribute : typeProfile.getAttributes()) {
-            result.addChild(attribute.execute(this));
+        if (typeProfile.getAttributes() != null) {
+            for (Attribute attribute : typeProfile.getAttributes()) {
+                result.addChild(attribute.execute(this));
+            }
         }
 
-        return result;
+        return save(typeProfile.getPid(), result);
     }
 
     @Override
@@ -104,19 +107,25 @@ public class InheritanceValidator extends Visitor<ValidationResult> {
 
         if (operation.getExecutableOn() != null) result.addChild(operation.getExecutableOn().execute(this, args));
 
-        for (Attribute attribute : operation.getReturns()) {
-            result.addChild(attribute.execute(this, args));
+        if (operation.getReturns() != null) {
+            for (Attribute attribute : operation.getReturns()) {
+                result.addChild(attribute.execute(this, args));
+            }
         }
 
-        for (Attribute attribute : operation.getEnvironment()) {
-            result.addChild(attribute.execute(this, args));
+        if (operation.getEnvironment() != null) {
+            for (Attribute attribute : operation.getEnvironment()) {
+                result.addChild(attribute.execute(this, args));
+            }
         }
 
-        for (OperationStep step : operation.getExecution()) {
-            result.addChild(step.execute(this, args));
+        if (operation.getExecution() != null) {
+            for (OperationStep step : operation.getExecution()) {
+                result.addChild(step.execute(this, args));
+            }
         }
 
-        return result;
+        return save(operation.getPid(), result);
     }
 
     @Override
@@ -129,19 +138,25 @@ public class InheritanceValidator extends Visitor<ValidationResult> {
         if (operationStep.getOperationTypeProfile() != null)
             result.addChild(operationStep.getOperationTypeProfile().execute(this, args));
 
-        for (AttributeMapping attributeMapping : operationStep.getAttributes()) {
-            result.addChild(attributeMapping.execute(this, args));
+        if (operationStep.getAttributes() != null) {
+            for (AttributeMapping attributeMapping : operationStep.getAttributes()) {
+                result.addChild(attributeMapping.execute(this, args));
+            }
         }
 
-        for (AttributeMapping attributeMapping : operationStep.getOutput()) {
-            result.addChild(attributeMapping.execute(this, args));
+        if (operationStep.getOutput() != null) {
+            for (AttributeMapping attributeMapping : operationStep.getOutput()) {
+                result.addChild(attributeMapping.execute(this, args));
+            }
         }
 
-        for (OperationStep child : operationStep.getSteps()) {
-            result.addChild(child.execute(this, args));
+        if (operationStep.getSteps() != null) {
+            for (OperationStep child : operationStep.getSteps()) {
+                result.addChild(child.execute(this, args));
+            }
         }
 
-        return result;
+        return save(operationStep.getId(), result);
     }
 
     @Override
@@ -150,17 +165,24 @@ public class InheritanceValidator extends Visitor<ValidationResult> {
         if ((result = checkCache(operationTypeProfile.getPid())) != null) return result;
         else result = new ValidationResult();
 
-        for (Attribute attribute : operationTypeProfile.getAttributes()) {
-            result.addChild(attribute.execute(this, args));
+        if (operationTypeProfile.getAttributes() != null) {
+            for (Attribute attribute : operationTypeProfile.getAttributes()) {
+                result.addChild(attribute.execute(this, args));
+            }
         }
 
-        for (OperationTypeProfile parent : operationTypeProfile.getInheritsFrom()) {
-            result.addChild(parent.execute(this, args));
+        if (operationTypeProfile.getInheritsFrom() != null) {
+            for (OperationTypeProfile parent : operationTypeProfile.getInheritsFrom()) {
+                result.addChild(parent.execute(this, args));
+            }
         }
 
-        for (Attribute attribute : operationTypeProfile.getOutputs())
-            result.addChild(attribute.execute(this, args));
+        if (operationTypeProfile.getOutputs() != null) {
+            for (Attribute attribute : operationTypeProfile.getOutputs()) {
+                result.addChild(attribute.execute(this, args));
+            }
+        }
 
-        return result;
+        return save(operationTypeProfile.getPid(), result);
     }
 }

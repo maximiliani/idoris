@@ -22,13 +22,16 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 @RepositoryRestResource(collectionResourceRel = "operations", path = "operations")
 public interface IOperationDao extends IAbstractRepo<Operation, String> {
-    //    @Query("optional Match (:DataType {pid: $pid})-[:attributes|inheritsFrom*]->(:DataType)<-[:dataType]-(:Attribute)<-[:executableOn]-(o:Operation) return o")
-    @Query("match (d:DataType {pid: $pid})-[:attributes]->(:Attribute)<-[:executableOn]-(o:Operation) return o\n" +
-            "union\n" +
-            "match (d:DataType {pid: $pid})-[:attributes]->(:Attribute)-[:dataType]->(:DataType)<-[:dataType]-(:Attribute)<-[:executableOn]-(o:Operation) return o\n" +
-            "union\n" +
-            "match (d:DataType {pid: $pid})-[:inheritsFrom*]->(:DataType)-[:attributes]->(:Attribute)-[:dataType]->(:DataType)<-[:dataType]-(:Attribute)<-[:executableOn]-(o:Operation) return o\n" +
-            "union\n" +
-            "match (d:DataType {pid: $pid})-[:inheritsFrom*]->(:DataType)-[:attributes]->(:Attribute)-[:dataType]->(:DataType)-[:inheritsFrom*]->(:DataType)<-[:dataType]-(:Attribute)<-[:executableOn]-(o:Operation) return o")
+    //    @Query("optional MATCH (:DataType {pid: $pid})-[:attributes|inheritsFrom*]->(:DataType)<-[:dataType]-(:Attribute)<-[:executableOn]-(o:Operation) RETURN o")
+    @Query("""
+            MATCH (d:DataType {pid: $pid})<-[:dataType]-(:Attribute)<-[:executableOn]-(o:Operation) RETURN o
+            UNION
+            MATCH (d:DataType {pid: $pid})-[:attributes]->(:Attribute)<-[:executableOn]-(o:Operation) RETURN o
+            UNION
+            MATCH (d:DataType {pid: $pid})-[:attributes]->(:Attribute)-[:dataType]->(:DataType)<-[:dataType]-(:Attribute)<-[:executableOn]-(o:Operation) RETURN o
+            UNION
+            MATCH (d:DataType {pid: $pid})-[:inheritsFrom*]->(:DataType)-[:attributes]->(:Attribute)-[:dataType]->(:DataType)<-[:dataType]-(:Attribute)<-[:executableOn]-(o:Operation) RETURN o
+            UNION
+            MATCH (d:DataType {pid: $pid})-[:inheritsFrom*]->(:DataType)-[:attributes]->(:Attribute)-[:dataType]->(:DataType)-[:inheritsFrom*]->(:DataType)<-[:dataType]-(:Attribute)<-[:executableOn]-(o:Operation) RETURN o""")
     Iterable<Operation> getOperationsForDataType(String pid);
 }
