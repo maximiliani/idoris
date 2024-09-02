@@ -36,7 +36,8 @@ public class SubSchemaRelationValidator extends Visitor<ValidationResult> {
         ValidationResult result;
         if ((result = checkCache(attribute.getPid())) != null) return result;
         log.info("Redirecting from Attribute " + attribute.getPid() + " to DataType");
-        return save(attribute.getPid(), attribute.getDataType().execute(this, args));
+        if (attribute.getDataType() != null) result = attribute.getDataType().execute(this, args);
+        return save(attribute.getPid(), result);
     }
 
     @Override

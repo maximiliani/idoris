@@ -66,7 +66,6 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
         config.exposeIdsFor(
                 Attribute.class,
                 BasicDataType.class,
-                FDO.class,
                 Operation.class,
                 OperationTypeProfile.class,
                 TypeProfile.class
@@ -127,7 +126,9 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
                 );
 
                 Map<String, Map<ValidationMessage.MessageSeverity, List<ValidationMessage>>> results = validators.stream()
+                        .peek(visitor -> log.info("Executing validation for " + visitor.getClass().getSimpleName()))
                         .map(visitor -> Map.entry(visitor.getClass().getSimpleName(), element.execute(visitor)))
+                        .peek(entry -> log.info("Validation result for " + entry.getKey() + ": " + entry.getValue()))
                         .map(entry -> Map.entry(
                                 entry.getKey(),
                                 entry.getValue()
@@ -137,6 +138,7 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
                                         .filter(e -> e.getKey().isHigherOrEqualTo(applicationProperties.getValidationLevel()))
                                         .filter(e -> !e.getValue().isEmpty())
                                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))))
+                        .peek(entry -> log.info("Filtered validation result for " + entry.getKey() + ": " + entry.getValue()))
                         .filter(entry -> !entry.getValue().isEmpty())
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
