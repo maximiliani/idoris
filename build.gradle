@@ -1,4 +1,5 @@
 plugins {
+    id "java"
     id 'org.springframework.boot' version '3.2.1'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'io.freefair.lombok' version '8.4'
@@ -8,7 +9,6 @@ plugins {
     id 'net.ltgt.errorprone' version '3.1.0'
     id 'net.researchgate.release' version '3.0.2'
     id 'com.gorylenko.gradle-git-properties' version '2.4.1'
-    id 'java'
     id 'jacoco'
 }
 
@@ -42,29 +42,36 @@ ext {
     javersVersion = '7.3.7'
     errorproneVersion = '2.24.1'
     // directory for generated code snippets during tests
-    snippetsDir = file("build/generated-snippets")
+    set('snippetsDir', file("build/generated-snippets"))
 }
 
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-neo4j'
-    implementation 'org.springframework.boot:spring-boot-starter-data-rest'
-    implementation 'org.springframework.boot:spring-boot-starter-graphql'
+//    implementation 'org.springframework.boot:spring-boot-starter-graphql'
     implementation 'org.springframework.boot:spring-boot-starter-hateoas'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation "org.springframework.boot:spring-boot-starter-actuator"
+    implementation 'org.springframework.data:spring-data-rest-hal-explorer'
+    implementation 'org.springframework.boot:spring-boot-starter-data-rest'
+//    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation:2.7.3'
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.7.3'
+    implementation 'org.springdoc:springdoc-openapi-ui:1.6.11'
+    implementation 'org.springdoc:springdoc-openapi-data-rest:1.6.11'
+    implementation 'org.springdoc:springdoc-openapi-webmvc-core:1.6.11'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+//    implementation 'com.netflix.graphql.dgs.codegen:graphql-dgs-codegen-gradle:6.0.3'
+//    testImplementation 'org.springframework:spring-webflux'
 
     compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework:spring-webflux'
-    testImplementation 'org.springframework.graphql:spring-graphql-test'
+//    testImplementation 'org.springframework.graphql:spring-graphql-test'
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
     testImplementation 'org.springframework.security:spring-security-test'
 
-    // errorprone
     errorprone "com.google.errorprone:error_prone_core:${errorproneVersion}"
 }
 
@@ -77,6 +84,24 @@ compileTestJava {
     // disable errorprone for tests
     options.errorprone.disableWarningsInGeneratedCode = true
     options.errorprone.enabled = false // change it to true to enable
+}
+
+tasks.named('test') {
+    outputs.dir snippetsDir
+    finalizedBy jacocoTestReport
+    environment "spring.config.location", "optional:classpath:/test-config/"
+
+    maxHeapSize = "8192m"
+    testLogging {
+        outputs.upToDateWhen { false }
+        showStandardStreams = true
+    }
+    useJUnitPlatform()
+}
+
+tasks.named('asciidoctor') {
+    inputs.dir snippetsDir
+    dependsOn test
 }
 
 test {
