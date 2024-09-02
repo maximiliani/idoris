@@ -62,7 +62,7 @@ public class ApplicationProperties {
     /**
      * The policy to use for validating the input.
      * <p>
-     * The policy can be either STRICT or LENIENT.
+     * The policy can be either STRICT or LAX.
      * Strict means that the input must be exactly as expected. Warnings are treated as errors and therefore fail the validation.
      * Lenient means that the input can be slightly different from the expected input. Warnings are provided to the user but DO NOT fail the validation.
      */

@@ -35,8 +35,9 @@ public class SubSchemaRelationValidator extends Visitor<ValidationResult> {
     public ValidationResult visit(Attribute attribute, Object... args) {
         ValidationResult result;
         if ((result = checkCache(attribute.getPid())) != null) return result;
-        log.info("Redirecting from Attribute " + attribute.getPid() + " to DataType " + attribute.getDataType().getPid());
-        return save(attribute.getPid(), attribute.getDataType().execute(this, args));
+        log.info("Redirecting from Attribute " + attribute.getPid() + " to DataType");
+        if (attribute.getDataType() != null) result = attribute.getDataType().execute(this, args);
+        return save(attribute.getPid(), result);
     }
 
     @Override
@@ -62,9 +63,9 @@ public class SubSchemaRelationValidator extends Visitor<ValidationResult> {
         if ((result = checkCache(typeProfile.getPid())) != null) return result;
         else result = new ValidationResult();
 
-        if (typeProfile.getInheritsFrom().isEmpty()) {
+        if (typeProfile.getInheritsFrom() == null || typeProfile.getInheritsFrom().isEmpty()) {
             log.info("TypeProfile " + typeProfile.getPid() + " has no parent TypeProfiles. Skipping validation.");
-            return result;
+            return save(typeProfile.getPid(), result);
         }
         for (TypeProfile parent : typeProfile.getInheritsFrom()) {
             if (parent == null || parent.getSubSchemaRelation() == null) {
@@ -120,11 +121,21 @@ public class SubSchemaRelationValidator extends Visitor<ValidationResult> {
         if ((result = checkCache(operation.getPid())) != null) return result;
         else result = new ValidationResult();
 
-        for (OperationStep step : operation.getExecution()) result.addChild(step.execute(this, args));
-        Attribute executableOn = operation.getExecutableOn();
-        if (executableOn != null) result.addChild(executableOn.execute(this, args));
-        for (Attribute returns : operation.getReturns()) result.addChild(returns.execute(this, args));
-        for (Attribute env : operation.getEnvironment()) result.addChild(env.execute(this, args));
+        if (operation.getExecution() != null)
+            for (OperationStep step : operation.getExecution())
+                result.addChild(step.execute(this, args));
+
+        if (operation.getExecutableOn() != null)
+            result.addChild(operation.getExecutableOn().execute(this, args));
+
+        if (operation.getReturns() != null)
+            for (Attribute returns : operation.getReturns())
+                result.addChild(returns.execute(this, args));
+
+        if (operation.getEnvironment() != null)
+            for (Attribute env : operation.getEnvironment())
+                result.addChild(env.execute(this, args));
+
         return save(operation.getPid(), result);
     }
 
@@ -134,13 +145,24 @@ public class SubSchemaRelationValidator extends Visitor<ValidationResult> {
         if ((result = checkCache(operationStep.getId())) != null) return result;
         else result = new ValidationResult();
 
-        for (AttributeMapping input : operationStep.getAttributes()) result.addChild(input.execute(this, args));
-        for (AttributeMapping output : operationStep.getOutput()) result.addChild(output.execute(this, args));
-        for (OperationStep step : operationStep.getSteps()) result.addChild(step.execute(this, args));
-        OperationTypeProfile otp = operationStep.getOperationTypeProfile();
-        if (otp != null) result.addChild(otp.execute(this, args));
-        Operation operation = operationStep.getOperation();
-        if (operation != null) result.addChild(operation.execute(this, args));
+        if (operationStep.getAttributes() != null)
+            for (AttributeMapping input : operationStep.getAttributes())
+                result.addChild(input.execute(this, args));
+
+        if (operationStep.getOutput() != null)
+            for (AttributeMapping output : operationStep.getOutput())
+                result.addChild(output.execute(this, args));
+
+        if (operationStep.getSteps() != null)
+            for (OperationStep step : operationStep.getSteps())
+                result.addChild(step.execute(this, args));
+
+        if (operationStep.getOperationTypeProfile() != null)
+            result.addChild(operationStep.getOperationTypeProfile().execute(this, args));
+
+        if (operationStep.getOperation() != null)
+            result.addChild(operationStep.getOperation().execute(this, args));
+
         return save(operationStep.getId(), result);
     }
 
@@ -150,12 +172,18 @@ public class SubSchemaRelationValidator extends Visitor<ValidationResult> {
         if ((result = checkCache(operationTypeProfile.getPid())) != null) return result;
         else result = new ValidationResult();
 
-        for (OperationTypeProfile parent : operationTypeProfile.getInheritsFrom())
-            result.addChild(parent.execute(this, args));
-        for (Attribute attribute : operationTypeProfile.getAttributes())
-            result.addChild(attribute.execute(this, args));
-        for (Attribute outputs : operationTypeProfile.getOutputs())
-            result.addChild(outputs.execute(this, args));
+        if (operationTypeProfile.getInheritsFrom() != null)
+            for (OperationTypeProfile parent : operationTypeProfile.getInheritsFrom())
+                result.addChild(parent.execute(this, args));
+
+        if (operationTypeProfile.getAttributes() != null)
+            for (Attribute attribute : operationTypeProfile.getAttributes())
+                result.addChild(attribute.execute(this, args));
+
+        if (operationTypeProfile.getOutputs() != null)
+            for (Attribute outputs : operationTypeProfile.getOutputs())
+                result.addChild(outputs.execute(this, args));
+
         return save(operationTypeProfile.getPid(), result);
     }
 

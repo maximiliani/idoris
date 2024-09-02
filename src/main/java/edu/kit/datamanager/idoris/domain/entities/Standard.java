@@ -16,7 +16,6 @@
 
 package edu.kit.datamanager.idoris.domain.entities;
 
-import edu.kit.datamanager.idoris.domain.enums.NatureOfApplicability;
 import edu.kit.datamanager.idoris.domain.enums.StandardIssuer;
 import lombok.*;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
@@ -37,6 +36,5 @@ public class Standard {
     private String name;
     private StandardIssuer issuer;
     private String details;
-    private NatureOfApplicability natureOfApplicability;
 }
 

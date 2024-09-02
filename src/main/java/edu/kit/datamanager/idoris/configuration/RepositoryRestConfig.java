@@ -66,7 +66,6 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
         config.exposeIdsFor(
                 Attribute.class,
                 BasicDataType.class,
-                FDO.class,
                 Operation.class,
                 OperationTypeProfile.class,
                 TypeProfile.class
@@ -81,7 +80,7 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
     public void configureValidatingRepositoryEventListener(ValidatingRepositoryEventListener v) {
         v.addValidator("beforeSave", new VisitableElementValidator(applicationProperties));
         v.addValidator("beforeCreate", new VisitableElementValidator(applicationProperties));
-        v.addValidator("beforeLinkSave", new VisitableElementValidator(applicationProperties));
+        v.addValidator("afterLinkSave", new VisitableElementValidator(applicationProperties));
     }
 
     @Bean
@@ -94,6 +93,17 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
                 model.add(baseLink.slash(pid).slash("validate").withRel("validate"));
                 model.add(baseLink.slash(pid).slash("inheritedAttributes").withRel("inheritedAttributes"));
                 model.add(baseLink.slash(pid).slash("inheritanceTree").withRel("inheritanceTree"));
+                return model;
+            }
+        };
+    }
+
+    @Bean
+    public RepresentationModelProcessor<EntityModel<DataType>> dataTypeProcessor() {
+        return new RepresentationModelProcessor<EntityModel<DataType>>() {
+            @Override
+            public EntityModel<DataType> process(EntityModel<DataType> model) {
+                String pid = Objects.requireNonNull(model.getContent()).getPid();
                 model.add(Link.of(linkTo(IOperationDao.class)
                         .slash("api")
                         .slash("operations")
@@ -116,18 +126,21 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
                 );
 
                 Map<String, Map<ValidationMessage.MessageSeverity, List<ValidationMessage>>> results = validators.stream()
+                        .peek(visitor -> log.info("Executing validation for " + visitor.getClass().getSimpleName()))
                         .map(visitor -> Map.entry(visitor.getClass().getSimpleName(), element.execute(visitor)))
-                        .filter(entry -> !entry.getValue().isEmpty())
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                entry -> entry.getValue()
+                        .peek(entry -> log.info("Validation result for " + entry.getKey() + ": " + entry.getValue()))
+                        .map(entry -> Map.entry(
+                                entry.getKey(),
+                                entry.getValue()
                                         .getValidationMessages()
                                         .entrySet()
                                         .stream()
                                         .filter(e -> e.getKey().isHigherOrEqualTo(applicationProperties.getValidationLevel()))
                                         .filter(e -> !e.getValue().isEmpty())
-                                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
-                        ));
-
+                                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))))
+                        .peek(entry -> log.info("Filtered validation result for " + entry.getKey() + ": " + entry.getValue()))
+                        .filter(entry -> !entry.getValue().isEmpty())
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
                 if (!results.isEmpty()) return CollectionModel.of(Set.of(results, model));
             }

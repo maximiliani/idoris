@@ -45,8 +45,8 @@ public class OperationTypeProfile extends GenericIDORISEntity {
     @Relationship(value = "outputs", direction = Relationship.Direction.OUTGOING)
     private Set<Attribute> outputs;
 
-    @Relationship(value = "adapters", direction = Relationship.Direction.OUTGOING)
-    private Set<FDO> adapters;
+    //    @Relationship(value = "adapters", direction = Relationship.Direction.OUTGOING)
+    private Set<String> adapters;
 
 
     @Override

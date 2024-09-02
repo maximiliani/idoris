@@ -22,11 +22,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 
 import java.io.Serializable;
+import java.time.Instant;
 
 @Node("User")
 @Getter
@@ -39,10 +41,11 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = TextUser.class, name = "text")
 })
 public abstract sealed class User implements Serializable permits ORCiDUser, TextUser {
+    @CreatedDate
+    Instant createdAt;
     @Id
     @GeneratedValue
     private String id;
-
     private String type;
 }
 

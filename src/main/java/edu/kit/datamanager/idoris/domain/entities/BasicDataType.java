@@ -16,6 +16,7 @@
 
 package edu.kit.datamanager.idoris.domain.entities;
 
+import edu.kit.datamanager.idoris.domain.enums.Category;
 import edu.kit.datamanager.idoris.domain.enums.PrimitiveDataTypes;
 import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
@@ -68,15 +69,4 @@ public final class BasicDataType extends DataType {
         return false;
     }
 
-    @AllArgsConstructor
-    @Getter
-    public enum Category {
-        MeasurementUnit("Measurement Unit"),
-        Format("Format"),
-        Enumeration("Enumeration"),
-        CharacterSet("Character Set"),
-        Encoding("Encoding"),
-        Other("Other");
-        private final String name;
-    }
 }

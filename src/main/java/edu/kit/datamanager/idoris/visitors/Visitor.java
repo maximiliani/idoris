@@ -56,6 +56,7 @@ public abstract class Visitor<T> {
         log.info("Cache miss for " + id);
         if (visited.contains(id)) {
             log.info("Cycle detected for " + id);
+            if (id == null) return null;
             return handleCircle(id);
         } else {
             visited.add(id);
