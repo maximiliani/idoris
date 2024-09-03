@@ -2,6 +2,18 @@
 
 IDORIS is an **Integrated Data Type and Operations Registry with Inheritance System**.
 
+## Cloning this repository
+
+This repository includes files that are stored using Git LFS.
+Please install Git LFS before cloning this repository.
+For more information, see https://git-lfs.com/.
+Then execute the following command to clone this repository:
+
+```
+git lfs install
+git lfs clone https://github.com/maximiliani/idoris.git
+```
+
 ## Installation of Neo4j
 
 IDORIS relies on the Neo4j graph database.
@@ -12,19 +24,21 @@ The password for the Neo4j user `neo4j` is `superSecret`.
 You can access the Neo4j browser at http://localhost:7474.
 
 ```
+
 docker run \
-   -p 7474:7474 -p 7687:7687 \
-   --name neo4j-apoc-gds-idoris \
-   --volume=$(pwd)/neo4j-data:/data \
-   -e NEO4J_AUTH=neo4j/superSecret \
-   -e NEO4J_DEBUG=true \
-   -e NEO4J_ACCEPT_LICENSE_AGREEMENT=yes \
-   -e NEO4J_apoc_export_file_enabled=true \
-   -e NEO4J_apoc_import_file_enabled=true \
-   -e NEO4J_apoc_import_file_use__neo4j__config=true \
-   -e NEO4J_PLUGINS=\[\"apoc\",\"graph-data-science\"\,\"bloom\"] \
-   -e NEO4J_dbms_security_procedures_unrestricted=apoc.\\\*,gds.\\\* \
-   neo4j:5.22
+-p 7474:7474 -p 7687:7687 \
+--name neo4j-apoc-gds-idoris \
+--volume=$(pwd)/neo4j-data:/data \
+-e NEO4J_AUTH=neo4j/superSecret \
+-e NEO4J_DEBUG=true \
+-e NEO4J_ACCEPT_LICENSE_AGREEMENT=yes \
+-e NEO4J_apoc_export_file_enabled=true \
+-e NEO4J_apoc_import_file_enabled=true \
+-e NEO4J_apoc_import_file_use__neo4j__config=true \
+-e NEO4J_PLUGINS=\[\"apoc\",\"graph-data-science\"\,\"bloom\"] \
+-e NEO4J_dbms_security_procedures_unrestricted=apoc.\\\*,gds.\\\* \
+neo4j:5.22
+
 ```
 
 ## Running IDORIS
@@ -32,6 +46,7 @@ docker run \
 Configure the application.properties file to contain the Neo4j API credentials.
 
 ```
+
 spring.application.name=idoris
 logging.level.root=INFO
 spring.neo4j.uri=bolt://localhost:7687
@@ -41,10 +56,13 @@ spring.data.rest.basePath=/api
 server.port=8095
 idoris.validation-level=info
 idoris.validation-policy=strict
+
 ```
 
 When Neo4j is running, start IDORIS with the following command:
 
 ```
+
 ./gradlew bootRun
+
 ```
