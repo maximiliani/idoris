@@ -24,7 +24,6 @@ The password for the Neo4j user `neo4j` is `superSecret`.
 You can access the Neo4j browser at http://localhost:7474.
 
 ```
-
 docker run \
 -p 7474:7474 -p 7687:7687 \
 --name neo4j-apoc-gds-idoris \
@@ -38,7 +37,6 @@ docker run \
 -e NEO4J_PLUGINS=\[\"apoc\",\"graph-data-science\"\,\"bloom\"] \
 -e NEO4J_dbms_security_procedures_unrestricted=apoc.\\\*,gds.\\\* \
 neo4j:5.22
-
 ```
 
 ## Running IDORIS
@@ -59,7 +57,6 @@ spring.data.rest.basePath=/api
 server.port=8095
 idoris.validation-level=info
 idoris.validation-policy=strict
-
 ```
 
 When Neo4j is running, start IDORIS with the following command:
