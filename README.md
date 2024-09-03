@@ -24,7 +24,7 @@ docker run \
    -e NEO4J_apoc_import_file_use__neo4j__config=true \
    -e NEO4J_PLUGINS=\[\"apoc\",\"graph-data-science\"\,\"bloom\"] \
    -e NEO4J_dbms_security_procedures_unrestricted=apoc.\\\*,gds.\\\* \
-   neo4j:latest
+   neo4j:5.22
 ```
 
 ## Running IDORIS
