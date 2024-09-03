@@ -39,6 +39,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 public class IdorisApplication {
     public static void main(String[] args) {
         SpringApplication.run(IdorisApplication.class, args);
+        System.out.println();
+        System.out.println("---------------------------------");
+        System.out.println("IDORIS started successfully.");
+        System.out.println("---------------------------------");
     }
 
     @Bean
