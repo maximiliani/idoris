@@ -1,5 +1,7 @@
 # IDORIS
 
+[![Build with Gradle](https://github.com/maximiliani/idoris/actions/workflows/gradle.yml/badge.svg)](https://github.com/maximiliani/idoris/actions/workflows/gradle.yml)
+
 IDORIS is an **Integrated Data Type and Operations Registry with Inheritance System**.
 
 ## Cloning this repository
