@@ -9,7 +9,7 @@ nbproject
 **/*.bak
 
 # Ignore internal specific settings
-**/application.properties
+#**/application.properties
 
 # Ignore Gradle build output directory
 build
