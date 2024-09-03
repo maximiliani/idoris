@@ -42,10 +42,13 @@ neo4j:5.22
 ## Running IDORIS
 
 You need to have JDK 21 installed on your system.
+
 For macOS, you can install it using Homebrew: ```brew install openjdk@21```.
+
 For Fedora, you can install it using DNF: ```sudo dnf install java-21```.
 
-Configure the application.properties file to contain the Neo4j API credentials.
+Configure the [application.properties](src/main/resources/application.properties) file to contain the Neo4j API
+credentials.
 
 ```
 spring.application.name=idoris
