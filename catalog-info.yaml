@@ -49,7 +49,10 @@ metadata:
   name: idoris
   title: idoris
   description: Integrated Data Type and Operations Registry with Inheritance System
-  tags: ["FAIR-DO", "DTR", "Java", "Spring"]
+  tags: 
+    - FAIR-DO
+    - java
+    - spring
   annotations:
     github.com/project-slug: maximiliani/idoris
     github.com/user-login: maximiliani
