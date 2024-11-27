@@ -17,8 +17,9 @@ kind: System
 metadata:
   name: idoris
 spec:
-  owner: maximiliani
+  owner: maximilian.inckmann@kit.edu
   type: service
+  domain: fairdo
 
 ---
 # https://backstage.io/docs/features/software-catalog/descriptor-format#kind-api
@@ -29,7 +30,7 @@ metadata:
 spec:
   type: openapi
   lifecycle: experimental
-  owner: maximiliani
+  owner: maximilian.inckmann@kit.edu
   system: idoris
   definition: |
     openapi: "3.0.0"
@@ -61,7 +62,7 @@ metadata:
 spec:
   type: service
   lifecycle: experimental
-  owner: maximiliani
+  owner: maximilian.inckmann@kit.edu
   system: idoris
   provides-apis:
     - idoris-rest-api
