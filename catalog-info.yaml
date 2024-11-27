@@ -1,21 +1,24 @@
+---
+# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-domain
 apiVersion: backstage.io/v1alpha1
-kind: Component
+kind: Domain
+metadata:
+  name: fairdo
+  description: Essential FAIR-DO architecture components
+spec:
+  owner: core
+  type: product-area
+
+
+---
+# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-system
+apiVersion: backstage.io/v1alpha1
+kind: System
 metadata:
   name: idoris
-  title: idoris
-  description: Integrated Data Type and Operations Registry with Inheritance System
-  tags: ["FAIR-DO", "DTR", "Java", "Spring"]
-  annotations:
-    github.com/project-slug: maximiliani/idoris
-    github.com/user-login: maximiliani
-    backstage.io/source-location: url:https://github.com/maximiliani/idoris
-    backstage.io/techdocs-ref: dir:.
-    backstage.io/managed-by-origin-location: url:http://github.com/maximiliani/idoris/blob/master/catalog-info.yaml
 spec:
-  type: service
-  lifecycle: experimental
   owner: maximiliani
-  system: idoris
+  type: service
 
 ---
 # https://backstage.io/docs/features/software-catalog/descriptor-format#kind-api
@@ -40,21 +43,23 @@ spec:
       paths:
 
 ---
-# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-system
 apiVersion: backstage.io/v1alpha1
-kind: System
+kind: Component
 metadata:
   name: idoris
+  title: idoris
+  description: Integrated Data Type and Operations Registry with Inheritance System
+  tags: ["FAIR-DO", "DTR", "Java", "Spring"]
+  annotations:
+    github.com/project-slug: maximiliani/idoris
+    github.com/user-login: maximiliani
+    backstage.io/source-location: url:https://github.com/maximiliani/idoris
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/managed-by-origin-location: url:http://github.com/maximiliani/idoris/blob/master/catalog-info.yaml
 spec:
-  owner: maximiliani
   type: service
----
-# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-domain
-apiVersion: backstage.io/v1alpha1
-kind: Domain
-metadata:
-  name: fairdo
-  description: Essential FAIR-DO architecture components
-spec:
-  owner: core
-  type: product-area
+  lifecycle: experimental
+  owner: maximiliani
+  system: idoris
+  provides-apis:
+    - idoris-rest-api
