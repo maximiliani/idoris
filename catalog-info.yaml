@@ -50,7 +50,6 @@ metadata:
   title: idoris
   description: Integrated Data Type and Operations Registry with Inheritance System
   tags: 
-    - FAIR-DO
     - java
     - spring
   annotations:
