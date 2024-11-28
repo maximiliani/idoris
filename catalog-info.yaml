@@ -9,15 +9,16 @@ spec:
   owner: core
   type: product-area
 
-
 ---
 # https://backstage.io/docs/features/software-catalog/descriptor-format#kind-system
 apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
   name: idoris
+  description: Integrated Data Type and Operations Registry with Inheritance System
 spec:
-  owner: maximilian.inckmann@kit.edu
+  lifecycle: experimental
+  owner: user:maximiliani
   type: service
   domain: fairdo
 
@@ -27,10 +28,16 @@ apiVersion: backstage.io/v1alpha1
 kind: API
 metadata:
   name: idoris-rest-api
+  description: A placeholder for the HATEOAS compliant REST API of IDORIS
+  tags:
+    - rest
+    - hateoas
+    - alps
+    - openapi
 spec:
   type: openapi
   lifecycle: experimental
-  owner: maximilian.inckmann@kit.edu
+  owner: user:maximiliani
   system: idoris
   definition: |
     openapi: "3.0.0"
@@ -44,13 +51,35 @@ spec:
       paths:
 
 ---
+# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-resource
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: idoris-db
+  description: Stores all the data for IDORIS
+  tags:
+    - database
+    - neo4j
+  links:
+    - url: https://neo4j.com
+      title: Neo4j
+    - title: Neo4j Docs
+      url: https://neo4j.com/docs/
+spec:
+  lifecycle: experimental
+  type: database
+  owner: user:maximiliani
+  system: idoris
+
+---
+# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-component
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: idoris
   title: idoris
   description: Integrated Data Type and Operations Registry with Inheritance System
-  tags: 
+  tags:
     - java
     - spring
   annotations:
@@ -62,7 +91,11 @@ metadata:
 spec:
   type: service
   lifecycle: experimental
-  owner: maximilian.inckmann@kit.edu
+  owner: user:maximiliani
   system: idoris
-  provides-apis:
-    - idoris-rest-api
+  providesApis:
+    - api:idoris-rest-api
+  dependsOn:
+    - resource:idoris-db
+  dependencyOf:
+    - api:idoris-rest-api
