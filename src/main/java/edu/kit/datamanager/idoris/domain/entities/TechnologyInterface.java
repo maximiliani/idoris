@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,24 +20,19 @@ import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
 import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.util.Set;
 
-@Node("OperationTypeProfile")
+@Node("TechnologyInterface")
 @Getter
 @Setter
+@RequiredArgsConstructor
 @AllArgsConstructor
-@NoArgsConstructor
-public class OperationTypeProfile extends GenericIDORISEntity {
-    private String name;
-    private String description;
-
-    @Relationship(value = "inheritsFrom", direction = Relationship.Direction.OUTGOING)
-    private Set<OperationTypeProfile> inheritsFrom;
+public class TechnologyInterface extends GenericIDORISEntity {
 
     @Relationship(value = "attributes", direction = Relationship.Direction.INCOMING)
     private Set<Attribute> attributes;
@@ -45,9 +40,7 @@ public class OperationTypeProfile extends GenericIDORISEntity {
     @Relationship(value = "outputs", direction = Relationship.Direction.OUTGOING)
     private Set<Attribute> outputs;
 
-    //    @Relationship(value = "adapters", direction = Relationship.Direction.OUTGOING)
-    private Set<String> adapters;
-
+    private Set<String> adapters = Set.of();
 
     @Override
     protected <T> T accept(Visitor<T> visitor, Object... args) {

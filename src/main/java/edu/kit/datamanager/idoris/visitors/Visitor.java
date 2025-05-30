@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ public abstract class Visitor<T> {
 
     public abstract T visit(AttributeMapping attributeMapping, Object... args);
 
-    public abstract T visit(BasicDataType basicDataType, Object... args);
+    public abstract T visit(AtomicDataType atomicDataType, Object... args);
 
     public abstract T visit(TypeProfile typeProfile, Object... args);
 
@@ -46,7 +46,7 @@ public abstract class Visitor<T> {
 
     public abstract T visit(OperationStep operationStep, Object... args);
 
-    public abstract T visit(OperationTypeProfile operationTypeProfile, Object... args);
+    public abstract T visit(TechnologyInterface technologyInterface, Object... args);
 
     protected final ValidationResult checkCache(String id) {
         if (cache.containsKey(id)) {

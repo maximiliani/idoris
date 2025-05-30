@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package edu.kit.datamanager.idoris.visitors;
 
 import edu.kit.datamanager.idoris.domain.entities.*;
-import edu.kit.datamanager.idoris.domain.enums.Obligation;
 import edu.kit.datamanager.idoris.validators.ValidationResult;
 
 import static edu.kit.datamanager.idoris.validators.ValidationMessage.MessageSeverity.ERROR;
@@ -38,8 +37,12 @@ public class InheritanceValidator extends Visitor<ValidationResult> {
             if (!attribute.getDataType().inheritsFrom(override.getDataType()))
                 result.addMessage("The data type of an attribute MUST be inherited from the data type of the attribute that was overwritten.", attribute, ERROR);
 
-            if (attribute.getObligation() == Obligation.Optional && override.getObligation() == Obligation.Mandatory)
-                result.addMessage("The obligation of an attribute MUST be more or equally restrictive than the obligation of the attribute that was overwritten. Overriding a mandatory attribute as an optional attribute is NOT possible.", attribute, ERROR);
+            if (attribute.getLowerBoundCardinality() < override.getLowerBoundCardinality())
+                result.addMessage("The lower bound cardinality of an attribute MUST be more or equally restrictive than the lower bound cardinality of the attribute that was overwritten. Overriding a more restrictive attribute as a less restrictive attribute is NOT possible.", attribute, ERROR);
+            if (attribute.getUpperBoundCardinality() == null && override.getUpperBoundCardinality() != null) {
+                result.addMessage("The upper bound cardinality of an attribute MUST be defined if the attribute that was overwritten has an upper bound cardinality defined.", attribute, ERROR);
+            } else if (override.getUpperBoundCardinality() != null && attribute.getUpperBoundCardinality() > override.getUpperBoundCardinality())
+                result.addMessage("The upper bound cardinality of an attribute MUST be more or equally restrictive than the upper bound cardinality of the attribute that was overwritten. Overriding a less restrictive attribute as a more restrictive attribute is NOT possible.", attribute, ERROR);
         }
 
         return save(attribute.getPid(), result);
@@ -58,24 +61,43 @@ public class InheritanceValidator extends Visitor<ValidationResult> {
     }
 
     @Override
-    public ValidationResult visit(BasicDataType basicDataType, Object... args) {
+    public ValidationResult visit(AtomicDataType atomicDataType, Object... args) {
         ValidationResult result;
-        if ((result = checkCache(basicDataType.getPid())) != null) return result;
+        if ((result = checkCache(atomicDataType.getPid())) != null) return result;
         else result = new ValidationResult();
 
-        BasicDataType parent = basicDataType.getInheritsFrom();
+        AtomicDataType parent = atomicDataType.getInheritsFrom();
         if (parent != null) {
             result.addChild(parent.execute(this, args));
-            if (!basicDataType.getPrimitiveDataType().equals(parent.getPrimitiveDataType()))
-                result.addMessage("Primitive data type does not match parent", basicDataType, ERROR);
-            if (!basicDataType.getCategory().equals(parent.getCategory()))
-                result.addMessage("Category does not match parent", basicDataType, ERROR);
+            if (!atomicDataType.getPrimitiveDataType().equals(parent.getPrimitiveDataType()))
+                result.addMessage("Primitive data type does not match parent", atomicDataType, ERROR);
 
-            if ((parent.getValueEnum() != null && basicDataType.getValueEnum() != null) && !parent.getValueEnum().isEmpty() && !parent.getValueEnum().containsAll(basicDataType.getValueEnum()))
-                result.addMessage("Value enum does not match parent", basicDataType, ERROR);
+            // Compare permitted values with parent
+            if (parent.getPermittedValues() != null && parent.getPermittedValues().size() > 0) {
+                if (atomicDataType.getPermittedValues() == null || atomicDataType.getPermittedValues().isEmpty())
+                    result.addMessage("Permitted values are not defined for atomic data type, but should contain at least those defined by the parent", atomicDataType, ERROR);
+                else if (!atomicDataType.getPermittedValues().containsAll(parent.getPermittedValues()))
+                    result.addMessage("Permitted values do not match parent", atomicDataType, ERROR);
+            }
+
+            // Compare forbidden values with parent
+            if (parent.getForbiddenValues() != null && parent.getForbiddenValues().size() > 0) {
+                if (atomicDataType.getForbiddenValues() == null || atomicDataType.getForbiddenValues().isEmpty())
+                    result.addMessage("Forbidden values are not defined for atomic data type, but should contain at least those defined by the parent", atomicDataType, ERROR);
+                else if (!atomicDataType.getForbiddenValues().containsAll(parent.getForbiddenValues()))
+                    result.addMessage("Forbidden values do not match parent", atomicDataType, ERROR);
+            }
+
+            // Detect conflicts between permitted and forbidden values in atomic data type and parent
+            if (atomicDataType.getPermittedValues() != null && atomicDataType.getForbiddenValues() != null &&
+                    !atomicDataType.getPermittedValues().isEmpty() && !atomicDataType.getForbiddenValues().isEmpty() &&
+                    atomicDataType.getPermittedValues().stream().anyMatch(atomicDataType.getForbiddenValues()::contains)) {
+                result.addMessage("Atomic data type has conflicting permitted and forbidden values", atomicDataType, ERROR);
+            }
+
         }
 
-        return save(basicDataType.getPid(), result);
+        return save(atomicDataType.getPid(), result);
     }
 
     @Override
@@ -93,6 +115,14 @@ public class InheritanceValidator extends Visitor<ValidationResult> {
         if (typeProfile.getAttributes() != null) {
             for (Attribute attribute : typeProfile.getAttributes()) {
                 result.addChild(attribute.execute(this));
+            }
+        }
+
+        if (typeProfile.getInheritsFrom() != null && typeProfile.getInheritsFrom().size() > 0) {
+            for (TypeProfile parent : typeProfile.getInheritsFrom()) {
+                if (parent.isAbstract() && !typeProfile.isAbstract()) {
+                    result.addMessage("TypeProfile " + typeProfile.getPid() + " is not abstract, but inherits from the TypeProfile " + parent.getPid() + " that is abstract.", typeProfile, ERROR);
+                }
             }
         }
 
@@ -134,24 +164,25 @@ public class InheritanceValidator extends Visitor<ValidationResult> {
         if ((result = checkCache(operationStep.getId())) != null) return result;
         else result = new ValidationResult();
 
-        if (operationStep.getOperation() != null) result.addChild(operationStep.getOperation().execute(this, args));
-        if (operationStep.getOperationTypeProfile() != null)
-            result.addChild(operationStep.getOperationTypeProfile().execute(this, args));
+        if (operationStep.getExecuteOperation() != null)
+            result.addChild(operationStep.getExecuteOperation().execute(this, args));
+        if (operationStep.getUseTechnology() != null)
+            result.addChild(operationStep.getUseTechnology().execute(this, args));
 
-        if (operationStep.getAttributes() != null) {
-            for (AttributeMapping attributeMapping : operationStep.getAttributes()) {
+        if (operationStep.getInputMappings() != null) {
+            for (AttributeMapping attributeMapping : operationStep.getInputMappings()) {
                 result.addChild(attributeMapping.execute(this, args));
             }
         }
 
-        if (operationStep.getOutput() != null) {
-            for (AttributeMapping attributeMapping : operationStep.getOutput()) {
+        if (operationStep.getOutputMappings() != null) {
+            for (AttributeMapping attributeMapping : operationStep.getOutputMappings()) {
                 result.addChild(attributeMapping.execute(this, args));
             }
         }
 
-        if (operationStep.getSteps() != null) {
-            for (OperationStep child : operationStep.getSteps()) {
+        if (operationStep.getSubSteps() != null) {
+            for (OperationStep child : operationStep.getSubSteps()) {
                 result.addChild(child.execute(this, args));
             }
         }
@@ -160,29 +191,23 @@ public class InheritanceValidator extends Visitor<ValidationResult> {
     }
 
     @Override
-    public ValidationResult visit(OperationTypeProfile operationTypeProfile, Object... args) {
+    public ValidationResult visit(TechnologyInterface technologyInterface, Object... args) {
         ValidationResult result;
-        if ((result = checkCache(operationTypeProfile.getPid())) != null) return result;
+        if ((result = checkCache(technologyInterface.getPid())) != null) return result;
         else result = new ValidationResult();
 
-        if (operationTypeProfile.getAttributes() != null) {
-            for (Attribute attribute : operationTypeProfile.getAttributes()) {
+        if (technologyInterface.getAttributes() != null) {
+            for (Attribute attribute : technologyInterface.getAttributes()) {
                 result.addChild(attribute.execute(this, args));
             }
         }
 
-        if (operationTypeProfile.getInheritsFrom() != null) {
-            for (OperationTypeProfile parent : operationTypeProfile.getInheritsFrom()) {
-                result.addChild(parent.execute(this, args));
-            }
-        }
-
-        if (operationTypeProfile.getOutputs() != null) {
-            for (Attribute attribute : operationTypeProfile.getOutputs()) {
+        if (technologyInterface.getOutputs() != null) {
+            for (Attribute attribute : technologyInterface.getOutputs()) {
                 result.addChild(attribute.execute(this, args));
             }
         }
 
-        return save(operationTypeProfile.getPid(), result);
+        return save(technologyInterface.getPid(), result);
     }
 }

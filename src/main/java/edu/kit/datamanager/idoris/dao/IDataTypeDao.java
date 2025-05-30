@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,6 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 @RepositoryRestResource(collectionResourceRel = "dataTypes", path = "dataTypes")
 public interface IDataTypeDao extends IAbstractRepo<DataType, String> {
-    Iterable<DataType> findAllByLicenseUrl(String licenseUrl);
-
     @Query("MATCH (d:DataType {pid: $pid})-[:inheritsFrom*]->(d2:DataType) RETURN d2")
     Iterable<DataType> findAllInInheritanceChain(String pid);
 

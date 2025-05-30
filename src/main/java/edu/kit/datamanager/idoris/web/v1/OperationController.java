@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import edu.kit.datamanager.idoris.dao.IDataTypeDao;
 import edu.kit.datamanager.idoris.dao.IOperationDao;
 import edu.kit.datamanager.idoris.domain.entities.Operation;
 import edu.kit.datamanager.idoris.validators.ValidationResult;
-import edu.kit.datamanager.idoris.visitors.SubSchemaRelationValidator;
+import edu.kit.datamanager.idoris.visitors.ValidationPolicyValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.RepositoryRestController;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +38,7 @@ public class OperationController {
     @GetMapping("v1/operations/{pid}/validate")
     public ResponseEntity<?> validate(@PathVariable("pid") String pid) {
         Operation operation = operationDao.findById(pid).orElseThrow();
-        SubSchemaRelationValidator validator = new SubSchemaRelationValidator();
+        ValidationPolicyValidator validator = new ValidationPolicyValidator();
         ValidationResult result = operation.execute(validator);
         if (result.isValid()) {
             return ResponseEntity.ok(result);

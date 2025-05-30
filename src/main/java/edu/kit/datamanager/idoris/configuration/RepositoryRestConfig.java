@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import edu.kit.datamanager.idoris.validators.ValidationMessage;
 import edu.kit.datamanager.idoris.validators.ValidationResult;
 import edu.kit.datamanager.idoris.validators.VisitableElementValidator;
 import edu.kit.datamanager.idoris.visitors.InheritanceValidator;
-import edu.kit.datamanager.idoris.visitors.SubSchemaRelationValidator;
 import edu.kit.datamanager.idoris.visitors.SyntaxValidator;
+import edu.kit.datamanager.idoris.visitors.ValidationPolicyValidator;
 import edu.kit.datamanager.idoris.visitors.Visitor;
 import io.netty.util.Attribute;
 import lombok.extern.java.Log;
@@ -65,9 +65,9 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
     public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry cors) {
         config.exposeIdsFor(
                 Attribute.class,
-                BasicDataType.class,
+                AtomicDataType.class,
                 Operation.class,
-                OperationTypeProfile.class,
+                TechnologyInterface.class,
                 TypeProfile.class
         );
 
@@ -120,7 +120,7 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
         return model -> {
             if (model instanceof EntityModel<?> && ((EntityModel<?>) model).getContent() instanceof VisitableElement element) {
                 Set<Visitor<ValidationResult>> validators = Set.of(
-                        new SubSchemaRelationValidator(),
+                        new ValidationPolicyValidator(),
                         new SyntaxValidator(),
                         new InheritanceValidator()
                 );

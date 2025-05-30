@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import edu.kit.datamanager.idoris.dao.ITypeProfileDao;
 import edu.kit.datamanager.idoris.domain.entities.Attribute;
 import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
 import edu.kit.datamanager.idoris.validators.ValidationResult;
-import edu.kit.datamanager.idoris.visitors.SubSchemaRelationValidator;
+import edu.kit.datamanager.idoris.visitors.ValidationPolicyValidator;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.RepositoryRestController;
@@ -51,7 +51,7 @@ public class TypeProfileController {
     @GetMapping("typeProfiles/{pid}/validate")
     public ResponseEntity<?> validate(@PathVariable("pid") String pid) {
         TypeProfile typeProfile = typeProfileDao.findById(pid).orElseThrow();
-        SubSchemaRelationValidator validator = new SubSchemaRelationValidator();
+        ValidationPolicyValidator validator = new ValidationPolicyValidator();
         ValidationResult result = typeProfile.execute(validator);
         if (result.isValid()) {
             return ResponseEntity.ok(result);

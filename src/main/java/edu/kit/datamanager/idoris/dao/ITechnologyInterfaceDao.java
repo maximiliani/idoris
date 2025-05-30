@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,9 @@
 
 package edu.kit.datamanager.idoris.dao;
 
-import edu.kit.datamanager.idoris.domain.entities.BasicDataType;
-import org.springframework.data.neo4j.repository.query.Query;
+import edu.kit.datamanager.idoris.domain.entities.TechnologyInterface;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.data.rest.core.annotation.RestResource;
 
-@RepositoryRestResource(collectionResourceRel = "basicDataTypes", path = "basicDataTypes")
-public interface IBasicDataTypeDao extends IAbstractRepo<BasicDataType, String> {
-    @RestResource(exported = false)
-    @Query("MATCH (d:BasicDataType {pid: $pid})-[:inheritsFrom*]->(d2:BasicDataType) RETURN d2")
-    Iterable<BasicDataType> findAllInInheritanceChain(String pid);
+@RepositoryRestResource(collectionResourceRel = "technologyInterfaces", path = "technologyInterfaces")
+public interface ITechnologyInterfaceDao extends IAbstractRepo<TechnologyInterface, String> {
 }

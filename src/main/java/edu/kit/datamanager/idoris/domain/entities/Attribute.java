@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,35 +16,26 @@
 
 package edu.kit.datamanager.idoris.domain.entities;
 
-import edu.kit.datamanager.idoris.domain.VisitableElement;
-import edu.kit.datamanager.idoris.domain.enums.Obligation;
+import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
 import edu.kit.datamanager.idoris.visitors.Visitor;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
-import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 @Node
 @AllArgsConstructor
 @RequiredArgsConstructor
 @Getter
 @Setter
-public class Attribute extends VisitableElement {
-    @Id
-    @GeneratedValue(UUIDStringGenerator.class)
-    private String pid;
-    private String name;
-    private String description;
-
-    private boolean repeatable = false;
-    private Obligation obligation = Obligation.Mandatory;
-    private String value;
+public class Attribute extends GenericIDORISEntity {
+    private String defaultValue;
+    private String constantValue;
+    private Integer lowerBoundCardinality = 0;
+    private Integer upperBoundCardinality;
 
     @Relationship(value = "dataType", direction = Relationship.Direction.OUTGOING)
     @NotNull

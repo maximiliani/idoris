@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@
 package edu.kit.datamanager.idoris.visitors;
 
 import edu.kit.datamanager.idoris.domain.entities.*;
-import edu.kit.datamanager.idoris.domain.enums.Category;
+import edu.kit.datamanager.idoris.domain.enums.CombinationOptions;
+import edu.kit.datamanager.idoris.domain.enums.ExecutionMode;
 import edu.kit.datamanager.idoris.domain.enums.PrimitiveDataTypes;
-import edu.kit.datamanager.idoris.domain.enums.SubSchemaRelation;
 import edu.kit.datamanager.idoris.validators.ValidationResult;
 import lombok.extern.java.Log;
 
@@ -49,8 +49,18 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
             result.addChild(attribute.getDataType().execute(this, args));
         }
 
-        if (attribute.getObligation() == null) {
-            result.addMessage("You MUST provide an obligation for the attribute. The default value is 'Mandatory'.", attribute, ERROR);
+        if (attribute.getLowerBoundCardinality() == null) {
+            result.addMessage("You MUST provide a lower bound cardinality for the attribute.", attribute, ERROR);
+        } else if (attribute.getLowerBoundCardinality() < 0) {
+            result.addMessage("The lower bound cardinality of an attribute MUST be a positive number or zero.", attribute, ERROR);
+        }
+
+        if (attribute.getUpperBoundCardinality() != null && attribute.getUpperBoundCardinality() < 0) {
+            result.addMessage("The upper bound cardinality of an attribute MUST be a positive number or zero.", attribute, ERROR);
+        } else if (attribute.getUpperBoundCardinality() != null && attribute.getLowerBoundCardinality() != null && attribute.getUpperBoundCardinality() < attribute.getLowerBoundCardinality()) {
+            result.addMessage("The upper bound cardinality of an attribute MUST be greater than or equal to the lower bound cardinality.", attribute, ERROR);
+        } else if (attribute.getUpperBoundCardinality() == null) {
+            result.addMessage("This attribute represents an unlimited number of values. This is not recommended, as it may lead to unexpected results in the future. Please consider setting an upper bound cardinality.", attribute, WARNING);
         }
 
         if (attribute.getOverride() != null) {
@@ -82,63 +92,58 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
             result.addMessage("Input and value MUST NOT be unspecified at the same time.", attributeMapping, ERROR);
         }
 
-        if (attributeMapping.getInput() != null && attributeMapping.getInput().isRepeatable() && attributeMapping.getOutput() != null && !attributeMapping.getOutput().isRepeatable() && attributeMapping.getIndex() == null) {
-            result.addMessage("The input is repeatable, the output is not repeatable and no index is specified.", attributeMapping, ERROR);
+        // Check that the output cardinalities are compatible with the input cardinalities.
+        if (attributeMapping.getInput() != null && attributeMapping.getOutput() != null) {
+            // If the input has an upper cardinality of more than one, the output has at most one or null, and no index is specified, return an error.
+            if (attributeMapping.getInput().getLowerBoundCardinality() > 0 && attributeMapping.getInput().getUpperBoundCardinality() != null && attributeMapping.getInput().getUpperBoundCardinality() > 1 &&
+                    (attributeMapping.getOutput().getLowerBoundCardinality() < 1 || (attributeMapping.getOutput().getUpperBoundCardinality() != null && attributeMapping.getOutput().getUpperBoundCardinality() < 1)) &&
+                    attributeMapping.getIndex() == null) {
+                result.addMessage("The output cardinality is not compatible with the input cardinality. If the input has an upper cardinality of more than one, the output must have at least a lower cardinality of one and an upper cardinality of one or null.", attributeMapping, ERROR);
+            }
+
+            // If the input has an upper cardinality smaller than the lower cardinality of the output, return an error.
+            if (attributeMapping.getInput().getUpperBoundCardinality() != null && attributeMapping.getOutput().getLowerBoundCardinality() > attributeMapping.getInput().getUpperBoundCardinality()) {
+                result.addMessage("The output cardinality is not compatible with the input cardinality. The lower bound cardinality of the output must be less than or equal to the upper bound cardinality of the input.", attributeMapping, ERROR);
+            }
         }
 
         return save(attributeMapping.getId(), result);
     }
 
     @Override
-    public ValidationResult visit(BasicDataType basicDataType, Object... args) {
+    public ValidationResult visit(AtomicDataType atomicDataType, Object... args) {
         ValidationResult result;
-        if ((result = checkCache(basicDataType.getPid())) != null) return result;
+        if ((result = checkCache(atomicDataType.getPid())) != null) return result;
         else result = new ValidationResult();
 
-        visitDataType(basicDataType, result);
+        visitDataType(atomicDataType, result);
 
-        if (basicDataType.getInheritsFrom() != null)
-            result.addChild(basicDataType.getInheritsFrom().execute(this, args));
+        if (atomicDataType.getInheritsFrom() != null)
+            result.addChild(atomicDataType.getInheritsFrom().execute(this, args));
 
-        if (basicDataType.getPrimitiveDataType() == null) {
-            result.addMessage("You MUST provide a primitive data type for the basic data type. Please select from: " + Arrays.toString(PrimitiveDataTypes.values()), basicDataType, ERROR);
+        if (atomicDataType.getPrimitiveDataType() == null) {
+            result.addMessage("You MUST provide a primitive data type for the basic data type. Please select from: " + Arrays.toString(PrimitiveDataTypes.values()), atomicDataType, ERROR);
         }
 
-        if (basicDataType.getCategory() == null) {
-            result.addMessage("You MUST provide a category for the basic data type. Please select from: " + Arrays.toString(Category.values()), basicDataType, ERROR);
-        } else switch (basicDataType.getCategory()) {
-            case MeasurementUnit -> {
-                if (basicDataType.getUnitName() == null || basicDataType.getUnitName().isEmpty()) {
-                    result.addMessage("A measurement unit MUST have a unit name", basicDataType, ERROR);
+        // Ensure that all permitted and forbidden values are of the same primitive data type
+        if (atomicDataType.getPermittedValues() != null) {
+            for (String value : atomicDataType.getPermittedValues()) {
+                if (!atomicDataType.getPrimitiveDataType().isValueValid(value)) {
+                    result.addMessage("The permitted value '" + value + "' is not valid for the primitive data type " + atomicDataType.getPrimitiveDataType() + ".", atomicDataType, ERROR);
                 }
-                if (basicDataType.getUnitSymbol() == null || basicDataType.getUnitSymbol().isEmpty()) {
-                    result.addMessage("A measurement unit MUST have a unit symbol", basicDataType, ERROR);
-                }
-                if (basicDataType.getDefinedBy() == null || basicDataType.getDefinedBy().isEmpty()) {
-                    result.addMessage("A measurement unit SHOULD specify the defined by field", basicDataType, WARNING);
-                }
-                if (basicDataType.getStandard_uncertainty() == null || basicDataType.getStandard_uncertainty().isEmpty()) {
-                    result.addMessage("A measurement unit SHOULD specify the standard uncertainty", basicDataType, WARNING);
-                }
-            }
-            case Format -> {
-                if (basicDataType.getRegex() == null || basicDataType.getRegex().isEmpty()) {
-                    result.addMessage("A format data type MUST have a regex.", basicDataType, ERROR);
-                }
-                if (basicDataType.getRegexFlavour() == null || basicDataType.getRegexFlavour().isEmpty()) {
-                    result.addMessage("A format data type MUST specify the regex flavour. The encouraged default value is 'ecma-262-RegExp'.'", basicDataType, ERROR);
-                }
-            }
-            case Enumeration -> {
-                if (basicDataType.getValueEnum() == null || basicDataType.getValueEnum().isEmpty()) {
-                    result.addMessage("An enumerated BasicDataType MUST have provide a set of acceptable values", basicDataType, ERROR);
-                }
-            }
-            default -> {
             }
         }
 
-        return save(basicDataType.getPid(), result);
+        // Ensure that no conflicts of permitted and forbidden values exist
+        if (atomicDataType.getPermittedValues() != null && atomicDataType.getForbiddenValues() != null) {
+            for (String value : atomicDataType.getPermittedValues()) {
+                if (atomicDataType.getForbiddenValues().contains(value)) {
+                    result.addMessage("The permitted values and forbidden values of the atomic data type must not overlap. The value '" + value + "' is both permitted and forbidden.", atomicDataType, ERROR);
+                }
+            }
+        }
+
+        return save(atomicDataType.getPid(), result);
     }
 
     @Override
@@ -156,8 +161,8 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
             typeProfile.getAttributes().stream().map(attribute -> attribute.execute(this, args)).forEach(result::addChild);
         }
 
-        if (typeProfile.getSubSchemaRelation() == null) {
-            result.addMessage("You MUST provide a sub schema relation for the type profile. Please select from: " + Arrays.toString(SubSchemaRelation.values()), typeProfile, ERROR);
+        if (typeProfile.getValidationPolicy() == null) {
+            result.addMessage("You MUST provide a validation policy for the type profile. Please select from: " + Arrays.toString(CombinationOptions.values()), typeProfile, ERROR);
         }
 
         return save(typeProfile.getPid(), result);
@@ -204,67 +209,62 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
             result.addMessage("For better human readability, you SHOULD provide a name for the operation step.", operationStep, WARNING);
         }
 
-        if (operationStep.getExecutionOrderIndex() == null) {
+        if (operationStep.getIndex() == null) {
             result.addMessage("Execution order index MUST be specified. If multiple Operation Steps for an Operation have the same index, the execution may happen in random order or be parallelized.", operationStep, ERROR);
         }
 
         if (operationStep.getMode() == null) {
-            result.addMessage("An execution mode must be specified. Default is synchronous execution. Select from: " + Arrays.toString(OperationStep.ExecutionMode.values()), operationStep, ERROR);
+            result.addMessage("An execution mode must be specified. Default is synchronous execution. Select from: " + Arrays.toString(ExecutionMode.values()), operationStep, ERROR);
         }
 
-        if ((operationStep.getOperation() == null && operationStep.getOperationTypeProfile() == null) || (operationStep.getOperation() != null && operationStep.getOperationTypeProfile() != null)) {
+        if ((operationStep.getExecuteOperation() == null && operationStep.getUseTechnology() == null) || (operationStep.getExecuteOperation() != null && operationStep.getUseTechnology() != null)) {
             result.addMessage("You MUST specify either an operation or an operation type profile for the operation step. You can only specify exactly one!", operationStep, ERROR);
         }
 
-        if (operationStep.getOperation() != null) {
-            result.addChild(operationStep.getOperation().execute(this, args));
-        } else if (operationStep.getOperationTypeProfile() != null) {
-            result.addChild(operationStep.getOperationTypeProfile().execute(this, args));
+        if (operationStep.getExecuteOperation() != null) {
+            result.addChild(operationStep.getExecuteOperation().execute(this, args));
+        } else if (operationStep.getUseTechnology() != null) {
+            result.addChild(operationStep.getUseTechnology().execute(this, args));
         }
 
-        if (operationStep.getAttributes() != null) {
-            operationStep.getAttributes().stream().map(attributeMapping -> attributeMapping.execute(this, args)).forEach(result::addChild);
+        if (operationStep.getInputMappings() != null) {
+            operationStep.getInputMappings().stream().map(attributeMapping -> attributeMapping.execute(this, args)).forEach(result::addChild);
         }
 
-        if (operationStep.getOutput() != null) {
-            operationStep.getOutput().stream().map(attributeMapping -> attributeMapping.execute(this, args)).forEach(result::addChild);
+        if (operationStep.getOutputMappings() != null) {
+            operationStep.getOutputMappings().stream().map(attributeMapping -> attributeMapping.execute(this, args)).forEach(result::addChild);
         }
 
         return save(operationStep.getId(), result);
     }
 
     @Override
-    public ValidationResult visit(OperationTypeProfile operationTypeProfile, Object... args) {
+    public ValidationResult visit(TechnologyInterface technologyInterface, Object... args) {
         ValidationResult result;
-        if ((result = checkCache(operationTypeProfile.getPid())) != null) return result;
+        if ((result = checkCache(technologyInterface.getPid())) != null) return result;
         else result = new ValidationResult();
 
-        if (operationTypeProfile.getName() == null || operationTypeProfile.getName().isEmpty()) {
-            result.addMessage("For better human readability and understanding, you MUST provide a name for the operation type profile.", operationTypeProfile, ERROR);
+        if (technologyInterface.getName() == null || technologyInterface.getName().isEmpty()) {
+            result.addMessage("For better human readability and understanding, you MUST provide a name for the operation type profile.", technologyInterface, ERROR);
         }
 
-        if (operationTypeProfile.getDescription() == null || operationTypeProfile.getDescription().isEmpty()) {
-            result.addMessage("For better human readability and understanding, you SHOULD provide a description for the operation type profile.", operationTypeProfile, WARNING);
+        if (technologyInterface.getDescription() == null || technologyInterface.getDescription().isEmpty()) {
+            result.addMessage("For better human readability and understanding, you SHOULD provide a description for the operation type profile.", technologyInterface, WARNING);
         }
 
-        if (operationTypeProfile.getInheritsFrom() != null) {
-            operationTypeProfile.getInheritsFrom().stream().map(operationTypeProfile1 -> operationTypeProfile1.execute(this, args)).forEach(result::addChild);
+        if (technologyInterface.getAttributes() != null) {
+            technologyInterface.getAttributes().stream().map(attribute -> attribute.execute(this, args)).forEach(result::addChild);
         }
 
-        if (operationTypeProfile.getAttributes() != null) {
-            operationTypeProfile.getAttributes().stream().map(attribute -> attribute.execute(this, args)).forEach(result::addChild);
+        if (technologyInterface.getOutputs() != null) {
+            technologyInterface.getOutputs().stream().map(attribute -> attribute.execute(this, args)).forEach(result::addChild);
         }
 
-        if (operationTypeProfile.getOutputs() != null) {
-            operationTypeProfile.getOutputs().stream().map(attribute -> attribute.execute(this, args)).forEach(result::addChild);
+        if (technologyInterface.getAdapters() == null || technologyInterface.getAdapters().isEmpty()) {
+            result.addMessage("You SHOULD specify at least one adapter for the technology interface.", technologyInterface, WARNING);
         }
 
-//        TODO
-//        if (operationTypeProfile.getAdapters() != null) {
-//            operationTypeProfile.getAdapters().stream().map(fdo -> fdo.execute(this, args)).forEach(result::addChild);
-//        }
-
-        return save(operationTypeProfile.getPid(), result);
+        return save(technologyInterface.getPid(), result);
     }
 
     private void visitDataType(DataType dataType, ValidationResult result) {
@@ -280,7 +280,7 @@ public class SyntaxValidator extends Visitor<ValidationResult> {
             result.addMessage("For better human readability and understanding, you SHOULD provide a description for the data type.", dataType, WARNING);
         }
 
-        if (dataType.getExpectedUses() == null || dataType.getExpectedUses().isEmpty()) {
+        if (dataType.getExpectedUseCases() == null || dataType.getExpectedUseCases().isEmpty()) {
             result.addMessage("For better human readability and understanding, you SHOULD provide a list of expected uses for the data type.", dataType, WARNING);
         }
     }

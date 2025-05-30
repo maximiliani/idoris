@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package edu.kit.datamanager.idoris.visitors;
 
 import edu.kit.datamanager.idoris.domain.entities.*;
-import edu.kit.datamanager.idoris.domain.enums.SubSchemaRelation;
+import edu.kit.datamanager.idoris.domain.enums.CombinationOptions;
 import edu.kit.datamanager.idoris.validators.ValidationResult;
 import lombok.extern.java.Log;
 
@@ -29,7 +29,7 @@ import static edu.kit.datamanager.idoris.validators.ValidationMessage.MessageSev
 import static edu.kit.datamanager.idoris.validators.ValidationMessage.MessageSeverity.WARNING;
 
 @Log
-public class SubSchemaRelationValidator extends Visitor<ValidationResult> {
+public class ValidationPolicyValidator extends Visitor<ValidationResult> {
 
     @Override
     public ValidationResult visit(Attribute attribute, Object... args) {
@@ -53,8 +53,8 @@ public class SubSchemaRelationValidator extends Visitor<ValidationResult> {
     }
 
     @Override
-    public ValidationResult visit(BasicDataType basicDataType, Object... args) {
-        return notAllowed(basicDataType);
+    public ValidationResult visit(AtomicDataType atomicDataType, Object... args) {
+        return notAllowed(atomicDataType);
     }
 
     @Override
@@ -68,47 +68,42 @@ public class SubSchemaRelationValidator extends Visitor<ValidationResult> {
             return save(typeProfile.getPid(), result);
         }
         for (TypeProfile parent : typeProfile.getInheritsFrom()) {
-            if (parent == null || parent.getSubSchemaRelation() == null) {
+            if (parent == null || parent.getValidationPolicy() == null) {
                 log.info("Parent TypeProfile is null or has no SubSchemaRelation defined. Skipping validation.");
                 continue;
             }
             log.info("Validating TypeProfile " + typeProfile.getPid() + " against parent TypeProfile " + parent.getPid());
             result.addChild(parent.execute(this, args));
-            switch (parent.getSubSchemaRelation()) {
-                case denyAdditionalProperties:
-                    if (!typeProfile.getAttributes().isEmpty()) {
-                        result.addMessage("TypeProfile " + typeProfile.getPid() + " defines additional properties, but inherits from the TypeProfile " + parent.getPid() + " that denies additional properties.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, Map.of("countOfAttributes", typeProfile.getAttributes().size())), ERROR);
-                    }
-                    break;
-                case allowAdditionalProperties:
-                    log.info("TypeProfile " + typeProfile.getPid() + " meets all requirements.");
-                    break;
-                case requireAllProperties:
+
+            if (!parent.isAllowAdditionalAttributes() && !typeProfile.getAttributes().isEmpty())
+                result.addMessage("TypeProfile " + typeProfile.getPid() + " defines additional properties, but inherits from the TypeProfile " + parent.getPid() + " that denies additional properties.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, Map.of("countOfAttributes", typeProfile.getAttributes().size())), ERROR);
+
+            switch (parent.getValidationPolicy()) {
+                case ALL -> {
                     for (Attribute attribute : parent.getAttributes()) {
                         List<Attribute> undefinedAttributes = typeProfile.getAttributes().stream().filter(a -> a.getDataType().equals(attribute.getDataType())).toList();
                         if (!undefinedAttributes.isEmpty()) {
                             result.addMessage("TypeProfile " + typeProfile.getPid() + " does not define all properties defined in the TypeProfile " + parent.getPid() + " that requires all properties.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, Map.of("numberOfUndefinedAttributes", undefinedAttributes.size(), "undefinedAttributes", undefinedAttributes)), ERROR);
                         }
                     }
-                    break;
-                case requireAnyOfProperties:
+                }
+                case ANY -> {
                     if (typeProfile.getAttributes().stream().noneMatch(a -> parent.getAttributes().stream().anyMatch(pa -> pa.getDataType().equals(a.getDataType())))) {
                         result.addMessage("TypeProfile " + typeProfile.getPid() + " does not define any property defined in the TypeProfile " + parent.getPid() + " that requires at least one property.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, null), ERROR);
                     }
-                    break;
-                case requireOneOfProperties:
+                }
+                case ONE -> {
                     if (typeProfile.getAttributes().stream().filter(a -> parent.getAttributes().stream().anyMatch(pa -> pa.getDataType().equals(a.getDataType()))).count() != 1) {
                         result.addMessage("TypeProfile " + typeProfile.getPid() + " does not define exactly one property defined in the TypeProfile " + parent.getPid() + " that requires exactly one property.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, null), ERROR);
                     }
-                    break;
-                case requireNoneOfProperties:
+                }
+                case NONE -> {
                     List<Attribute> illegallyDefinedAttributes = typeProfile.getAttributes().stream().filter(a -> parent.getAttributes().stream().anyMatch(pa -> pa.getDataType().equals(a.getDataType()))).toList();
                     if (!illegallyDefinedAttributes.isEmpty()) {
                         result.addMessage("TypeProfile " + typeProfile.getPid() + " defines a property defined in the TypeProfile " + parent.getPid() + " that requires no property.", getTypeProfileAndParentElementaryInformation(typeProfile, parent, Map.of("numberOfIllegallyDefinedAttributes", illegallyDefinedAttributes.size(), "illegallyDefinedAttributes", illegallyDefinedAttributes)), ERROR);
                     }
-                    break;
-                default:
-                    throw new IllegalStateException("Unknown SubSchemaRelation " + parent.getSubSchemaRelation());
+                }
+                default -> throw new IllegalStateException("Unknown ValidationPolicy " + parent.getValidationPolicy());
             }
         }
         log.info("Validation of TypeProfile " + typeProfile.getPid() + " against parent TypeProfiles completed. result=" + result);
@@ -145,52 +140,48 @@ public class SubSchemaRelationValidator extends Visitor<ValidationResult> {
         if ((result = checkCache(operationStep.getId())) != null) return result;
         else result = new ValidationResult();
 
-        if (operationStep.getAttributes() != null)
-            for (AttributeMapping input : operationStep.getAttributes())
+        if (operationStep.getInputMappings() != null)
+            for (AttributeMapping input : operationStep.getInputMappings())
                 result.addChild(input.execute(this, args));
 
-        if (operationStep.getOutput() != null)
-            for (AttributeMapping output : operationStep.getOutput())
+        if (operationStep.getOutputMappings() != null)
+            for (AttributeMapping output : operationStep.getOutputMappings())
                 result.addChild(output.execute(this, args));
 
-        if (operationStep.getSteps() != null)
-            for (OperationStep step : operationStep.getSteps())
+        if (operationStep.getSubSteps() != null)
+            for (OperationStep step : operationStep.getSubSteps())
                 result.addChild(step.execute(this, args));
 
-        if (operationStep.getOperationTypeProfile() != null)
-            result.addChild(operationStep.getOperationTypeProfile().execute(this, args));
+        if (operationStep.getUseTechnology() != null)
+            result.addChild(operationStep.getUseTechnology().execute(this, args));
 
-        if (operationStep.getOperation() != null)
-            result.addChild(operationStep.getOperation().execute(this, args));
+        if (operationStep.getExecuteOperation() != null)
+            result.addChild(operationStep.getExecuteOperation().execute(this, args));
 
         return save(operationStep.getId(), result);
     }
 
     @Override
-    public ValidationResult visit(OperationTypeProfile operationTypeProfile, Object... args) {
+    public ValidationResult visit(TechnologyInterface technologyInterface, Object... args) {
         ValidationResult result;
-        if ((result = checkCache(operationTypeProfile.getPid())) != null) return result;
+        if ((result = checkCache(technologyInterface.getPid())) != null) return result;
         else result = new ValidationResult();
 
-        if (operationTypeProfile.getInheritsFrom() != null)
-            for (OperationTypeProfile parent : operationTypeProfile.getInheritsFrom())
-                result.addChild(parent.execute(this, args));
-
-        if (operationTypeProfile.getAttributes() != null)
-            for (Attribute attribute : operationTypeProfile.getAttributes())
+        if (technologyInterface.getAttributes() != null)
+            for (Attribute attribute : technologyInterface.getAttributes())
                 result.addChild(attribute.execute(this, args));
 
-        if (operationTypeProfile.getOutputs() != null)
-            for (Attribute outputs : operationTypeProfile.getOutputs())
+        if (technologyInterface.getOutputs() != null)
+            for (Attribute outputs : technologyInterface.getOutputs())
                 result.addChild(outputs.execute(this, args));
 
-        return save(operationTypeProfile.getPid(), result);
+        return save(technologyInterface.getPid(), result);
     }
 
     private Object getTypeProfileAndParentElementaryInformation(TypeProfile typeProfile, TypeProfile parent, Map<String, Object> otherInformation) {
         Map<String, Object> result = new HashMap<>();
-        result.put("this", new elementaryInformation(typeProfile.getPid(), typeProfile.getName(), typeProfile.getSubSchemaRelation()));
-        result.put("parent", new elementaryInformation(parent.getPid(), parent.getName(), parent.getSubSchemaRelation()));
+        result.put("this", new elementaryInformation(typeProfile.getPid(), typeProfile.getName(), typeProfile.getValidationPolicy()));
+        result.put("parent", new elementaryInformation(parent.getPid(), parent.getName(), parent.getValidationPolicy()));
         result.put("otherInformation", otherInformation);
         return result;
     }
@@ -200,6 +191,6 @@ public class SubSchemaRelationValidator extends Visitor<ValidationResult> {
         return new ValidationResult().addMessage("Cycle detected", id, WARNING);
     }
 
-    private record elementaryInformation(String pid, String name, SubSchemaRelation subSchemaRelation) {
+    private record elementaryInformation(String pid, String name, CombinationOptions validationPolicy) {
     }
 }

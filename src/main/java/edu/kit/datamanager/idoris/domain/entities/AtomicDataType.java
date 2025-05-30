@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package edu.kit.datamanager.idoris.domain.entities;
 
-import edu.kit.datamanager.idoris.domain.enums.Category;
 import edu.kit.datamanager.idoris.domain.enums.PrimitiveDataTypes;
 import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
@@ -24,34 +23,26 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.Node;
-import org.springframework.data.neo4j.core.schema.Property;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.util.Set;
 
-@Node("BasicDataType")
+@Node("AtomicDataType")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public final class BasicDataType extends DataType {
+public final class AtomicDataType extends DataType {
     @Relationship(value = "inheritsFrom", direction = Relationship.Direction.OUTGOING)
-    private BasicDataType inheritsFrom;
+    private AtomicDataType inheritsFrom;
 
     private PrimitiveDataTypes primitiveDataType;
-    private Category category = Category.Format;
-    private String unitName;
-    private String unitSymbol;
-    private String definedBy;
-    private String standard_uncertainty;
+    private String regularExpression;
 
-    private String restrictions;
-    private String regex;
-    // TODO: Make this an enum
-    private String regexFlavour = "ecma-262-RegExp";
-
-    @Property("enum")
-    private Set<String> valueEnum;
+    private Set<String> permittedValues;
+    private Set<String> forbiddenValues;
+    private Integer minimum;
+    private Integer maximum;
 
     @Override
     protected <T> T accept(Visitor<T> visitor, Object... args) {
@@ -60,11 +51,11 @@ public final class BasicDataType extends DataType {
 
     @Override
     public boolean inheritsFrom(DataType dataType) {
-        if (dataType instanceof BasicDataType basicDataType) {
-            if (basicDataType.equals(this)) {
+        if (dataType instanceof AtomicDataType atomicDataType) {
+            if (atomicDataType.equals(this)) {
                 return true;
             }
-            return inheritsFrom != null && inheritsFrom.inheritsFrom(basicDataType);
+            return inheritsFrom != null && inheritsFrom.inheritsFrom(atomicDataType);
         }
         return false;
     }

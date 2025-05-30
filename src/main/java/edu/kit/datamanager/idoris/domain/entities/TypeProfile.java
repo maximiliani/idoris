@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package edu.kit.datamanager.idoris.domain.entities;
 
-import edu.kit.datamanager.idoris.domain.enums.SubSchemaRelation;
+import edu.kit.datamanager.idoris.domain.enums.CombinationOptions;
 import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -40,9 +40,10 @@ public final class TypeProfile extends DataType {
     @Relationship(value = "attributes", direction = Relationship.Direction.OUTGOING)
     private Set<Attribute> attributes;
 
-    private boolean isEmbeddable = true;
+    private boolean permitEmbedding = true;
     private boolean isAbstract = false;
-    private SubSchemaRelation subSchemaRelation = SubSchemaRelation.allowAdditionalProperties;
+    private boolean allowAdditionalAttributes = true;
+    private CombinationOptions validationPolicy = CombinationOptions.ALL;
 
     @Override
     protected <T> T accept(Visitor<T> visitor, Object... args) {

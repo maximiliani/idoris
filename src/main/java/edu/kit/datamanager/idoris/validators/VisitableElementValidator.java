@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ package edu.kit.datamanager.idoris.validators;
 import edu.kit.datamanager.idoris.configuration.ApplicationProperties;
 import edu.kit.datamanager.idoris.domain.VisitableElement;
 import edu.kit.datamanager.idoris.visitors.InheritanceValidator;
-import edu.kit.datamanager.idoris.visitors.SubSchemaRelationValidator;
 import edu.kit.datamanager.idoris.visitors.SyntaxValidator;
+import edu.kit.datamanager.idoris.visitors.ValidationPolicyValidator;
 import edu.kit.datamanager.idoris.visitors.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.extern.java.Log;
@@ -44,7 +44,7 @@ public class VisitableElementValidator implements Validator {
         VisitableElement visitableElement = (VisitableElement) target;
 
         Set<Visitor<ValidationResult>> validators = Set.of(
-                new SubSchemaRelationValidator(),
+                new ValidationPolicyValidator(),
                 new SyntaxValidator(),
                 new InheritanceValidator()
         );

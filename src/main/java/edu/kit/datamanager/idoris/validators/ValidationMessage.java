@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,7 @@ package edu.kit.datamanager.idoris.validators;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 public record ValidationMessage(@NotNull String message, @Nullable Object element, @NotNull MessageSeverity severity) {
     @AllArgsConstructor

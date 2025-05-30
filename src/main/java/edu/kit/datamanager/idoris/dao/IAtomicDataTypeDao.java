@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,14 @@
 
 package edu.kit.datamanager.idoris.dao;
 
-import edu.kit.datamanager.idoris.domain.entities.OperationTypeProfile;
+import edu.kit.datamanager.idoris.domain.entities.AtomicDataType;
+import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.data.rest.core.annotation.RestResource;
 
-@RepositoryRestResource(collectionResourceRel = "operationTypeProfiles", path = "operationTypeProfiles")
-public interface IOperationTypeProfileDao extends IAbstractRepo<OperationTypeProfile, String> {
+@RepositoryRestResource(collectionResourceRel = "atomicDataTypes", path = "atomicDataTypes")
+public interface IAtomicDataTypeDao extends IAbstractRepo<AtomicDataType, String> {
+    @RestResource(exported = false)
+    @Query("MATCH (d:AtomicDataType {pid: $pid})-[:inheritsFrom*]->(d2:AtomicDataType) RETURN d2")
+    Iterable<AtomicDataType> findAllInInheritanceChain(String pid);
 }

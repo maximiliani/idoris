@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package edu.kit.datamanager.idoris.domain;
 
-import edu.kit.datamanager.idoris.domain.entities.License;
+import edu.kit.datamanager.idoris.domain.entities.Reference;
 import edu.kit.datamanager.idoris.domain.entities.User;
-import edu.kit.datamanager.idoris.domain.relationships.StandardApplicability;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -42,6 +41,10 @@ public abstract class GenericIDORISEntity extends VisitableElement implements Se
     @GeneratedValue(UUIDStringGenerator.class)
     String pid;
 
+    String name;
+
+    String description;
+
     @Version
     Long version;
 
@@ -51,12 +54,10 @@ public abstract class GenericIDORISEntity extends VisitableElement implements Se
     @LastModifiedDate
     Instant lastModifiedAt;
 
+    Set<String> expectedUseCases;
+
     @Relationship(value = "contributors", direction = Relationship.Direction.OUTGOING)
     Set<User> contributors;
 
-    @Relationship(value = "license", direction = Relationship.Direction.OUTGOING)
-    License license;
-
-    @Relationship(value = "standards", direction = Relationship.Direction.OUTGOING)
-    Set<StandardApplicability> standards;
+    Set<Reference> references;
 }
