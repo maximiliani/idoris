@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.dao;
+package edu.kit.datamanager.idoris.domain.enums;
 
-import edu.kit.datamanager.idoris.domain.entities.Standard;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-
-@RepositoryRestResource(collectionResourceRel = "standards", path = "standards")
-public interface IStandardsDao extends IAbstractRepo<Standard, String> {
+public enum ExecutionMode {
+    sync,
+    async
 }

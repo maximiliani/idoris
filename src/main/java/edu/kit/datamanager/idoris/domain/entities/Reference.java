@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,8 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.domain.enums;
+package edu.kit.datamanager.idoris.domain.entities;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
-@Getter
-@AllArgsConstructor
-public enum Obligation {
-    Mandatory("Mandatory"),
-    Optional("Optional");
-    private final String name;
+public record Reference(String relationType, String targetPID) {
 }
