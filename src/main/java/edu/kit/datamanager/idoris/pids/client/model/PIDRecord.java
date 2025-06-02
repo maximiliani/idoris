@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.dao;
+package edu.kit.datamanager.idoris.pids.client.model;
 
-import org.springframework.data.neo4j.repository.Neo4jRepository;
-import org.springframework.data.repository.ListCrudRepository;
-import org.springframework.data.repository.NoRepositoryBean;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@NoRepositoryBean
-public interface IAbstractRepo<T, ID> extends Neo4jRepository<T, ID>, ListCrudRepository<T, ID>, PagingAndSortingRepository<T, ID> {
+import java.util.List;
+
+/**
+ * Represents a Simple PID Record in the Typed PID Maker service.
+ * This follows the SimplePidRecord structure from the Typed PID Maker API.
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record PIDRecord(String pid, List<PIDRecordEntry> record) {
 }

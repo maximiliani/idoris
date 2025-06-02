@@ -23,8 +23,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
@@ -37,10 +35,6 @@ import java.util.List;
 @Getter
 @Setter
 public class OperationStep extends VisitableElement implements Serializable {
-    @Id
-    @GeneratedValue
-    private String id;
-
     private Integer index;
 
     private String name;
@@ -65,20 +59,5 @@ public class OperationStep extends VisitableElement implements Serializable {
     @Override
     protected <T> T accept(Visitor<T> visitor, Object... args) {
         return visitor.visit(this, args);
-    }
-
-    @Override
-    public String toString() {
-        return "OperationStep{" +
-                "id=" + id +
-                ", executionOrderIndex=" + index +
-                ", name='" + name + '\'' +
-                ", mode=" + mode +
-                ", steps=" + subSteps +
-                ", operation=" + executeOperation +
-                ", technologyInterface=" + useTechnology +
-                ", attributes=" + inputMappings +
-                ", output=" + outputMappings +
-                "} " + super.toString();
     }
 }

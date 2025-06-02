@@ -25,12 +25,25 @@ public record ValidationMessage(@NotNull String message, @Nullable Object elemen
     @AllArgsConstructor
     @Getter
     public enum MessageSeverity {
-        INFO("INFO"),
-        WARNING("WARNING"),
-        ERROR("ERROR");
+        INFO("INFO"),        // ordinal 0
+        WARNING("WARNING"),  // ordinal 1
+        ERROR("ERROR");      // ordinal 2
         private final String value;
 
+        /**
+         * Checks if this severity is higher than or equal to the other severity.
+         * Assumes severities are ordered by their declaration (ordinal value):
+         * INFO < WARNING < ERROR
+         *
+         * @param other The severity to compare against.
+         * @return true if this severity is higher than or equal to other; false otherwise.
+         */
+        @SuppressWarnings("EnumOrdinal")
         public boolean isHigherOrEqualTo(MessageSeverity other) {
+            if (other == null) {
+                // Or throw new IllegalArgumentException("Cannot compare with a null severity");
+                return false; // Or handle as per specific requirements for null inputs
+            }
             return this.ordinal() >= other.ordinal();
         }
     }

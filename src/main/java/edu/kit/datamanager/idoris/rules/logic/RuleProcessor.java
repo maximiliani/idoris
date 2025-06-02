@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.dao;
+package edu.kit.datamanager.idoris.rules.logic;
 
-import edu.kit.datamanager.idoris.domain.entities.License;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import edu.kit.datamanager.idoris.domain.VisitableElement;
 
-@RepositoryRestResource(collectionResourceRel = "licenses", path = "licenses")
-public interface ILicenseDao extends IAbstractRepo<License, String> {
-    License findByName(String name);
-
-    License findByUrl(String url);
+@FunctionalInterface
+public interface RuleProcessor<T extends VisitableElement, R extends RuleOutput> {
+    void process(T input, R result);
 }
+

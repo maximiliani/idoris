@@ -22,7 +22,7 @@ import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 @RepositoryRestResource(collectionResourceRel = "dataTypes", path = "dataTypes")
-public interface IDataTypeDao extends IAbstractRepo<DataType, String> {
+public interface IDataTypeDao extends IGenericRepo<DataType> {
     @Query("MATCH (d:DataType {pid: $pid})-[:inheritsFrom*]->(d2:DataType) RETURN d2")
     Iterable<DataType> findAllInInheritanceChain(String pid);
 

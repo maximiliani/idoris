@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,15 @@ package edu.kit.datamanager.idoris.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.kit.datamanager.idoris.visitors.Visitor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.neo4j.core.schema.CompositeProperty;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -30,12 +34,17 @@ import java.util.Map;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 public abstract class VisitableElement {
     private static final Logger LOG = LoggerFactory.getLogger(VisitableElement.class);
 
     @CompositeProperty
     @JsonIgnore
     private Map<String, Instant> visitedBy = new HashMap<>();
+
+    @Id
+    @GeneratedValue(UUIDStringGenerator.class)
+    private String internalId;
 
     public <T> T execute(Visitor<T> visitor, Object... args) {
 //        if (isVisitedBy(visitor)) {
@@ -60,5 +69,9 @@ public abstract class VisitableElement {
 
     public void clearVisitedBy(Visitor<?> visitor) {
         visitedBy.remove(visitor.getClass().getName());
+    }
+
+    public String getId() {
+        return internalId;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
+ * Copyright (c) 2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,14 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.domain.entities;
+package edu.kit.datamanager.idoris.rules.logic;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.springframework.data.neo4j.core.schema.Node;
-
-import java.net.URL;
-
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
-@Node("ORCiDUser")
-public final class ORCiDUser extends User {
-    @JsonProperty("orcid")
-    private URL orcid;
+public enum RuleEvent {
+    CREATE,
+    UPDATE,
+    DELETE,
+    CONSUME,
+    VALIDATE,
+    PUBLISH,
+    OTHERS
 }

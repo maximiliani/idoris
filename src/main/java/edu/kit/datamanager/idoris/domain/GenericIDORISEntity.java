@@ -18,14 +18,13 @@ package edu.kit.datamanager.idoris.domain;
 
 import edu.kit.datamanager.idoris.domain.entities.Reference;
 import edu.kit.datamanager.idoris.domain.entities.User;
+import edu.kit.datamanager.idoris.pids.ConfigurablePIDGenerator;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Relationship;
-import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -34,11 +33,10 @@ import java.util.Set;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
-@RequiredArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class GenericIDORISEntity extends VisitableElement implements Serializable {
-    @Id
-    @GeneratedValue(UUIDStringGenerator.class)
+    @GeneratedValue(ConfigurablePIDGenerator.class)
     String pid;
 
     String name;

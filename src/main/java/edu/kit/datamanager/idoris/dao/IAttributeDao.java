@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 @RepositoryRestResource(collectionResourceRel = "attributes", path = "attributes")
-public interface IAttributeDao extends IAbstractRepo<Attribute, String> {
+public interface IAttributeDao extends IGenericRepo<Attribute> {
     @Query("MATCH (n:Attribute)" +
             " WHERE size([(n)-[:dataType]->() | 1]) = 1 AND NOT (n)<-[]-()" +
             " WITH n" +

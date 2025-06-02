@@ -22,7 +22,7 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.core.annotation.RestResource;
 
 @RepositoryRestResource(collectionResourceRel = "atomicDataTypes", path = "atomicDataTypes")
-public interface IAtomicDataTypeDao extends IAbstractRepo<AtomicDataType, String> {
+public interface IAtomicDataTypeDao extends IGenericRepo<AtomicDataType> {
     @RestResource(exported = false)
     @Query("MATCH (d:AtomicDataType {pid: $pid})-[:inheritsFrom*]->(d2:AtomicDataType) RETURN d2")
     Iterable<AtomicDataType> findAllInInheritanceChain(String pid);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.domain.enums;
+package edu.kit.datamanager.idoris.pids.client.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@AllArgsConstructor
-@Getter
-public enum Category {
-    MeasurementUnit("Measurement Unit"),
-    Format("Format"),
-    Enumeration("Enumeration"),
-    CharacterSet("Character Set"),
-    Encoding("Encoding"),
-    Other("Other");
-    private final String name;
+/**
+ * Represents a key-value pair in a SimplePidRecord.
+ * This follows the PIDRecordEntry structure from the Typed PID Maker API.
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record PIDRecordEntry(String key, String value) {
 }

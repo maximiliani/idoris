@@ -26,7 +26,7 @@ import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
-@Node
+@Node("Attribute")
 @AllArgsConstructor
 @RequiredArgsConstructor
 @Getter
