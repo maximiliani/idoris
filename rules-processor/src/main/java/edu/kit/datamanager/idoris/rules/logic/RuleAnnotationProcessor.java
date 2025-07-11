@@ -26,6 +26,9 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import javax.tools.JavaFileObject;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -584,7 +587,7 @@ public final class RuleAnnotationProcessor extends AbstractProcessor {
 
             // Check if the type element is a TypeElement with abstract modifier
             if (typeElement instanceof TypeElement te &&
-                    te.getModifiers().contains(javax.lang.model.element.Modifier.ABSTRACT)) {
+                    te.getModifiers().contains(Modifier.ABSTRACT)) {
                 reportError(ruleClass,
                         "Rule %s cannot target abstract type %s. " +
                                 "Rules can only be applied to concrete (non-abstract) classes.",
@@ -667,13 +670,39 @@ public final class RuleAnnotationProcessor extends AbstractProcessor {
      *   <li>For each task, iterates through each target type</li>
      *   <li>Validates the dependency graph for that specific context</li>
      *   <li>Reports any cycles found as compilation errors</li>
+     *   <li>If all validations pass, generates a precomputed rule graph class</li>
      * </ol>
      */
     private void validateAllRuleDependencyGraphs() {
+        // Map to store topologically sorted rules for each task and target type
+        Map<RuleTask, Map<String, List<String>>> sortedRulesByTaskAndType = new HashMap<>();
+
         // Validate each task-target combination independently
-        rulesByTaskAndTarget.forEach((task, rulesByTarget) ->
-                rulesByTarget.forEach((targetType, rulesInGraph) ->
-                        validateDependencyGraph(task, targetType, rulesInGraph)));
+        rulesByTaskAndTarget.forEach((task, rulesByTarget) -> {
+            Map<String, List<String>> sortedRulesByTarget = new HashMap<>();
+            sortedRulesByTaskAndType.put(task, sortedRulesByTarget);
+
+            rulesByTarget.forEach((targetType, rulesInGraph) -> {
+                try {
+                    // Validate and get topologically sorted rules
+                    List<RuleMetadata> sortedRules = validateDependencyGraph(task, targetType, rulesInGraph);
+
+                    // Store the class names of sorted rules
+                    List<String> sortedClassNames = sortedRules.stream()
+                            .map(RuleMetadata::className)
+                            .collect(Collectors.toList());
+
+                    sortedRulesByTarget.put(targetType, sortedClassNames);
+                } catch (CyclicDependencyException e) {
+                    // Error already reported in validateDependencyGraph
+                }
+            });
+        });
+
+//        // Generate the precomputed rule graph class if no errors occurred
+//        if (!processingEnv.getMessager().isErrorRaised()) {
+        generatePrecomputedRuleGraphClass(sortedRulesByTaskAndType);
+//        }
     }
 
     /**
@@ -689,13 +718,16 @@ public final class RuleAnnotationProcessor extends AbstractProcessor {
      * @param task         the task context being validated
      * @param targetType   the target type context being validated
      * @param rulesInGraph the rules in this specific dependency graph
+     * @return list of rule metadata in topological order, or empty list if validation fails
+     * @throws CyclicDependencyException if a cycle is detected in the dependency graph
      */
-    private void validateDependencyGraph(RuleTask task, String targetType, Map<String, RuleMetadata> rulesInGraph) {
+    private List<RuleMetadata> validateDependencyGraph(RuleTask task, String targetType, Map<String, RuleMetadata> rulesInGraph) {
         try {
             // Attempt to topologically sort the dependency graph
-            performTopologicalSort(rulesInGraph);
+            List<RuleMetadata> sortedRules = performTopologicalSort(rulesInGraph);
 
             // If successful, the graph is acyclic and valid
+            return sortedRules;
 
         } catch (CyclicDependencyException exception) {
             // Cycle detected - report as compilation error
@@ -705,6 +737,9 @@ public final class RuleAnnotationProcessor extends AbstractProcessor {
                     task,
                     targetType,
                     exception.getMessage());
+
+            // Re-throw the exception to signal validation failure
+            throw exception;
         }
     }
 
@@ -860,6 +895,122 @@ public final class RuleAnnotationProcessor extends AbstractProcessor {
                 String.format(messageFormat, arguments),
                 element
         );
+    }
+
+    /**
+     * Generates a Java source file containing the precomputed rule graph.
+     *
+     * <p>This method creates a class that stores the topologically sorted rules
+     * for each task and target type combination. The generated class can be used
+     * at runtime to avoid duplicate validation and sorting in the RuleService.
+     *
+     * @param sortedRulesByTaskAndType map of task to target type to sorted rule class names
+     */
+    private void generatePrecomputedRuleGraphClass(
+            Map<RuleTask, Map<String, List<String>>> sortedRulesByTaskAndType) {
+
+        try {
+            // Create a fully qualified class name for the generated class
+            String packageName = "edu.kit.datamanager.idoris.rules.logic";
+            String className = "PrecomputedRuleGraphImpl";
+            String fullClassName = packageName + "." + className;
+
+            // Create a new Java file in the specified package
+            JavaFileObject sourceFile = processingEnv.getFiler()
+                    .createSourceFile(fullClassName);
+
+            try (PrintWriter writer = new PrintWriter(sourceFile.openWriter())) {
+                // Write package declaration and imports
+                writer.println("package " + packageName + ";");
+                writer.println();
+                writer.println("import java.util.List;");
+                writer.println("import java.util.Map;");
+                writer.println("import java.util.HashMap;");
+                writer.println("import java.util.ArrayList;");
+                writer.println("import java.util.Collections;");
+                writer.println();
+
+                // Write class javadoc and declaration
+                writer.println("/**");
+                writer.println(" * Generated implementation of PrecomputedRuleGraph.");
+                writer.println(" * <p>");
+                writer.println(" * This class was automatically generated by RuleAnnotationProcessor");
+                writer.println(" * and contains the precomputed, topologically sorted rule dependency graphs.");
+                writer.println(" * <p>");
+                writer.println(" * DO NOT MODIFY THIS FILE - it will be regenerated during compilation.");
+                writer.println(" */");
+                writer.println("public class " + className + " extends PrecomputedRuleGraph {");
+                writer.println();
+
+                // Write constructor
+                writer.println("    /**");
+                writer.println("     * Constructs the precomputed rule graph with validated and sorted rule dependencies.");
+                writer.println("     */");
+                writer.println("    public " + className + "() {");
+                writer.println("        super(initRuleGraph());");
+                writer.println("    }");
+                writer.println();
+
+                // Write initialization method
+                writer.println("    /**");
+                writer.println("     * Initializes the rule graph with precomputed, topologically sorted rules.");
+                writer.println("     *");
+                writer.println("     * @return map of task to target type to sorted rule class names");
+                writer.println("     */");
+                writer.println("    private static Map<RuleTask, Map<String, List<String>>> initRuleGraph() {");
+                writer.println("        Map<RuleTask, Map<String, List<String>>> graph = new HashMap<>();");
+                writer.println();
+
+                // Write task-level entries
+                for (Map.Entry<RuleTask, Map<String, List<String>>> taskEntry : sortedRulesByTaskAndType.entrySet()) {
+                    RuleTask task = taskEntry.getKey();
+                    Map<String, List<String>> targetMap = taskEntry.getValue();
+
+                    if (!targetMap.isEmpty()) {
+                        writer.println("        // Rules for task " + task.name());
+                        writer.println("        Map<String, List<String>> " + task.name().toLowerCase() + "Rules = new HashMap<>();");
+                        writer.println("        graph.put(RuleTask." + task.name() + ", " + task.name().toLowerCase() + "Rules);");
+                        writer.println();
+
+                        // Write target-level entries
+                        for (Map.Entry<String, List<String>> targetEntry : targetMap.entrySet()) {
+                            String targetType = targetEntry.getKey();
+                            List<String> ruleClasses = targetEntry.getValue();
+
+                            if (!ruleClasses.isEmpty()) {
+                                String targetVarName = "rules_" + task.name().toLowerCase() + "_" +
+                                        targetType.replaceAll("[^a-zA-Z0-9]", "_");
+
+                                writer.println("        // Rules for " + targetType);
+                                writer.println("        List<String> " + targetVarName + " = new ArrayList<>();");
+                                writer.println("        " + task.name().toLowerCase() + "Rules.put(\"" + targetType + "\", " + targetVarName + ");");
+
+                                // Write individual rule class names
+                                for (String ruleClass : ruleClasses) {
+                                    writer.println("        " + targetVarName + ".add(\"" + ruleClass + "\");");
+                                }
+                                writer.println();
+                            }
+                        }
+                    }
+                }
+
+                writer.println("        return graph;");
+                writer.println("    }");
+                writer.println("}");
+            }
+
+            processingEnv.getMessager().printMessage(
+                    Diagnostic.Kind.NOTE,
+                    "Generated precomputed rule graph class: " + fullClassName
+            );
+
+        } catch (IOException e) {
+            processingEnv.getMessager().printMessage(
+                    Diagnostic.Kind.ERROR,
+                    "Failed to generate precomputed rule graph class: " + e.getMessage()
+            );
+        }
     }
 
     /**

@@ -172,7 +172,22 @@ public class RuleService {
         log.info("Initializing RuleService - discovering rule beans...");
         Collection<Object> ruleBeans = beanFactory.getBeansWithAnnotation(Rule.class).values();
         log.info("Found {} rule beans", ruleBeans.size());
-        buildRuleIndex(ruleBeans);
+
+        // Try to use precomputed rule graph if available
+        try {
+            Class<?> precomputedGraphClass = Class.forName("edu.kit.datamanager.idoris.rules.logic.PrecomputedRuleGraphImpl");
+            PrecomputedRuleGraph precomputedGraph = (PrecomputedRuleGraph) precomputedGraphClass.getConstructor().newInstance();
+            log.info("Using precomputed rule graph for dependency ordering");
+            buildRuleIndexFromPrecomputed(ruleBeans, precomputedGraph);
+        } catch (ClassNotFoundException e) {
+            log.info("Precomputed rule graph not found, falling back to runtime topological sorting");
+            buildRuleIndex(ruleBeans);
+        } catch (Exception e) {
+            log.warn("Failed to initialize from precomputed rule graph: {}", e.getMessage());
+            log.warn("Falling back to runtime topological sorting", e);
+            buildRuleIndex(ruleBeans);
+        }
+
         log.info("RuleService initialization complete");
     }
 
@@ -239,6 +254,91 @@ public class RuleService {
 
             rulesByTaskAndType.put(task, sortedRulesByElementType);
         });
+    }
+
+    /**
+     * Builds the rule index using the precomputed dependency graph.
+     * This avoids expensive runtime topological sorting and validation.
+     *
+     * @param ruleBeans        discovered Spring beans annotated with {@link Rule}
+     * @param precomputedGraph precomputed rule dependency graph from annotation processor
+     */
+    private void buildRuleIndexFromPrecomputed(
+            Collection<Object> ruleBeans,
+            PrecomputedRuleGraph precomputedGraph) {
+
+        log.info("Building rule index from precomputed dependency graph");
+
+        // Create a map of class names to rule instances for fast lookup
+        Map<String, Object> ruleInstancesByClassName = new HashMap<>();
+        Map<String, Rule> ruleAnnotationsByClassName = new HashMap<>();
+
+        // Index all rule beans by their class name
+        for (Object ruleBean : ruleBeans) {
+            Rule ruleAnnotation = ruleBean.getClass().getAnnotation(Rule.class);
+            if (ruleAnnotation == null) {
+                log.warn("Bean {} was retrieved as @Rule annotated but annotation is null",
+                        ruleBean.getClass().getSimpleName());
+                continue;
+            }
+
+            String className = ruleBean.getClass().getName();
+            ruleInstancesByClassName.put(className, ruleBean);
+            ruleAnnotationsByClassName.put(className, ruleAnnotation);
+        }
+
+        // Access the precomputed sorted rule classes
+        Map<RuleTask, Map<String, List<String>>> precomputedRules =
+                precomputedGraph.getSortedRulesByTaskAndType();
+
+        // Process each task
+        for (Map.Entry<RuleTask, Map<String, List<String>>> taskEntry : precomputedRules.entrySet()) {
+            RuleTask task = taskEntry.getKey();
+            Map<String, List<String>> rulesByTargetType = taskEntry.getValue();
+
+            Map<Class<? extends VisitableElement>, List<RuleNode>> sortedRulesByElementType = new HashMap<>();
+            rulesByTaskAndType.put(task, sortedRulesByElementType);
+
+            // Process each target type
+            for (Map.Entry<String, List<String>> targetEntry : rulesByTargetType.entrySet()) {
+                String targetTypeName = targetEntry.getKey();
+                List<String> sortedRuleClasses = targetEntry.getValue();
+
+                try {
+                    // Load the target type class
+                    @SuppressWarnings("unchecked")
+                    Class<? extends VisitableElement> targetType =
+                            (Class<? extends VisitableElement>) Class.forName(targetTypeName);
+
+                    // Convert sorted class names to RuleNode instances
+                    List<RuleNode> sortedRuleNodes = new ArrayList<>();
+
+                    for (String ruleClassName : sortedRuleClasses) {
+                        Object ruleInstance = ruleInstancesByClassName.get(ruleClassName);
+                        Rule ruleAnnotation = ruleAnnotationsByClassName.get(ruleClassName);
+
+                        if (ruleInstance != null && ruleAnnotation != null) {
+                            sortedRuleNodes.add(new RuleNode(ruleInstance, ruleAnnotation));
+                        } else {
+                            log.warn("Precomputed rule {} not found in Spring context", ruleClassName);
+                        }
+                    }
+
+                    if (!sortedRuleNodes.isEmpty()) {
+                        sortedRulesByElementType.put(targetType, sortedRuleNodes);
+                        log.debug("Added {} precomputed rules for task {} and element type {}",
+                                sortedRuleNodes.size(), task, targetType.getSimpleName());
+                    }
+
+                } catch (ClassNotFoundException e) {
+                    log.warn("Target type {} not found in classpath", targetTypeName);
+                } catch (ClassCastException e) {
+                    log.warn("Target type {} is not a VisitableElement", targetTypeName);
+                }
+            }
+        }
+
+        log.info("Rule index built from precomputed dependency graph");
     }
 
     /**
