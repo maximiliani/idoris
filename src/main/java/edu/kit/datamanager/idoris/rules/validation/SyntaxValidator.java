@@ -16,7 +16,6 @@
 
 package edu.kit.datamanager.idoris.rules.validation;
 
-import edu.kit.datamanager.idoris.domain.VisitableElement;
 import edu.kit.datamanager.idoris.domain.entities.*;
 import edu.kit.datamanager.idoris.domain.enums.CombinationOptions;
 import edu.kit.datamanager.idoris.domain.enums.ExecutionMode;
@@ -55,9 +54,11 @@ public class SyntaxValidator extends ValidationVisitor {
      * Validates syntax constraints for Attribute entities
      *
      * @param attribute The attribute to validate
+     * @param args      Additional arguments (not used in this implementation)
      * @return ValidationResult containing any validation errors
      */
-    public ValidationResult validate(Attribute attribute) {
+    @Override
+    public ValidationResult visit(Attribute attribute, Object... args) {
         ValidationResult result = new ValidationResult();
 
         if (attribute.getName() == null || attribute.getName().isEmpty()) {
@@ -100,9 +101,11 @@ public class SyntaxValidator extends ValidationVisitor {
      * Validates syntax constraints for AttributeMapping entities
      *
      * @param attributeMapping The attribute mapping to validate
+     * @param args             Additional arguments (not used in this implementation)
      * @return ValidationResult containing any validation errors
      */
-    public ValidationResult validate(AttributeMapping attributeMapping) {
+    @Override
+    public ValidationResult visit(AttributeMapping attributeMapping, Object... args) {
         ValidationResult result = new ValidationResult();
 
         if (attributeMapping.getName() == null || attributeMapping.getName().isEmpty()) {
@@ -153,9 +156,11 @@ public class SyntaxValidator extends ValidationVisitor {
      * Validates syntax constraints for AtomicDataType entities
      *
      * @param atomicDataType The atomic data type to validate
+     * @param args           Additional arguments (not used in this implementation)
      * @return ValidationResult containing any validation errors
      */
-    public ValidationResult validate(AtomicDataType atomicDataType) {
+    @Override
+    public ValidationResult visit(AtomicDataType atomicDataType, Object... args) {
         ValidationResult result = new ValidationResult();
 
         validateDataType(atomicDataType, result);
@@ -192,9 +197,11 @@ public class SyntaxValidator extends ValidationVisitor {
      * Validates syntax constraints for TypeProfile entities
      *
      * @param typeProfile The type profile to validate
+     * @param args        Additional arguments (not used in this implementation)
      * @return ValidationResult containing any validation errors
      */
-    public ValidationResult validate(TypeProfile typeProfile) {
+    @Override
+    public ValidationResult visit(TypeProfile typeProfile, Object... args) {
         ValidationResult result = new ValidationResult();
 
         validateDataType(typeProfile, result);
@@ -211,9 +218,11 @@ public class SyntaxValidator extends ValidationVisitor {
      * Validates syntax constraints for Operation entities
      *
      * @param operation The operation to validate
+     * @param args      Additional arguments (not used in this implementation)
      * @return ValidationResult containing any validation errors
      */
-    public ValidationResult validate(Operation operation) {
+    @Override
+    public ValidationResult visit(Operation operation, Object... args) {
         ValidationResult result = new ValidationResult();
 
         if (operation.getName() == null || operation.getName().isEmpty()) {
@@ -247,9 +256,11 @@ public class SyntaxValidator extends ValidationVisitor {
      * Validates syntax constraints for OperationStep entities
      *
      * @param operationStep The operation step to validate
+     * @param args          Additional arguments (not used in this implementation)
      * @return ValidationResult containing any validation errors
      */
-    public ValidationResult validate(OperationStep operationStep) {
+    @Override
+    public ValidationResult visit(OperationStep operationStep, Object... args) {
         ValidationResult result = new ValidationResult();
 
         if (operationStep.getName() == null || operationStep.getName().isEmpty()) {
@@ -280,9 +291,11 @@ public class SyntaxValidator extends ValidationVisitor {
      * Validates syntax constraints for TechnologyInterface entities
      *
      * @param technologyInterface The technology interface to validate
+     * @param args                Additional arguments (not used in this implementation)
      * @return ValidationResult containing any validation errors
      */
-    public ValidationResult validate(TechnologyInterface technologyInterface) {
+    @Override
+    public ValidationResult visit(TechnologyInterface technologyInterface, Object... args) {
         ValidationResult result = new ValidationResult();
 
         if (technologyInterface.getName() == null || technologyInterface.getName().isEmpty()) {
@@ -301,17 +314,6 @@ public class SyntaxValidator extends ValidationVisitor {
         }
 
         return result;
-    }
-
-    /**
-     * Default handler for any VisitableElement that doesn't have a specific validation method
-     *
-     * @param element The element to validate
-     * @return Empty ValidationResult as default
-     */
-    public ValidationResult validate(VisitableElement element) {
-        // Default implementation for other types
-        return new ValidationResult();
     }
 
     /**

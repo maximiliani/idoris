@@ -16,8 +16,8 @@
 
 package edu.kit.datamanager.idoris.rules.validation;
 
-import edu.kit.datamanager.idoris.domain.VisitableElement;
-import edu.kit.datamanager.idoris.domain.entities.*;
+import edu.kit.datamanager.idoris.domain.entities.Attribute;
+import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
 import edu.kit.datamanager.idoris.domain.enums.CombinationOptions;
 import edu.kit.datamanager.idoris.rules.logic.Rule;
 import edu.kit.datamanager.idoris.rules.logic.RuleTask;
@@ -37,11 +37,6 @@ import static edu.kit.datamanager.idoris.rules.logic.OutputMessage.MessageSeveri
 @Slf4j
 @Rule(
         appliesTo = {
-                Attribute.class,
-                AttributeMapping.class,
-                Operation.class,
-                OperationStep.class,
-                TechnologyInterface.class,
                 TypeProfile.class
         },
         name = "ValidationPolicyRule",
@@ -54,22 +49,24 @@ public class ValidationPolicyValidator extends ValidationVisitor {
      * Validates validation policy constraints for TypeProfile entities
      *
      * @param typeProfile The type profile to validate
+     * @param args        Additional arguments (not used in this implementation)
      * @return ValidationResult containing any validation errors
      */
-    public ValidationResult validate(TypeProfile typeProfile) {
+    @Override
+    public ValidationResult visit(TypeProfile typeProfile, Object... args) {
         ValidationResult result = new ValidationResult();
 
         if (typeProfile.getInheritsFrom() == null || typeProfile.getInheritsFrom().isEmpty()) {
-            log.debug("[RULE-DEBUG] TypeProfile {} has no parent TypeProfiles. Skipping validation.", typeProfile.getPid());
+            log.debug("TypeProfile {} has no parent TypeProfiles. Skipping validation.", typeProfile.getPid());
             return result;
         }
 
         for (TypeProfile parent : typeProfile.getInheritsFrom()) {
             if (parent == null || parent.getValidationPolicy() == null) {
-                log.debug("[RULE-DEBUG] Parent TypeProfile is null or has no SubSchemaRelation defined. Skipping validation.");
+                log.debug("Parent TypeProfile is null or has no SubSchemaRelation defined. Skipping validation.");
                 continue;
             }
-            log.debug("[RULE-DEBUG] Validating TypeProfile {} against parent TypeProfile {}", typeProfile.getPid(), parent.getPid());
+            log.debug("Validating TypeProfile {} against parent TypeProfile {}", typeProfile.getPid(), parent.getPid());
 
             if (!parent.isAllowAdditionalAttributes() && !typeProfile.getAttributes().isEmpty())
                 result.addMessage("TypeProfile " + typeProfile.getPid() + " defines additional properties, but inherits from the TypeProfile " +
@@ -125,90 +122,8 @@ public class ValidationPolicyValidator extends ValidationVisitor {
                 default -> throw new IllegalStateException("Unknown ValidationPolicy " + parent.getValidationPolicy());
             }
         }
-        log.debug("[RULE-DEBUG] Validation of TypeProfile {} against parent TypeProfiles completed. result={}", typeProfile.getPid(), result);
+        log.debug("Validation of TypeProfile {} against parent TypeProfiles completed. result={}", typeProfile.getPid(), result);
         return result;
-    }
-
-    /**
-     * Validates validation policy constraints for Attribute entities
-     *
-     * @param attribute The attribute to validate
-     * @return ValidationResult containing any validation errors
-     */
-    public ValidationResult validate(Attribute attribute) {
-        // For attributes, we're primarily interested in validating the data type
-        ValidationResult result = new ValidationResult();
-
-        // Additional attribute-specific validation logic can be added here if needed
-
-        return result;
-    }
-
-    /**
-     * Validates validation policy constraints for AttributeMapping entities
-     *
-     * @param attributeMapping The attribute mapping to validate
-     * @return ValidationResult containing any validation errors
-     */
-    public ValidationResult validate(AttributeMapping attributeMapping) {
-        ValidationResult result = new ValidationResult();
-
-        // Additional attribute mapping-specific validation logic can be added here if needed
-
-        return result;
-    }
-
-    /**
-     * Validates validation policy constraints for Operation entities
-     *
-     * @param operation The operation to validate
-     * @return ValidationResult containing any validation errors
-     */
-    public ValidationResult validate(Operation operation) {
-        ValidationResult result = new ValidationResult();
-
-        // Additional operation-specific validation logic can be added here if needed
-
-        return result;
-    }
-
-    /**
-     * Validates validation policy constraints for OperationStep entities
-     *
-     * @param operationStep The operation step to validate
-     * @return ValidationResult containing any validation errors
-     */
-    public ValidationResult validate(OperationStep operationStep) {
-        ValidationResult result = new ValidationResult();
-
-        // Additional operation step-specific validation logic can be added here if needed
-
-        return result;
-    }
-
-    /**
-     * Validates validation policy constraints for TechnologyInterface entities
-     *
-     * @param technologyInterface The technology interface to validate
-     * @return ValidationResult containing any validation errors
-     */
-    public ValidationResult validate(TechnologyInterface technologyInterface) {
-        ValidationResult result = new ValidationResult();
-
-        // Additional technology interface-specific validation logic can be added here if needed
-
-        return result;
-    }
-
-    /**
-     * Default handler for any VisitableElement that doesn't have a specific validation method
-     *
-     * @param element The element to validate
-     * @return Empty ValidationResult as default
-     */
-    public ValidationResult validate(VisitableElement element) {
-        // Default implementation for other types
-        return new ValidationResult();
     }
 
     /**

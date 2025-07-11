@@ -34,7 +34,7 @@ import edu.kit.datamanager.idoris.domain.VisitableElement;
 import edu.kit.datamanager.idoris.rules.logic.IRule;
 import edu.kit.datamanager.idoris.rules.logic.Visitor;
 
-public class ValidationVisitor extends Visitor<ValidationResult> implements IRule<VisitableElement, ValidationResult> {
+public abstract class ValidationVisitor extends Visitor<ValidationResult> implements IRule<VisitableElement, ValidationResult> {
 
     /**
      * Constructor for ValidationVisitor.

@@ -16,8 +16,9 @@
 
 package edu.kit.datamanager.idoris.rules.validation;
 
-import edu.kit.datamanager.idoris.domain.VisitableElement;
-import edu.kit.datamanager.idoris.domain.entities.*;
+import edu.kit.datamanager.idoris.domain.entities.AtomicDataType;
+import edu.kit.datamanager.idoris.domain.entities.Attribute;
+import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
 import edu.kit.datamanager.idoris.rules.logic.Rule;
 import edu.kit.datamanager.idoris.rules.logic.RuleTask;
 import lombok.extern.slf4j.Slf4j;
@@ -35,10 +36,6 @@ import static edu.kit.datamanager.idoris.rules.logic.OutputMessage.MessageSeveri
         appliesTo = {
                 AtomicDataType.class,
                 Attribute.class,
-                AttributeMapping.class,
-                Operation.class,
-                OperationStep.class,
-                TechnologyInterface.class,
                 TypeProfile.class
         },
         name = "InheritanceValidationRule",
@@ -51,9 +48,11 @@ public class InheritanceValidator extends ValidationVisitor {
      * Validates inheritance relationships for Attribute entities
      *
      * @param attribute The attribute to validate
+     * @param args      Additional arguments (not used in this implementation)
      * @return ValidationResult containing any validation errors
      */
-    public ValidationResult validate(Attribute attribute) {
+    @Override
+    public ValidationResult visit(Attribute attribute, Object... args) {
         ValidationResult result = new ValidationResult();
 
         if (attribute.getOverride() != null && attribute.getOverride().getDataType() != null) {
@@ -82,9 +81,11 @@ public class InheritanceValidator extends ValidationVisitor {
      * Validates inheritance relationships for AtomicDataType entities
      *
      * @param atomicDataType The atomic data type to validate
+     * @param args           Additional arguments (not used in this implementation)
      * @return ValidationResult containing any validation errors
      */
-    public ValidationResult validate(AtomicDataType atomicDataType) {
+    @Override
+    public ValidationResult visit(AtomicDataType atomicDataType, Object... args) {
         ValidationResult result = new ValidationResult();
 
         AtomicDataType parent = atomicDataType.getInheritsFrom();
@@ -125,9 +126,11 @@ public class InheritanceValidator extends ValidationVisitor {
      * Validates inheritance relationships for TypeProfile entities
      *
      * @param typeProfile The type profile to validate
+     * @param args        Additional arguments (not used in this implementation)
      * @return ValidationResult containing any validation errors
      */
-    public ValidationResult validate(TypeProfile typeProfile) {
+    @Override
+    public ValidationResult visit(TypeProfile typeProfile, Object... args) {
         ValidationResult result = new ValidationResult();
 
         if (typeProfile.getInheritsFrom() != null && typeProfile.getInheritsFrom().size() > 0) {
@@ -140,16 +143,5 @@ public class InheritanceValidator extends ValidationVisitor {
         }
 
         return result;
-    }
-
-    /**
-     * Default handler for any VisitableElement that doesn't have a specific validation method
-     *
-     * @param element The element to validate
-     * @return Empty ValidationResult as default
-     */
-    public ValidationResult validate(VisitableElement element) {
-        // Default implementation for other types
-        return new ValidationResult();
     }
 }

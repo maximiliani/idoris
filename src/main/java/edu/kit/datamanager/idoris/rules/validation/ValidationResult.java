@@ -168,36 +168,17 @@ public class ValidationResult implements RuleOutput<ValidationResult> {
         );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public ValidationResult merge(ValidationResult... others) {
         if (others == null) return this;
 
         try {
-            // Process each element individually
-            for (int i = 0; i < others.length; i++) {
-                Object otherObj = others[i];
-                if (otherObj == null) continue;
+            // Process each ValidationResult individually
+            for (ValidationResult other : others) {
+                if (other == null) continue;
 
-                ValidationResult validationResult;
-                if (otherObj instanceof ValidationResult) {
-                    validationResult = (ValidationResult) otherObj;
-                } else if (otherObj instanceof RuleOutput<?> ruleOutput) {
-                    // Try to handle any RuleOutput generically
-                    log.debug("Received RuleOutput instead of ValidationResult in merge");
-
-                    // Create a new ValidationResult to hold any messages
-                    validationResult = new ValidationResult();
-                    // We can't directly transfer messages, so we'll just log this situation
-                    log.warn("Cannot directly convert messages from {} to ValidationResult",
-                            otherObj.getClass().getName());
-                } else {
-                    log.warn("Unexpected object type in merge: {}", otherObj.getClass().getName());
-                    continue;
-                }
-
-                if (validationResult != null && !validationResult.isEmpty()) {
-                    this.addChild(validationResult);
+                if (!other.isEmpty()) {
+                    this.addChild(other);
                 }
             }
         } catch (Exception e) {

@@ -132,11 +132,11 @@ tasks.withType(JavaCompile).configureEach {
 
     // Enable annotation processing explicitly
     options.fork = true
-    options.forkOptions.jvmArgs += [
-            '-verbose',
-//            '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
-//            '--add-opens', 'java.base/java.util=ALL-UNNAMED'
-    ]
+//    options.forkOptions.jvmArgs += [
+//            '-verbose',
+////            '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+////            '--add-opens', 'java.base/java.util=ALL-UNNAMED'
+//    ]
 
     options.errorprone {
         disableWarningsInGeneratedCode = true

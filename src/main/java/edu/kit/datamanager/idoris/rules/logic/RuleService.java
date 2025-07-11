@@ -16,7 +16,6 @@
 
 package edu.kit.datamanager.idoris.rules.logic;
 
-import edu.kit.datamanager.idoris.domain.VisitableElement;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -184,13 +183,14 @@ public class RuleService {
      */
     private void buildRuleIndex(Collection<Object> ruleBeans) {
         // Temporary structure for collecting rules before topological sorting
-        Map<RuleTask, Map<Class<? extends VisitableElement>, Map<Class<?>, RuleNode>>> ruleCollector = new HashMap<>();
+        // Change your collector structure to use the interface
+        final Map<RuleTask, Map<Class<? extends VisitableElement>, Map<Class<?>, RuleNode>>> collector = new HashMap<>();
 
         // Phase 1: Group rules by task and element type
-        collectRulesByTaskAndType(ruleBeans, ruleCollector);
+        collectRulesByTaskAndType(ruleBeans, collector);
 
         // Phase 2: Topologically sort rules for each (task, type) combination
-        applySortingToCollectedRules(ruleCollector);
+        applySortingToCollectedRules(collector);
     }
 
     /**
@@ -488,10 +488,14 @@ public class RuleService {
                             return accumulator; // Skip null results
                         }
 
-                        // Fix for ClassCastException: Use individual result objects rather than an array
-                        // The merge method expects an array of the correct type, but we only have a single result here
+                        // Fix for ClassCastException: Create a proper array of the correct type
+                        // Create an array with the exact type to avoid type erasure issues
                         @SuppressWarnings("unchecked")
-                        R mergedResult = accumulator.merge(result);
+                        R[] resultArray = (R[]) java.lang.reflect.Array.newInstance(result.getClass(), 1);
+                        resultArray[0] = result;
+
+                        R mergedResult = accumulator.merge(resultArray);
+
                         log.debug("After merge: {}", mergedResult);
                         return mergedResult;
                     } catch (Exception e) {

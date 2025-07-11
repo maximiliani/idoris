@@ -556,7 +556,7 @@ public final class RuleAnnotationProcessor extends AbstractProcessor {
      * @param targetType the target type to validate
      */
     private void validateExtendsVisitableElement(TypeElement ruleClass, TypeMirror targetType) {
-        // Look up the VisitableElement interface
+        // Look up the interface VisitableElement
         TypeElement visitableElement = elementUtilities.getTypeElement("edu.kit.datamanager.idoris.rules.logic.VisitableElement");
 
         if (visitableElement != null && !typeUtilities.isAssignable(targetType, visitableElement.asType())) {
