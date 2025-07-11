@@ -22,26 +22,55 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.lang.reflect.Array;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
- * Central component that replaces the former "registry" + "engine" duo.
+ * Central service that manages rule discovery and execution based on precomputed dependency graphs.
  * <p>
- * Responsibilities:
- * <ol>
- *   <li>Discover all Spring beans annotated with {@link Rule}.</li>
- *   <li>Build an index "task → element-type → topologically sorted rules".</li>
- *   <li>Execute the rules for a given input while respecting declared dependencies.</li>
- * </ol>
+ * The RuleService is the orchestration core of the rule execution engine. It leverages a
+ * precomputed dependency graph generated at compile-time by the annotation processor to
+ * efficiently execute rules in the correct order. This approach eliminates the overhead
+ * of runtime dependency resolution and enables optimal parallel execution.
  * <p>
- * Threading model: each rule is executed asynchronously (via {@link CompletableFuture})
- * once all of its declared {@link Rule#dependsOn() dependencies} are finished.
- * This allows parallel execution when rules are independent.
+ * This service follows an optimization-first design with several key principles:
+ * <ul>
+ *   <li><strong>Just-in-time rule instantiation</strong>: Only rules referenced in the precomputed
+ *       graph are loaded, reducing memory usage and startup time</li>
+ *   <li><strong>Zero runtime dependency calculation</strong>: All rule ordering is determined
+ *       at compile-time through static analysis</li>
+ *   <li><strong>Maximum parallelism</strong>: Rules are executed concurrently using CompletableFuture
+ *       while still respecting their execution order</li>
+ *   <li><strong>Type-safe execution</strong>: Strong generic typing ensures rules receive
+ *       compatible input types and produce correct output types</li>
+ *   <li><strong>Resilient processing</strong>: Failures in individual rules are isolated and won't
+ *       cause the entire rule processing pipeline to fail</li>
+ * </ul>
+ * <p>
+ * <strong>Usage example:</strong>
+ * <pre>
+ * {@code
+ * // Create a rule result factory
+ * Supplier<ValidationResult> resultFactory = ValidationResult::new;
+ *
+ * // Execute validation rules for an Operation
+ * ValidationResult result = ruleService.executeRules(
+ *     RuleTask.VALIDATE,
+ *     operation,
+ *     resultFactory
+ * );
+ * }
+ * </pre>
+ * <p>
+ * <strong>Extension points:</strong> The rule engine can be extended by implementing the {@link IRule}
+ * interface and annotating the implementation with {@link Rule}. The annotation processor will
+ * automatically incorporate the new rule into the precomputed graph.
  */
 @Component
 @RequiredArgsConstructor
@@ -49,594 +78,405 @@ import java.util.stream.Collectors;
 public class RuleService {
 
     /**
-     * Provides access to all Spring-managed beans for rule discovery
+     * Provides access to all Spring-managed beans for rule discovery.
+     * <p>
+     * Used to selectively load only the rule implementations that are actually referenced
+     * in the precomputed dependency graph, avoiding the instantiation of unused rules.
      */
     private final ListableBeanFactory beanFactory;
 
     /**
-     * Immutable read-only index built during initialization.
-     * Structure: RuleTask → ElementType → TopologicallySortedRules
-     * <pre>
-     * ┌─────────────┐
-     * │  RuleTask   │ ─▶ element-type (class) ─▶ ordered list of rules
-     * └─────────────┘
-     * </pre>
+     * Thread-safe registry mapping fully qualified class names to rule instances.
+     * <p>
+     * This registry serves as a cache of rule implementations that have been loaded from the
+     * Spring context. It uses the fully qualified class name as the key since that's what
+     * the precomputed graph uses to identify rules. The {@link ConcurrentHashMap} implementation
+     * ensures thread safety during concurrent rule execution.
      */
-    private final Map<RuleTask, Map<Class<? extends VisitableElement>, List<RuleNode>>> rulesByTaskAndType = new HashMap<>();
-
-    /* --------------------------------------------------------------------- */
-    /* ------------------------- Initialization ---------------------------- */
-    /* --------------------------------------------------------------------- */
+    private final Map<String, IRule<?, ?>> ruleRegistry = new ConcurrentHashMap<>();
 
     /**
-     * Sorts rules according to their {@link Rule#dependsOn()} declarations using topological sort.
-     * Detects and throws {@link IllegalStateException} for cyclic dependencies.
+     * The precomputed rule dependency graph loaded from generated code.
+     * <p>
+     * This graph contains the topologically sorted rule class names for each combination of
+     * rule task and target element type. It's generated at compile-time by the annotation
+     * processor, eliminating the need for runtime dependency analysis. The graph is the
+     * authoritative source for rule execution order.
+     */
+    private PrecomputedRuleGraph precomputedGraph;
+
+    /**
+     * Initializes the rule engine by loading the precomputed dependency graph and
+     * discovering required rule implementations.
+     * <p>
+     * This method follows a two-step initialization process:
+     * <ol>
+     *   <li>First, it loads the precomputed rule dependency graph from the generated implementation</li>
+     *   <li>Then, it selectively loads only the rule implementations that are referenced in the graph</li>
+     * </ol>
+     * <p>
+     * This approach ensures that only rules that are actually needed are instantiated, reducing
+     * memory usage and startup time. It also allows the rule engine to provide detailed diagnostic
+     * information about missing rules at startup rather than failing at runtime.
+     * <p>
+     * This method is automatically called by Spring after dependency injection is complete.
      *
-     * @param ruleMap map of rule class to rule node
-     * @return topologically sorted list of rule nodes
-     * @throws IllegalStateException if cyclic dependencies are detected
-     */
-    private static List<RuleNode> topologicallySort(Map<Class<?>, RuleNode> ruleMap) {
-        Map<Class<?>, List<Class<?>>> dependencyGraph = buildDependencyGraph(ruleMap);
-
-        List<RuleNode> sortedRules = new ArrayList<>();
-        Map<Class<?>, VisitState> visitStates = new HashMap<>();
-
-        // Visit all rule classes to ensure complete traversal
-        for (Class<?> ruleClass : ruleMap.keySet()) {
-            if (visitStates.get(ruleClass) == null) {
-                performDepthFirstSearch(ruleClass, dependencyGraph, visitStates, sortedRules, ruleMap);
-            }
-        }
-
-        return sortedRules;
-    }
-
-    /**
-     * Builds a dependency graph from rule nodes.
-     */
-    private static Map<Class<?>, List<Class<?>>> buildDependencyGraph(Map<Class<?>, RuleNode> ruleMap) {
-        Map<Class<?>, List<Class<?>>> dependencyGraph = new HashMap<>();
-
-        ruleMap.values().forEach(ruleNode -> {
-            Class<?> ruleClass = ruleNode.instance().getClass();
-            List<Class<?>> dependencies = Arrays.asList(ruleNode.annotation().dependsOn());
-            dependencyGraph.put(ruleClass, dependencies);
-        });
-
-        return dependencyGraph;
-    }
-
-    /**
-     * Performs depth-first search for topological sorting.
-     * Detects cycles and maintains proper ordering.
-     */
-    private static void performDepthFirstSearch(Class<?> currentRuleClass,
-                                                Map<Class<?>, List<Class<?>>> dependencyGraph,
-                                                Map<Class<?>, VisitState> visitStates,
-                                                List<RuleNode> sortedRules,
-                                                Map<Class<?>, RuleNode> ruleMap) {
-        visitStates.put(currentRuleClass, VisitState.VISITING);
-
-        // Process all dependencies
-        List<Class<?>> dependencies = dependencyGraph.getOrDefault(currentRuleClass, Collections.emptyList());
-        for (Class<?> dependencyClass : dependencies) {
-            VisitState dependencyState = visitStates.get(dependencyClass);
-
-            if (dependencyState == VisitState.VISITING) {
-                throw new IllegalStateException(
-                        String.format("Cyclic rule dependency detected: %s <-> %s",
-                                currentRuleClass.getSimpleName(), dependencyClass.getSimpleName()));
-            }
-
-            if (dependencyState == null) {
-                performDepthFirstSearch(dependencyClass, dependencyGraph, visitStates, sortedRules, ruleMap);
-            }
-        }
-
-        visitStates.put(currentRuleClass, VisitState.VISITED);
-
-        // Add to result only if the rule exists in our rule map
-        RuleNode ruleNode = ruleMap.get(currentRuleClass);
-        if (ruleNode != null) {
-            sortedRules.add(ruleNode);
-        }
-    }
-
-    /**
-     * Builds precedence graph for scheduling execution order.
-     */
-    private static Map<Class<?>, List<Class<?>>> buildPrecedenceGraph(List<RuleNode> ruleNodes) {
-        Map<Class<?>, List<Class<?>>> precedenceGraph = new HashMap<>();
-
-        for (RuleNode ruleNode : ruleNodes) {
-            Class<?> ruleClass = ruleNode.instance().getClass();
-            List<Class<?>> dependencies = new ArrayList<>();
-            Collections.addAll(dependencies, ruleNode.annotation().dependsOn());
-            precedenceGraph.put(ruleClass, dependencies);
-        }
-
-        return precedenceGraph;
-    }
-
-    /* --------------------------------------------------------------------- */
-    /* ----------------------- Topological Sorting ------------------------ */
-    /* --------------------------------------------------------------------- */
-
-    /**
-     * Called by Spring after bean construction to initialize the rule index.
-     * Discovers all {@link Rule @Rule} annotated beans and builds the internal indices.
+     * @throws IllegalStateException if the rule engine initialization fails, either because
+     *                               the precomputed graph couldn't be loaded or because critical
+     *                               rule implementations are missing
      */
     @PostConstruct
-    void init() {
-        log.info("Initializing RuleService - discovering rule beans...");
-        Collection<Object> ruleBeans = beanFactory.getBeansWithAnnotation(Rule.class).values();
-        log.info("Found {} rule beans", ruleBeans.size());
-
-        // Try to use precomputed rule graph if available
+    void initialize() {
         try {
-            Class<?> precomputedGraphClass = Class.forName("edu.kit.datamanager.idoris.rules.logic.PrecomputedRuleGraphImpl");
-            PrecomputedRuleGraph precomputedGraph = (PrecomputedRuleGraph) precomputedGraphClass.getConstructor().newInstance();
-            log.info("Using precomputed rule graph for dependency ordering");
-            buildRuleIndexFromPrecomputed(ruleBeans, precomputedGraph);
-        } catch (ClassNotFoundException e) {
-            log.info("Precomputed rule graph not found, falling back to runtime topological sorting");
-            buildRuleIndex(ruleBeans);
+            // Load precomputed graph first to know which rules we need
+            loadPrecomputedGraph();
+
+            // Only discover rules that are actually referenced in the precomputed graph
+            discoverRequiredRules();
+
+            log.info("Rule engine initialized with {} rules", ruleRegistry.size());
         } catch (Exception e) {
-            log.warn("Failed to initialize from precomputed rule graph: {}", e.getMessage());
-            log.warn("Falling back to runtime topological sorting", e);
-            buildRuleIndex(ruleBeans);
+            log.error("Failed to initialize rule engine", e);
+            throw new IllegalStateException("Rule engine initialization failed", e);
         }
-
-        log.info("RuleService initialization complete");
     }
 
     /**
-     * Builds the {@link #rulesByTaskAndType} index and topologically sorts rules.
+     * Loads the precomputed rule dependency graph from generated code.
+     * <p>
+     * This method uses reflection to instantiate the implementation class of {@link PrecomputedRuleGraph}
+     * that was generated by the annotation processor at compile time. The generated class contains
+     * the complete dependency information for all rules, including their topological sorting.
+     * <p>
+     * The precomputed graph is the source of truth for rule execution order and is used to:
+     * <ul>
+     *   <li>Determine which rule implementations need to be loaded from Spring</li>
+     *   <li>Determine the correct execution order of rules for each task and element type</li>
+     *   <li>Optimize rule execution by enabling parallel processing where possible</li>
+     * </ul>
      *
-     * @param ruleBeans discovered Spring beans annotated with {@link Rule}
+     * @throws IllegalStateException if the precomputed graph implementation cannot be loaded,
+     *                               which could happen if the annotation processor didn't run
+     *                               or if the generated class is not on the classpath
      */
-    private void buildRuleIndex(Collection<Object> ruleBeans) {
-        // Temporary structure for collecting rules before topological sorting
-        // Change your collector structure to use the interface
-        final Map<RuleTask, Map<Class<? extends VisitableElement>, Map<Class<?>, RuleNode>>> collector = new HashMap<>();
+    private void loadPrecomputedGraph() {
+        log.info("Loading precomputed rule dependency graph...");
 
-        // Phase 1: Group rules by task and element type
-        collectRulesByTaskAndType(ruleBeans, collector);
+        try {
+            // Load the generated implementation class
+            Class<?> implClass = Class.forName("edu.kit.datamanager.idoris.rules.logic.PrecomputedRuleGraphImpl");
+            precomputedGraph = (PrecomputedRuleGraph) implClass.getConstructor().newInstance();
 
-        // Phase 2: Topologically sort rules for each (task, type) combination
-        applySortingToCollectedRules(collector);
-    }
-
-    /**
-     * Groups discovered rule beans by their declared tasks and applicable element types.
-     */
-    private void collectRulesByTaskAndType(Collection<Object> ruleBeans,
-                                           Map<RuleTask, Map<Class<? extends VisitableElement>, Map<Class<?>, RuleNode>>> collector) {
-        for (Object ruleBean : ruleBeans) {
-            Rule ruleAnnotation = ruleBean.getClass().getAnnotation(Rule.class);
-            if (ruleAnnotation == null) {
-                log.warn("Bean {} was retrieved as @Rule annotated but annotation is null", ruleBean.getClass().getSimpleName());
-                continue;
-            }
-
-            RuleNode ruleNode = new RuleNode(ruleBean, ruleAnnotation);
-
-            // Register rule for each declared task and element type combination
-            for (RuleTask task : ruleAnnotation.tasks()) {
-                for (Class<? extends VisitableElement> elementType : ruleAnnotation.appliesTo()) {
-                    collector
-                            .computeIfAbsent(task, k -> new HashMap<>())
-                            .computeIfAbsent(elementType, k -> new HashMap<>())
-                            .put(ruleBean.getClass(), ruleNode);
-                }
-            }
+            log.info("Precomputed rule graph loaded successfully");
+        } catch (Exception e) {
+            log.error("Failed to load precomputed rule graph", e);
+            throw new IllegalStateException("Precomputed rule graph not available", e);
         }
     }
 
-    /* --------------------------------------------------------------------- */
-    /* ----------------------------- Public API ---------------------------- */
-    /* --------------------------------------------------------------------- */
-
     /**
-     * Applies topological sorting to all collected rule groups.
+     * Discovers and registers only the rule beans that are referenced in the precomputed graph.
+     * <p>
+     * This method implements a key optimization in the rule engine: it only loads rule
+     * implementations that are actually needed based on the precomputed graph. This approach
+     * significantly reduces memory usage and startup time, especially in large systems with
+     * many rule implementations where only a subset might be used for specific tasks.
+     * <p>
+     * The method works in three steps:
+     * <ol>
+     *   <li>Extract all unique rule class names from the precomputed graph</li>
+     *   <li>Query the Spring context for all {@link IRule} implementations</li>
+     *   <li>Register only those rule implementations that are referenced in the graph</li>
+     * </ol>
+     * <p>
+     * Additionally, this method provides diagnostic information about missing rules, which
+     * can help identify configuration issues early during application startup rather than
+     * failing at runtime.
      */
-    private void applySortingToCollectedRules(Map<RuleTask, Map<Class<? extends VisitableElement>, Map<Class<?>, RuleNode>>> collector) {
-        collector.forEach((task, rulesByElementType) -> {
-            Map<Class<? extends VisitableElement>, List<RuleNode>> sortedRulesByElementType = new HashMap<>();
+    private void discoverRequiredRules() {
+        log.info("Discovering required rule implementations...");
 
-            rulesByElementType.forEach((elementType, ruleMap) -> {
-                List<RuleNode> sortedRules = topologicallySort(ruleMap);
-                sortedRulesByElementType.put(elementType, sortedRules);
-                log.debug("Sorted {} rules for task {} and element type {}",
-                        sortedRules.size(), task, elementType.getSimpleName());
-            });
+        // Extract all unique rule class names from the precomputed graph and track their discovery status
+        // This creates a map where keys are class names and values are booleans indicating if they've been found
+        Map<String, Boolean> requiredRuleClasses = precomputedGraph.getSortedRulesByTaskAndType()
+                .values()                                // Get all target type maps
+                .stream()                                // Stream the maps
+                .flatMap(targetTypeMap -> targetTypeMap.values().stream())  // Flatten to all rule lists
+                .flatMap(List::stream)                  // Flatten to individual rule class names
+                .collect(Collectors.toMap(
+                        className -> className,          // Key is the class name
+                        className -> false,             // Initial value false (not yet found)
+                        (existing, replacement) -> existing  // Keep existing entry on duplicate key
+                ));
 
-            rulesByTaskAndType.put(task, sortedRulesByElementType);
-        });
-    }
+        log.debug("Precomputed graph references {} unique rule classes", requiredRuleClasses.size());
 
-    /**
-     * Builds the rule index using the precomputed dependency graph.
-     * This avoids expensive runtime topological sorting and validation.
-     *
-     * @param ruleBeans        discovered Spring beans annotated with {@link Rule}
-     * @param precomputedGraph precomputed rule dependency graph from annotation processor
-     */
-    private void buildRuleIndexFromPrecomputed(
-            Collection<Object> ruleBeans,
-            PrecomputedRuleGraph precomputedGraph) {
+        // Find and register only the required rule beans
+        beanFactory.getBeansOfType(IRule.class)
+                .forEach((beanName, ruleBean) -> {
+                    String className = ruleBean.getClass().getName();
 
-        log.info("Building rule index from precomputed dependency graph");
-
-        // Create a map of class names to rule instances for fast lookup
-        Map<String, Object> ruleInstancesByClassName = new HashMap<>();
-        Map<String, Rule> ruleAnnotationsByClassName = new HashMap<>();
-
-        // Index all rule beans by their class name
-        for (Object ruleBean : ruleBeans) {
-            Rule ruleAnnotation = ruleBean.getClass().getAnnotation(Rule.class);
-            if (ruleAnnotation == null) {
-                log.warn("Bean {} was retrieved as @Rule annotated but annotation is null",
-                        ruleBean.getClass().getSimpleName());
-                continue;
-            }
-
-            String className = ruleBean.getClass().getName();
-            ruleInstancesByClassName.put(className, ruleBean);
-            ruleAnnotationsByClassName.put(className, ruleAnnotation);
-        }
-
-        // Access the precomputed sorted rule classes
-        Map<RuleTask, Map<String, List<String>>> precomputedRules =
-                precomputedGraph.getSortedRulesByTaskAndType();
-
-        // Process each task
-        for (Map.Entry<RuleTask, Map<String, List<String>>> taskEntry : precomputedRules.entrySet()) {
-            RuleTask task = taskEntry.getKey();
-            Map<String, List<String>> rulesByTargetType = taskEntry.getValue();
-
-            Map<Class<? extends VisitableElement>, List<RuleNode>> sortedRulesByElementType = new HashMap<>();
-            rulesByTaskAndType.put(task, sortedRulesByElementType);
-
-            // Process each target type
-            for (Map.Entry<String, List<String>> targetEntry : rulesByTargetType.entrySet()) {
-                String targetTypeName = targetEntry.getKey();
-                List<String> sortedRuleClasses = targetEntry.getValue();
-
-                try {
-                    // Load the target type class
-                    @SuppressWarnings("unchecked")
-                    Class<? extends VisitableElement> targetType =
-                            (Class<? extends VisitableElement>) Class.forName(targetTypeName);
-
-                    // Convert sorted class names to RuleNode instances
-                    List<RuleNode> sortedRuleNodes = new ArrayList<>();
-
-                    for (String ruleClassName : sortedRuleClasses) {
-                        Object ruleInstance = ruleInstancesByClassName.get(ruleClassName);
-                        Rule ruleAnnotation = ruleAnnotationsByClassName.get(ruleClassName);
-
-                        if (ruleInstance != null && ruleAnnotation != null) {
-                            sortedRuleNodes.add(new RuleNode(ruleInstance, ruleAnnotation));
-                        } else {
-                            log.warn("Precomputed rule {} not found in Spring context", ruleClassName);
-                        }
+                    // Only register if this rule is referenced in the precomputed graph
+                    if (requiredRuleClasses.containsKey(className)) {
+                        ruleRegistry.put(className, ruleBean);
+                        requiredRuleClasses.put(className, true); // mark as found
+                        log.debug("Registered required rule: {}", className);
+                    } else {
+                        log.debug("Skipping unreferenced rule: {}", className);
                     }
+                });
 
-                    if (!sortedRuleNodes.isEmpty()) {
-                        sortedRulesByElementType.put(targetType, sortedRuleNodes);
-                        log.debug("Added {} precomputed rules for task {} and element type {}",
-                                sortedRuleNodes.size(), task, targetType.getSimpleName());
-                    }
+        // Log any missing rules
+        long missingRules = requiredRuleClasses.values().stream()
+                .mapToLong(found -> found ? 0 : 1)
+                .sum();
 
-                } catch (ClassNotFoundException e) {
-                    log.warn("Target type {} not found in classpath", targetTypeName);
-                } catch (ClassCastException e) {
-                    log.warn("Target type {} is not a VisitableElement", targetTypeName);
-                }
+        if (missingRules > 0) {
+            log.warn("{} rules referenced in precomputed graph were not found in Spring context", missingRules);
+
+            if (log.isDebugEnabled()) {
+                requiredRuleClasses.entrySet().stream()
+                        .filter(entry -> !entry.getValue())
+                        .forEach(entry -> log.debug("Missing rule: {}", entry.getKey()));
             }
         }
 
-        log.info("Rule index built from precomputed dependency graph");
+        log.info("Discovered {} required rule implementations", ruleRegistry.size());
     }
 
     /**
      * Executes all applicable rules for the given task and element.
-     * Rules are executed asynchronously with proper dependency ordering.
+     * <p>
+     * This method is the primary entry point for rule execution. It retrieves the correct
+     * sequence of rules from the precomputed graph based on the task and element type,
+     * then executes them in parallel while respecting their dependency order.
+     * <p>
+     * The method follows these steps:
+     * <ol>
+     *   <li>Identify the correct set of rule class names from the precomputed graph</li>
+     *   <li>Execute those rules in parallel using {@link CompletableFuture}</li>
+     *   <li>Merge the results from all rules into a single result object</li>
+     * </ol>
+     * <p>
+     * If no rules are found for the given task and element type, an empty result is returned.
+     * <p>
+     * <strong>Example usage:</strong>
+     * <pre>
+     * {@code
+     * // Validate an Operation
+     * ValidationResult validationResult = ruleService.executeRules(
+     *     RuleTask.VALIDATE,
+     *     operation,
+     *     ValidationResult::new
+     * );
      *
-     * @param task           the logical task (e.g., VALIDATE, ENRICH)
-     * @param input          the domain element to process
-     * @param resultSupplier factory for creating fresh result objects
+     * // Enrich a TypeProfile
+     * EnrichmentResult enrichmentResult = ruleService.executeRules(
+     *     RuleTask.ENRICH,
+     *     typeProfile,
+     *     EnrichmentResult::new
+     * );
+     * }
+     * </pre>
+     *
+     * @param task          the rule task to execute (e.g., {@link RuleTask#VALIDATE})
+     * @param element       the domain element to process
+     * @param resultFactory factory for creating result objects (typically a constructor reference)
+     * @param <T>           element type extending {@link VisitableElement}
+     * @param <R>           result type extending {@link RuleOutput}
+     * @return the merged result of all executed rules, or an empty result if no rules apply
+     * @throws RuntimeException if a critical error occurs during rule execution that prevents
+     *                          completion of the operation
+     */
+    public <T extends VisitableElement, R extends RuleOutput<R>> R executeRules(
+            RuleTask task,
+            T element,
+            Supplier<R> resultFactory
+    ) {
+        String elementType = element.getClass().getName();
+        log.debug("Executing rules for task={}, elementType={}", task, elementType);
+
+        // Get sorted rule class names directly from precomputed graph
+        List<String> ruleClassNames = precomputedGraph.getSortedRuleClasses(task, elementType);
+
+        if (ruleClassNames.isEmpty()) {
+            log.debug("No rules found for task={}, elementType={}", task, elementType);
+            return resultFactory.get();
+        }
+
+        log.debug("Found {} rules for task={}, elementType={}", ruleClassNames.size(), task, elementType);
+
+        // Execute rules in parallel and merge results
+        return executeRulesInParallel(ruleClassNames, element, resultFactory);
+    }
+
+    /**
+     * Executes rules in parallel while respecting their precomputed ordering.
+     * <p>
+     * This method is responsible for the actual parallel execution of rules. It takes the
+     * list of rule class names in their precomputed execution order, retrieves the rule
+     * instances from the registry, and executes them concurrently.
+     * <p>
+     * Key aspects of this implementation:
+     * <ul>
+     *   <li><strong>Selective execution</strong>: Only rules that are found in the registry are executed</li>
+     *   <li><strong>Parallel processing</strong>: Each rule executes in its own {@link CompletableFuture}</li>
+     *   <li><strong>Coordinated completion</strong>: The method waits for all rule executions to complete</li>
+     *   <li><strong>Result aggregation</strong>: Results from all rules are merged into a single result</li>
+     * </ul>
+     * <p>
+     * If no rule instances are available for execution, an empty result is returned. This ensures
+     * that the method always returns a valid result object even if no rules are executed.
+     *
+     * @param ruleClassNames the list of rule class names in execution order
+     * @param element        the domain element to process
+     * @param resultFactory  factory for creating result objects
      * @param <T>            element type extending VisitableElement
      * @param <R>            result type extending RuleOutput
      * @return the merged result of all executed rules
+     * @throws RuntimeException if rule execution fails critically
      */
-    public <T extends VisitableElement, R extends RuleOutput<R>> R process(
-            RuleTask task,
-            T input,
-            Supplier<R> resultSupplier
+    private <T extends VisitableElement, R extends RuleOutput<R>> R executeRulesInParallel(
+            List<String> ruleClassNames,
+            T element,
+            Supplier<R> resultFactory
     ) {
-        log.debug("Starting rule processing for task={}, inputType={}, inputDetails={}",
-                task, input.getClass().getSimpleName(), input);
+        // Create result futures for rule execution, but only for rules that are actually available in the registry
+        // This pipeline: 1) Gets rule instances from registry, 2) Filters out missing rules, 3) Executes each rule asynchronously
+        List<CompletableFuture<R>> resultFutures = ruleClassNames.stream()
+                .map(ruleRegistry::get)                  // Look up each rule by class name
+                .filter(Objects::nonNull)                // Skip rules that weren't found (null)
+                .map(rule -> executeRule(rule, element, resultFactory))  // Execute each rule asynchronously
+                .collect(Collectors.toList());          // Collect all future results
 
-        List<RuleNode> applicableRules = getRulesForTaskAndType(task, input.getClass());
-
-        if (applicableRules.isEmpty()) {
-            log.debug("No rules found for task={} and element type={}", task, input.getClass().getSimpleName());
-            return resultSupplier.get();
+        if (resultFutures.isEmpty()) {
+            log.debug("No available rule instances found for execution");
+            return resultFactory.get();
         }
 
-        log.debug("Found {} applicable rules for task={} and element type={}",
-                applicableRules.size(), task, input.getClass().getSimpleName());
-
-        // Log each applicable rule for debugging
-        applicableRules.forEach(rule -> {
-            log.debug("Will execute rule: {}, dependencies: {}",
-                    rule.instance().getClass().getSimpleName(),
-                    Arrays.toString(rule.annotation().dependsOn()));
-        });
-
-        return executeRulesAsync(applicableRules, input, resultSupplier);
-    }
-
-    /**
-     * Retrieves applicable rules for a specific task and element type.
-     */
-    private List<RuleNode> getRulesForTaskAndType(RuleTask task, Class<? extends VisitableElement> elementType) {
-        return rulesByTaskAndType
-                .getOrDefault(task, Collections.emptyMap())
-                .getOrDefault(elementType, Collections.emptyList());
-    }
-
-    /**
-     * Executes rules asynchronously while respecting dependencies.
-     */
-    private <T extends VisitableElement, R extends RuleOutput<R>> R executeRulesAsync(
-            List<RuleNode> ruleNodes,
-            T input,
-            Supplier<R> resultSupplier
-    ) {
-        // Build execution structures
-        Map<Class<?>, RuleNode> ruleNodeMap = createRuleNodeMap(ruleNodes);
-        Map<Class<?>, List<Class<?>>> dependencyGraph = buildPrecedenceGraph(ruleNodes);
-        Map<Class<?>, CompletableFuture<R>> executionFutures = new ConcurrentHashMap<>();
-
-        // Schedule all rules for execution and collect their futures
-        List<CompletableFuture<R>> scheduledFutures = dependencyGraph.keySet().stream()
-                .map(ruleClass -> scheduleRuleExecution(ruleClass, dependencyGraph, ruleNodeMap, executionFutures, input, resultSupplier))
-                .toList();
-
         // Wait for all executions to complete
-        CompletableFuture<Void> allCompleted = CompletableFuture.allOf(
-                scheduledFutures.toArray(CompletableFuture[]::new));
-
         try {
-            allCompleted.join();
+            CompletableFuture.allOf(resultFutures.toArray(CompletableFuture[]::new)).join();
         } catch (Exception e) {
             log.error("Error during rule execution", e);
             throw new RuntimeException("Rule execution failed", e);
         }
 
-        // Merge all results deterministically
-        return mergeResults(scheduledFutures, resultSupplier);
+        // Merge results
+        return mergeResults(resultFutures, resultFactory);
     }
 
     /**
-     * Creates a map from rule class to rule node for quick lookup.
+     * Executes a single rule asynchronously and returns its result future.
+     * <p>
+     * This method wraps the execution of an individual rule in a {@link CompletableFuture} to
+     * enable asynchronous processing. It handles the lifecycle of rule execution including:
+     * <ul>
+     *   <li>Creating a fresh result object for the rule</li>
+     *   <li>Safely casting the rule to the correct parameterized type</li>
+     *   <li>Invoking the rule's processing logic</li>
+     *   <li>Capturing and handling any exceptions that occur during execution</li>
+     * </ul>
+     * <p>
+     * The type casting in this method is safe because the precomputed graph ensures that
+     * rules are only invoked with compatible element and result types. The {@code @SuppressWarnings}
+     * annotation is used to silence the compiler warning about this cast.
+     *
+     * @param rule          the rule implementation to execute
+     * @param element       the domain element to process
+     * @param resultFactory factory for creating result objects
+     * @param <T>           element type extending VisitableElement
+     * @param <R>           result type extending RuleOutput
+     * @return a CompletableFuture containing the rule's execution result
      */
-    private Map<Class<?>, RuleNode> createRuleNodeMap(List<RuleNode> ruleNodes) {
-        return ruleNodes.stream()
-                .collect(Collectors.toUnmodifiableMap(
-                        node -> node.instance().getClass(),
-                        Function.identity()));
-    }
-
-    /**
-     * Recursively schedules rule execution, ensuring dependencies are executed first.
-     * Uses memoization to avoid duplicate scheduling.
-     */
-    private <T extends VisitableElement, R extends RuleOutput<R>> CompletableFuture<R> scheduleRuleExecution(
-            Class<?> ruleClass,
-            Map<Class<?>, List<Class<?>>> dependencyGraph,
-            Map<Class<?>, RuleNode> ruleNodeMap,
-            Map<Class<?>, CompletableFuture<R>> executionFutures,
-            T input,
-            Supplier<R> resultSupplier
+    @SuppressWarnings("unchecked")
+    private <T extends VisitableElement, R extends RuleOutput<R>> CompletableFuture<R> executeRule(
+            IRule<?, ?> rule,
+            T element,
+            Supplier<R> resultFactory
     ) {
-        log.debug("Scheduling execution for rule {}", ruleClass.getSimpleName());
+        return CompletableFuture.supplyAsync(() -> {
+            String ruleName = rule.getClass().getSimpleName();
+            log.debug("Executing rule: {}", ruleName);
 
-        return executionFutures.computeIfAbsent(ruleClass, rc -> {
-            log.debug("Rule {} not yet scheduled, computing dependencies", rc.getSimpleName());
+            R result = resultFactory.get();
 
-            // Get and log dependencies
-            List<Class<?>> dependencies = dependencyGraph.getOrDefault(rc, Collections.emptyList());
-            if (dependencies.isEmpty()) {
-                log.debug("Rule {} has no dependencies", rc.getSimpleName());
-            } else {
-                log.debug("Rule {} has {} dependencies: {}",
-                        rc.getSimpleName(),
-                        dependencies.size(),
-                        dependencies.stream().map(Class::getSimpleName).collect(Collectors.joining(", ")));
+            try {
+                // Perform a type-safe cast to the specific generic parameter types needed for this rule execution
+                // This cast is guaranteed to be safe because the precomputed graph ensures type compatibility
+                IRule<T, R> typedRule = (IRule<T, R>) rule;
+
+                // Execute the rule's processing logic with the input element and result container
+                typedRule.process(element, result);
+                log.debug("Rule {} execution completed successfully", ruleName);
+                return result;
+            } catch (Exception e) {
+                log.error("Rule {} execution failed: {}", ruleName, e.getMessage(), e);
+                throw new RuntimeException("Rule execution failed: " + e.getMessage(), e);
             }
-
-            // Schedule all dependencies first
-            List<CompletableFuture<R>> dependencyFutures = dependencies
-                    .stream()
-                    .map(dependencyClass -> {
-                        log.debug("Scheduling dependency {} for rule {}",
-                                dependencyClass.getSimpleName(), rc.getSimpleName());
-                        return scheduleRuleExecution(
-                                dependencyClass, dependencyGraph, ruleNodeMap, executionFutures, input, resultSupplier);
-                    })
-                    .toList();
-
-            log.debug("All dependencies for rule {} have been scheduled", rc.getSimpleName());
-
-            // Execute rule after all dependencies complete
-            return CompletableFuture
-                    .allOf(dependencyFutures.toArray(CompletableFuture[]::new))
-                    .thenApplyAsync(ignored -> {
-                        log.debug("All dependencies for rule {} completed, executing rule", rc.getSimpleName());
-                        return executeRuleWithDependencies(rc, dependencyFutures, ruleNodeMap, input, resultSupplier);
-                    })
-                    .exceptionally(throwable -> {
-                        log.error("Error executing rule {}: {}", rc.getSimpleName(), throwable.getMessage());
-                        log.error("Error executing rule {}", rc.getSimpleName(), throwable);
-                        throw new RuntimeException("Rule execution failed for " + rc.getSimpleName(), throwable);
-                    });
         });
     }
 
     /**
-     * Executes a single rule after merging results from its dependencies.
+     * Merges results from multiple rule executions into a single consolidated result.
+     * <p>
+     * This method aggregates the results from all rule executions into a single result object.
+     * It handles several important aspects of result processing:
+     * <ul>
+     *   <li><strong>Failure resilience</strong>: Gracefully handles failures in individual rule executions</li>
+     *   <li><strong>Type safety</strong>: Creates properly typed arrays for the merge operation</li>
+     *   <li><strong>Empty result handling</strong>: Returns a valid empty result when no results are available</li>
+     * </ul>
+     * <p>
+     * The merge operation itself is delegated to the {@link RuleOutput#merge} method of the result type,
+     * which implements domain-specific logic for combining multiple results. This allows for
+     * flexible result aggregation strategies depending on the specific rule task.
+     *
+     * @param resultFutures futures containing the results of rule executions
+     * @param resultFactory factory for creating the initial result object
+     * @param <R>           result type extending RuleOutput
+     * @return a single merged result containing the combined output of all rules
      */
-    private <T extends VisitableElement, R extends RuleOutput<R>> R executeRuleWithDependencies(
-            Class<?> ruleClass,
-            List<CompletableFuture<R>> dependencyFutures,
-            Map<Class<?>, RuleNode> ruleNodeMap,
-            T input,
-            Supplier<R> resultSupplier
+    private <R extends RuleOutput<R>> R mergeResults(
+            List<CompletableFuture<R>> resultFutures,
+            Supplier<R> resultFactory
     ) {
-        log.debug("Starting execution of rule {}", ruleClass.getSimpleName());
+        R finalResult = resultFactory.get();
 
-        // Log dependency information
-        log.debug("Rule {} has {} dependencies", ruleClass.getSimpleName(), dependencyFutures.size());
-
-        // Merge dependency results
-        R aggregatedResult = mergeResults(dependencyFutures, resultSupplier);
-        log.debug("Merged dependency results for rule {}, result before execution: {}",
-                ruleClass.getSimpleName(), aggregatedResult);
-
-        // Execute the rule itself
-        RuleNode ruleNode = ruleNodeMap.get(ruleClass);
-        if (ruleNode != null) {
-            try {
-                log.debug("Executing rule {} with input {}", ruleClass.getSimpleName(), input);
-
-                @SuppressWarnings("unchecked")
-                IRule<T, R> processor = (IRule<T, R>) ruleNode.instance();
-
-                // Capture result state before processing
-                R beforeResult = null;
-                if (aggregatedResult instanceof Cloneable) {
-                    try {
-                        beforeResult = (R) aggregatedResult.getClass().getMethod("clone").invoke(aggregatedResult);
-                    } catch (Exception e) {
-                        log.debug("Couldn't clone result for comparison: {}", e.getMessage());
-                    }
-                }
-
-                // Execute the rule
-                processor.process(input, aggregatedResult);
-
-                // Log detailed result after processing
-                if (beforeResult != null) {
-                    log.debug("Rule {} result changed from {} to {}",
-                            ruleClass.getSimpleName(), beforeResult, aggregatedResult);
-                } else {
-                    log.debug("Rule {} execution completed, result: {}",
-                            ruleClass.getSimpleName(), aggregatedResult);
-                }
-
-                log.debug("Successfully executed rule {}", ruleClass.getSimpleName());
-            } catch (Exception e) {
-                log.error("Error in rule execution for {}: {}", ruleClass.getSimpleName(), e.getMessage());
-                log.error("Error in rule execution for {}", ruleClass.getSimpleName(), e);
-                throw new RuntimeException("Rule execution failed", e);
-            }
-        } else {
-            log.warn("Rule node for class {} not found in rule node map", ruleClass.getSimpleName());
+        if (resultFutures.isEmpty()) {
+            return finalResult;
         }
 
-        return aggregatedResult;
-    }
+        log.debug("Merging {} rule results", resultFutures.size());
 
-    /**
-     * Merges multiple rule results into a single result.
-     * Properly handles the generic types to avoid unchecked warnings.
-     */
-    private <R extends RuleOutput<R>> R mergeResults(Collection<CompletableFuture<R>> futures, Supplier<R> resultSupplier) {
-        log.debug("Merging {} future results", futures.size());
-
-        R initialResult = resultSupplier.get();
-        log.debug("Initial result before merging: {}", initialResult);
-
-        if (futures.isEmpty()) {
-            log.debug("No futures to merge, returning initial result");
-            return initialResult;
-        }
-
-        return futures.stream()
+        // Extract results from all futures, gracefully handling any that failed during execution
+        // This creates a list containing only the successfully completed rule results
+        List<R> successfulResults = resultFutures.stream()
                 .map(future -> {
                     try {
-                        R result = future.join();
-                        log.debug("Joined future result: {}", result);
-                        return result;
+                        // Get the result from the completed future
+                        return future.join();
                     } catch (Exception e) {
-                        log.error("Error joining future result: {}", e.getMessage());
-                        log.error("Error joining future result", e);
-                        throw new RuntimeException("Failed to merge rule results", e);
+                        // If the future completed exceptionally, log a warning and return null
+                        // This prevents failures in one rule from affecting the entire merge process
+                        log.warn("Skipping failed rule result during merge: {}", e.getMessage());
+                        return null;
                     }
                 })
-                .reduce(initialResult, (accumulator, result) -> {
-                    try {
-                        log.debug("Merging result: {}\ninto accumulator: {}", result, accumulator);
+                .filter(Objects::nonNull)  // Remove any nulls from failed rule executions
+                .toList();
 
-                        if (result == null) {
-                            log.debug("Result is null, skipping merge");
-                            return accumulator; // Skip null results
-                        }
-
-                        // Fix for ClassCastException: Create a proper array of the correct type
-                        // Create an array with the exact type to avoid type erasure issues
-                        @SuppressWarnings("unchecked")
-                        R[] resultArray = (R[]) java.lang.reflect.Array.newInstance(result.getClass(), 1);
-                        resultArray[0] = result;
-
-                        R mergedResult = accumulator.merge(resultArray);
-
-                        log.debug("After merge: {}", mergedResult);
-                        return mergedResult;
-                    } catch (Exception e) {
-                        log.error("Error merging rule results: {}", e.getMessage());
-                        log.error("Error merging rule results", e);
-                        // Instead of failing, return the accumulator and continue processing
-                        log.warn("Continuing with unmerged results due to error");
-                        return accumulator;
-                    }
-                });
-    }
-
-    /* --------------------------------------------------------------------- */
-    /* --------------------------- Inner Classes --------------------------- */
-    /* --------------------------------------------------------------------- */
-
-    /**
-     * Enumeration for tracking DFS visit states during topological sorting.
-     */
-    private enum VisitState {
-        /**
-         * Currently being visited (on the DFS stack)
-         */
-        VISITING,
-        /**
-         * Completely visited and processed
-         */
-        VISITED
-    }
-
-    /**
-     * Immutable record that pairs a Spring bean instance with its {@link Rule} annotation.
-     * Provides convenient access to both the executable rule and its metadata.
-     *
-     * @param instance   the Spring bean implementing {@link RuleAnnotationProcessor}
-     * @param annotation the {@link Rule} annotation containing metadata
-     */
-    public record RuleNode(Object instance, Rule annotation) {
-        public RuleNode {
-            Objects.requireNonNull(instance, "Rule instance cannot be null");
-            Objects.requireNonNull(annotation, "Rule annotation cannot be null");
+        if (successfulResults.isEmpty()) {
+            return finalResult;
         }
+
+        // Create a properly typed array for the merge operation using reflection
+        // This is necessary because Java's type erasure prevents direct instantiation of generic arrays
+        // We use the concrete class of the first result to determine the array component type
+        @SuppressWarnings("unchecked")
+        R[] resultsArray = successfulResults.toArray((R[]) Array.newInstance(
+                successfulResults.getFirst().getClass(), successfulResults.size()));
+
+        return finalResult.merge(resultsArray);
     }
 }

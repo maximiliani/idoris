@@ -122,7 +122,7 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
         return model -> {
             if (model instanceof EntityModel<?> && ((EntityModel<?>) model).getContent() instanceof VisitableElement element) {
                 // Use RuleService to process validation with the VALIDATE task
-                ValidationResult validationResult = ruleService.process(
+                ValidationResult validationResult = ruleService.executeRules(
                         RuleTask.VALIDATE,
                         element,
                         ValidationResult::new
@@ -178,7 +178,7 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
 
             try {
                 // Execute validation rules using RuleService
-                ValidationResult result = ruleService.process(
+                ValidationResult result = ruleService.executeRules(
                         RuleTask.VALIDATE,
                         element,
                         ValidationResult::new
