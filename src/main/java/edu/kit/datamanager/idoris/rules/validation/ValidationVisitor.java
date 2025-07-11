@@ -30,10 +30,30 @@ package edu.kit.datamanager.idoris.rules.validation;
  * need validation capabilities.</p>
  */
 
+import edu.kit.datamanager.idoris.domain.VisitableElement;
+import edu.kit.datamanager.idoris.rules.logic.IRule;
 import edu.kit.datamanager.idoris.rules.logic.Visitor;
 
-public class ValidationVisitor extends Visitor<ValidationResult> {
+public class ValidationVisitor extends Visitor<ValidationResult> implements IRule<VisitableElement, ValidationResult> {
+
+    /**
+     * Constructor for ValidationVisitor.
+     * Initializes the visitor with a factory that creates new ValidationResult instances.
+     */
     public ValidationVisitor() {
         super(ValidationResult::new);
+    }
+
+    /**
+     * Process method required by IRule interface.
+     * Delegates to the appropriate validate method based on element type.
+     *
+     * @param input  the element to process
+     * @param output the output to update with processing results
+     */
+    @Override
+    public void process(VisitableElement input, ValidationResult output) {
+        ValidationResult result = input.execute(this);
+        output.merge(result);
     }
 }

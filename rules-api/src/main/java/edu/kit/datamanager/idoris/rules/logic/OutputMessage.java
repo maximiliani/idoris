@@ -21,6 +21,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.lang.Nullable;
 
+
 /**
  * Immutable record representing a message produced during rule processing.
  * Each message has a text content, a severity level, and optional related elements.

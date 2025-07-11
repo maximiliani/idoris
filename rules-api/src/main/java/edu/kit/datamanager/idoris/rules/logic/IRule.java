@@ -16,8 +16,6 @@
 
 package edu.kit.datamanager.idoris.rules.logic;
 
-import edu.kit.datamanager.idoris.domain.VisitableElement;
-
 /**
  * Interface for rule processors that can be used to process visitable elements.
  * Each rule processor is responsible for a specific task and element type.
@@ -25,7 +23,7 @@ import edu.kit.datamanager.idoris.domain.VisitableElement;
  * @param <T> the type of visitable element this processor can handle
  * @param <R> the type of rule output produced by this processor
  */
-public interface IRuleProcessor<T extends VisitableElement, R extends RuleOutput<R>> {
+public interface IRule<T extends VisitableElement, R extends RuleOutput<R>> {
 
     /**
      * Process the given input element and update the provided output.

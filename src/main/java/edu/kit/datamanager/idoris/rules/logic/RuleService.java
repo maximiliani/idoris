@@ -415,7 +415,7 @@ public class RuleService {
                 log.debug("Executing rule {} with input {}", ruleClass.getSimpleName(), input);
 
                 @SuppressWarnings("unchecked")
-                IRuleProcessor<T, R> processor = (IRuleProcessor<T, R>) ruleNode.instance();
+                IRule<T, R> processor = (IRule<T, R>) ruleNode.instance();
 
                 // Capture result state before processing
                 R beforeResult = null;
@@ -526,7 +526,7 @@ public class RuleService {
      * Immutable record that pairs a Spring bean instance with its {@link Rule} annotation.
      * Provides convenient access to both the executable rule and its metadata.
      *
-     * @param instance   the Spring bean implementing {@link RuleProcessor}
+     * @param instance   the Spring bean implementing {@link RuleAnnotationProcessor}
      * @param annotation the {@link Rule} annotation containing metadata
      */
     public record RuleNode(Object instance, Rule annotation) {

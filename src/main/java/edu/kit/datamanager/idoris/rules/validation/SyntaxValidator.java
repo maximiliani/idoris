@@ -21,7 +21,6 @@ import edu.kit.datamanager.idoris.domain.entities.*;
 import edu.kit.datamanager.idoris.domain.enums.CombinationOptions;
 import edu.kit.datamanager.idoris.domain.enums.ExecutionMode;
 import edu.kit.datamanager.idoris.domain.enums.PrimitiveDataTypes;
-import edu.kit.datamanager.idoris.rules.logic.IRuleProcessor;
 import edu.kit.datamanager.idoris.rules.logic.Rule;
 import edu.kit.datamanager.idoris.rules.logic.RuleTask;
 import lombok.extern.slf4j.Slf4j;
@@ -50,20 +49,7 @@ import static edu.kit.datamanager.idoris.rules.logic.OutputMessage.MessageSeveri
         description = "Validates that entities follow required syntax rules and constraints",
         tasks = {RuleTask.VALIDATE}
 )
-public class SyntaxValidator extends ValidationVisitor implements IRuleProcessor<VisitableElement, ValidationResult> {
-
-    /**
-     * Process method required by IRuleProcessor interface.
-     * Delegates to the appropriate validate method based on element type.
-     *
-     * @param input  the element to process
-     * @param output the output to update with processing results
-     */
-    @Override
-    public void process(VisitableElement input, ValidationResult output) {
-        ValidationResult result = input.execute(this);
-        output.merge(result);
-    }
+public class SyntaxValidator extends ValidationVisitor {
 
     /**
      * Validates syntax constraints for Attribute entities

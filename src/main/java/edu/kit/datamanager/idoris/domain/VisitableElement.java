@@ -36,7 +36,7 @@ import java.util.Map;
 @Getter
 @Setter
 @EqualsAndHashCode
-public abstract class VisitableElement {
+public abstract class VisitableElement implements edu.kit.datamanager.idoris.rules.logic.VisitableElement {
     private static final Logger LOG = LoggerFactory.getLogger(VisitableElement.class);
 
     @CompositeProperty

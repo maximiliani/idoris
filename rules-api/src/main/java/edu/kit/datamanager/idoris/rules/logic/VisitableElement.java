@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-rootProject.name = 'idoris'
+package edu.kit.datamanager.idoris.rules.logic;
 
-//include 'build:generated:sources:annotationProcessor:java:test:annotationProcessors'
-include 'rules-processor'
-include 'rules-api'
+public interface VisitableElement {
+}
