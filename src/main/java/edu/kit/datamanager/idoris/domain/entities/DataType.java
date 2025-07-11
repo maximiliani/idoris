@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.Node;
-import org.springframework.data.neo4j.core.schema.Property;
-
-import java.util.List;
 
 @Node("DataType")
 @Getter
@@ -35,22 +32,18 @@ import java.util.List;
 @RequiredArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION, property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = BasicDataType.class, name = "BasicDataType"),
+        @JsonSubTypes.Type(value = AtomicDataType.class, name = "AtomicDataType"),
         @JsonSubTypes.Type(value = TypeProfile.class, name = "TypeProfile"),
 })
-public abstract sealed class DataType extends GenericIDORISEntity permits BasicDataType, TypeProfile {
+public abstract sealed class DataType extends GenericIDORISEntity permits AtomicDataType, TypeProfile {
     private TYPES type;
-    private String name;
-    private String description;
-    private List<String> expectedUses;
 
-    @Property("default")
     private String defaultValue;
 
     public abstract boolean inheritsFrom(DataType dataType);
 
     public enum TYPES {
-        BasicDataType,
+        AtomicDataType,
         TypeProfile
     }
 }

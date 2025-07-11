@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Karlsruhe Institute of Technology
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,10 @@ import edu.kit.datamanager.idoris.dao.IOperationDao;
 import edu.kit.datamanager.idoris.dao.ITypeProfileDao;
 import edu.kit.datamanager.idoris.domain.VisitableElement;
 import edu.kit.datamanager.idoris.domain.entities.*;
-import edu.kit.datamanager.idoris.validators.ValidationMessage;
-import edu.kit.datamanager.idoris.validators.ValidationResult;
-import edu.kit.datamanager.idoris.validators.VisitableElementValidator;
-import edu.kit.datamanager.idoris.visitors.InheritanceValidator;
-import edu.kit.datamanager.idoris.visitors.SubSchemaRelationValidator;
-import edu.kit.datamanager.idoris.visitors.SyntaxValidator;
-import edu.kit.datamanager.idoris.visitors.Visitor;
+import edu.kit.datamanager.idoris.rules.logic.OutputMessage;
+import edu.kit.datamanager.idoris.rules.logic.RuleService;
+import edu.kit.datamanager.idoris.rules.logic.RuleTask;
+import edu.kit.datamanager.idoris.rules.validation.ValidationResult;
 import io.netty.util.Attribute;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +38,7 @@ import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.server.LinkBuilder;
 import org.springframework.hateoas.server.RepresentationModelProcessor;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.Errors;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 import java.util.List;
@@ -55,19 +53,22 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 @Log
 public class RepositoryRestConfig implements RepositoryRestConfigurer {
     private final ApplicationProperties applicationProperties;
+    private final RuleService ruleService;
 
     @Autowired
-    public RepositoryRestConfig(ApplicationProperties applicationProperties) {
+    public RepositoryRestConfig(ApplicationProperties applicationProperties, RuleService ruleService) {
         this.applicationProperties = applicationProperties;
+        this.ruleService = ruleService;
     }
+
 
     @Override
     public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry cors) {
         config.exposeIdsFor(
                 Attribute.class,
-                BasicDataType.class,
+                AtomicDataType.class,
                 Operation.class,
-                OperationTypeProfile.class,
+                TechnologyInterface.class,
                 TypeProfile.class
         );
 
@@ -78,9 +79,10 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
 
     @Override
     public void configureValidatingRepositoryEventListener(ValidatingRepositoryEventListener v) {
-        v.addValidator("beforeSave", new VisitableElementValidator(applicationProperties));
-        v.addValidator("beforeCreate", new VisitableElementValidator(applicationProperties));
-        v.addValidator("afterLinkSave", new VisitableElementValidator(applicationProperties));
+        RuleBasedVisitableElementValidator validator = new RuleBasedVisitableElementValidator(ruleService, applicationProperties);
+        v.addValidator("beforeSave", validator);
+        v.addValidator("beforeCreate", validator);
+        v.addValidator("afterLinkSave", validator);
     }
 
     @Bean
@@ -116,35 +118,108 @@ public class RepositoryRestConfig implements RepositoryRestConfigurer {
     }
 
     @Bean
-    public RepresentationModelProcessor<RepresentationModel<?>> validatorProcessor() {
+    public RepresentationModelProcessor<RepresentationModel<?>> validatorProcessor(RuleService ruleService) {
         return model -> {
             if (model instanceof EntityModel<?> && ((EntityModel<?>) model).getContent() instanceof VisitableElement element) {
-                Set<Visitor<ValidationResult>> validators = Set.of(
-                        new SubSchemaRelationValidator(),
-                        new SyntaxValidator(),
-                        new InheritanceValidator()
+                // Use RuleService to process validation with the VALIDATE task
+                ValidationResult validationResult = ruleService.executeRules(
+                        RuleTask.VALIDATE,
+                        element,
+                        ValidationResult::new
                 );
 
-                Map<String, Map<ValidationMessage.MessageSeverity, List<ValidationMessage>>> results = validators.stream()
-                        .peek(visitor -> log.info("Executing validation for " + visitor.getClass().getSimpleName()))
-                        .map(visitor -> Map.entry(visitor.getClass().getSimpleName(), element.execute(visitor)))
-                        .peek(entry -> log.info("Validation result for " + entry.getKey() + ": " + entry.getValue()))
-                        .map(entry -> Map.entry(
-                                entry.getKey(),
-                                entry.getValue()
-                                        .getValidationMessages()
-                                        .entrySet()
-                                        .stream()
-                                        .filter(e -> e.getKey().isHigherOrEqualTo(applicationProperties.getValidationLevel()))
-                                        .filter(e -> !e.getValue().isEmpty())
-                                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))))
-                        .peek(entry -> log.info("Filtered validation result for " + entry.getKey() + ": " + entry.getValue()))
-                        .filter(entry -> !entry.getValue().isEmpty())
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                // Convert ValidationResult to the expected format for the response
+                if (!validationResult.isEmpty()) {
+                    Map<OutputMessage.MessageSeverity, List<OutputMessage>> filteredMessages =
+                            validationResult.getOutputMessages()
+                                    .entrySet()
+                                    .stream()
+                                    .filter(entry -> entry.getKey().isHigherOrEqualTo(applicationProperties.getValidationLevel()))
+                                    .filter(entry -> !entry.getValue().isEmpty())
+                                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-                if (!results.isEmpty()) return CollectionModel.of(Set.of(results, model));
+                    if (!filteredMessages.isEmpty()) {
+                        Map<String, Object> results = Map.of(
+                                "validationResult", filteredMessages,
+                                "originalModel", model
+                        );
+                        return CollectionModel.of(Set.of(results));
+                    }
+                }
             }
             return model;
         };
+    }
+
+    /**
+     * Spring Data REST validator that uses the new rule-based validation system.
+     * This validator integrates with Spring's validation framework and executes
+     * all applicable validation rules through the RuleService.
+     */
+    private static class RuleBasedVisitableElementValidator implements org.springframework.validation.Validator {
+        private final RuleService ruleService;
+        private final ApplicationProperties applicationProperties;
+
+        public RuleBasedVisitableElementValidator(RuleService ruleService, ApplicationProperties applicationProperties) {
+            this.ruleService = ruleService;
+            this.applicationProperties = applicationProperties;
+        }
+
+        @Override
+        public boolean supports(Class<?> clazz) {
+            return VisitableElement.class.isAssignableFrom(clazz);
+        }
+
+        @Override
+        public void validate(Object target, Errors errors) {
+            if (!(target instanceof VisitableElement element)) {
+                return;
+            }
+
+            try {
+                // Execute validation rules using RuleService
+                ValidationResult result = ruleService.executeRules(
+                        RuleTask.VALIDATE,
+                        element,
+                        ValidationResult::new
+                );
+
+                // Convert ValidationResult to Spring validation errors
+                convertToSpringErrors(result, errors);
+
+            } catch (Exception e) {
+                log.severe("Error during rule-based validation: " + e.getMessage());
+                errors.reject("validation.error", "Validation failed due to internal error");
+            }
+        }
+
+        /**
+         * Converts ValidationResult messages to Spring validation errors.
+         * Only includes messages that meet the configured validation level threshold.
+         */
+        private void convertToSpringErrors(ValidationResult result, org.springframework.validation.Errors errors) {
+            if (result == null || result.isEmpty()) {
+                return;
+            }
+
+            result.getOutputMessages().entrySet().stream()
+                    .filter(entry -> entry.getKey().isHigherOrEqualTo(applicationProperties.getValidationLevel()))
+                    .forEach(entry -> {
+                        OutputMessage.MessageSeverity severity = entry.getKey();
+                        List<OutputMessage> messages = entry.getValue();
+
+                        for (OutputMessage message : messages) {
+                            String errorCode = "validation." + severity.name().toLowerCase();
+                            String defaultMessage = message.message();
+
+                            if (severity == OutputMessage.MessageSeverity.ERROR) {
+                                errors.reject(errorCode, defaultMessage);
+                            } else {
+                                // For warnings and info, we can still add them but they won't fail validation
+                                errors.reject("validation.warning", defaultMessage);
+                            }
+                        }
+                    });
+        }
     }
 }

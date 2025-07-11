@@ -1,5 +1,7 @@
 .idea/
 db/
+neo4j-data/
+neo4j-data-new/
 
 # Ignore Gradle project-specific cache directory
 nbproject
