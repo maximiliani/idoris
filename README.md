@@ -58,7 +58,8 @@ logging.level.root=INFO
 spring.neo4j.uri=bolt://localhost:7687
 spring.neo4j.authentication.username=neo4j
 spring.neo4j.authentication.password=superSecret
-spring.data.rest.basePath=/api
+# Base path for all REST endpoints
+server.servlet.context-path=/api
 server.port=8095
 idoris.validation-level=info
 idoris.validation-policy=strict
@@ -71,3 +72,26 @@ When Neo4j is running, start IDORIS with the following command:
 ```
 
 You can access the IDORIS API at http://localhost:8095/api.
+
+## Architecture
+
+IDORIS is built using Spring Boot and follows a modular, event-driven architecture using Spring Modulith.
+
+### Event-Based Architecture
+
+IDORIS uses an event-based architecture to decouple components and improve maintainability. Key events include:
+
+- EntityCreatedEvent: Published when a new entity is created
+- EntityUpdatedEvent: Published when an entity is updated
+- EntityDeletedEvent: Published when an entity is deleted
+- PIDGeneratedEvent: Published when a PID is generated for an entity
+
+For more details, see [event-based-architecture.md](event-based-architecture.md).
+
+### API Documentation
+
+IDORIS provides comprehensive API documentation using OpenAPI/Swagger. You can access the API documentation
+at http://localhost:8095/swagger-ui.html when the application is running.
+
+All endpoints support HATEOAS (Hypermedia as the Engine of Application State) and return HAL (Hypertext Application
+Language) responses, making the API self-discoverable.

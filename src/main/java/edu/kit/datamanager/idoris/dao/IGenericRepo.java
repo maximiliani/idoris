@@ -19,10 +19,10 @@ package edu.kit.datamanager.idoris.dao;
 import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.ListCrudRepository;
-import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
-@NoRepositoryBean
+@RepositoryRestResource(exported = false)
 public interface IGenericRepo<T extends GenericIDORISEntity> extends Neo4jRepository<T, String>, ListCrudRepository<T, String>, PagingAndSortingRepository<T, String> {
     // This interface serves as a marker for generic repositories.
     // It can be extended by specific repositories to inherit common methods.

@@ -43,7 +43,7 @@ import java.util.List;
 @Component
 @Slf4j
 @ConditionalOnBean(TypedPIDMakerConfig.class)
-public final class TypedPIDMakerIDGenerator implements IdGenerator<String> {
+public class TypedPIDMakerIDGenerator implements IdGenerator<String> {
     private final TypedPIDMakerClient client;
     private final TypedPIDMakerConfig config;
 

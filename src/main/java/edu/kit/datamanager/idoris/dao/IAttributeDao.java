@@ -18,9 +18,7 @@ package edu.kit.datamanager.idoris.dao;
 
 import edu.kit.datamanager.idoris.domain.entities.Attribute;
 import org.springframework.data.neo4j.repository.query.Query;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
-@RepositoryRestResource(collectionResourceRel = "attributes", path = "attributes")
 public interface IAttributeDao extends IGenericRepo<Attribute> {
     @Query("MATCH (n:Attribute)" +
             " WHERE size([(n)-[:dataType]->() | 1]) = 1 AND NOT (n)<-[]-()" +

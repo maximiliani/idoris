@@ -19,13 +19,28 @@ package edu.kit.datamanager.idoris.dao;
 import edu.kit.datamanager.idoris.domain.entities.DataType;
 import edu.kit.datamanager.idoris.domain.entities.Operation;
 import org.springframework.data.neo4j.repository.query.Query;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
-@RepositoryRestResource(collectionResourceRel = "dataTypes", path = "dataTypes")
+/**
+ * Repository interface for DataType entities.
+ */
 public interface IDataTypeDao extends IGenericRepo<DataType> {
+    /**
+     * Finds all DataType entities in the inheritance chain of the given DataType.
+     *
+     * @param pid the PID of the DataType
+     * @return an Iterable of DataType entities in the inheritance chain
+     */
     @Query("MATCH (d:DataType {pid: $pid})-[:inheritsFrom*]->(d2:DataType) RETURN d2")
     Iterable<DataType> findAllInInheritanceChain(String pid);
 
+    /**
+     * Gets operations that can be executed on a data type.
+     * This method finds operations that are executable on the given data type, its attributes,
+     * or any data type in its inheritance chain.
+     *
+     * @param pid the PID of the data type
+     * @return an Iterable of Operation entities
+     */
     @Query("Match (:DataType {pid: $pid})-[:attributes|inheritsFrom*]->(:DataType)<-[:dataType]-(:Attribute)<-[:executableOn]-(o:Operation) return o")
     Iterable<Operation> getOperations(String pid);
 }

@@ -21,9 +21,7 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
-@RepositoryRestResource(collectionResourceRel = "users", path = "users")
 public interface IUserDao extends Neo4jRepository<User, String>, ListCrudRepository<User, String>, PagingAndSortingRepository<User, String> {
     @Query("MATCH (u:ORCiDUser) RETURN u")
     Iterable<User> findAllORCiDUsers();

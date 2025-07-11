@@ -18,10 +18,18 @@ package edu.kit.datamanager.idoris.dao;
 
 import edu.kit.datamanager.idoris.domain.entities.Operation;
 import org.springframework.data.neo4j.repository.query.Query;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
-@RepositoryRestResource(collectionResourceRel = "operations", path = "operations")
+/**
+ * Repository interface for Operation entities.
+ */
 public interface IOperationDao extends IGenericRepo<Operation> {
+    /**
+     * Gets operations that can be executed on a data type.
+     * This method finds operations that are executable on the given data type or its attributes.
+     *
+     * @param pid the PID of the data type
+     * @return an Iterable of Operation entities
+     */
     //    @Query("optional MATCH (:DataType {pid: $pid})-[:attributes|inheritsFrom*]->(:DataType)<-[:dataType]-(:Attribute)<-[:executableOn]-(o:Operation) RETURN o")
     @Query("""
             MATCH (d:DataType {pid: $pid})<-[:dataType]-(:Attribute)<-[:executableOn]-(o:Operation) RETURN o

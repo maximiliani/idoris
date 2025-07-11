@@ -43,8 +43,6 @@ java {
 }
 
 configurations {
-//    annotationProcessorPath
-
     compileOnly {
         extendsFrom annotationProcessor
     }
@@ -60,12 +58,13 @@ repositories {
 
 ext {
     springBootVersion = "3.5.0"
-    springDocVersion = "2.8.8"
+    springDocVersion = "2.8.9"
     errorproneVersion = "2.38.0"
-    errorproneJavacVersion = "9+181-r4173-1"     // keep until a newer tag is published
+    errorproneJavacVersion = "9+181-r4173-1"
     httpClientVersion = "5.5"
-    javersVersion = "7.3.7"             // unchanged (latest)
+    javersVersion = "7.3.7"
     set("snippetsDir", file("build/generated-snippets"))
+    set('springModulithVersion', "1.4.1")
 }
 
 dependencies {
@@ -78,12 +77,19 @@ dependencies {
     /* Spring Boot starters (version comes from the BOM) */
     implementation "org.springframework.boot:spring-boot-starter-web"
     implementation "org.springframework.boot:spring-boot-starter-data-neo4j"
-    implementation "org.springframework.boot:spring-boot-starter-data-rest"
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "org.springframework.boot:spring-boot-starter-hateoas"
     implementation "org.springframework.boot:spring-boot-starter-validation"
     implementation "org.springframework:spring-web"
-    implementation "org.springframework.data:spring-data-rest-hal-explorer:5.0.0-M3"
+    implementation 'org.springframework.data:spring-data-rest-hal-explorer'
+    implementation "org.springframework.modulith:spring-modulith-starter-core"
+    implementation "org.springframework.modulith:spring-modulith-starter-neo4j:${springModulithVersion}"
+    implementation "org.springframework.modulith:spring-modulith-events-api:${springModulithVersion}"
+    runtimeOnly "org.springframework.boot:spring-boot-starter-actuator"
+    runtimeOnly 'org.springframework.modulith:spring-modulith-runtime'
+    runtimeOnly "org.springframework.modulith:spring-modulith-observability:${springModulithVersion}"
+    runtimeOnly "org.springframework.modulith:spring-modulith-actuator:${springModulithVersion}"
+//    runtimeOnly "org.springframework.modulith:spring-modulith-starter-insights:${springModulithVersion}"
 
     /* OpenAPI */
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springDocVersion}"
@@ -115,7 +121,16 @@ dependencies {
     testImplementation "org.springframework.boot:spring-boot-starter-test"
     testImplementation "org.springframework.restdocs:spring-restdocs-mockmvc:3.0.3"
     testImplementation "org.springframework.security:spring-security-test"
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
     testImplementation "org.junit.jupiter:junit-jupiter:5.13.0"
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"
+    }
 }
 
 // Modify JavaCompile tasks configuration
@@ -132,11 +147,6 @@ tasks.withType(JavaCompile).configureEach {
 
     // Enable annotation processing explicitly
     options.fork = true
-//    options.forkOptions.jvmArgs += [
-//            '-verbose',
-////            '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
-////            '--add-opens', 'java.base/java.util=ALL-UNNAMED'
-//    ]
 
     options.errorprone {
         disableWarningsInGeneratedCode = true

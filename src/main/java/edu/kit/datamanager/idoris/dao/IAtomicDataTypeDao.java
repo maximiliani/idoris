@@ -18,12 +18,17 @@ package edu.kit.datamanager.idoris.dao;
 
 import edu.kit.datamanager.idoris.domain.entities.AtomicDataType;
 import org.springframework.data.neo4j.repository.query.Query;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.data.rest.core.annotation.RestResource;
 
-@RepositoryRestResource(collectionResourceRel = "atomicDataTypes", path = "atomicDataTypes")
+/**
+ * Repository interface for AtomicDataType entities.
+ */
 public interface IAtomicDataTypeDao extends IGenericRepo<AtomicDataType> {
-    @RestResource(exported = false)
+    /**
+     * Finds all AtomicDataType entities in the inheritance chain of the given AtomicDataType.
+     *
+     * @param pid the PID of the AtomicDataType
+     * @return an Iterable of AtomicDataType entities in the inheritance chain
+     */
     @Query("MATCH (d:AtomicDataType {pid: $pid})-[:inheritsFrom*]->(d2:AtomicDataType) RETURN d2")
     Iterable<AtomicDataType> findAllInInheritanceChain(String pid);
 }

@@ -16,43 +16,165 @@
 
 package edu.kit.datamanager.idoris.web.v1;
 
-import edu.kit.datamanager.idoris.dao.IDataTypeDao;
-import edu.kit.datamanager.idoris.dao.IOperationDao;
-import edu.kit.datamanager.idoris.dao.ITypeProfileDao;
 import edu.kit.datamanager.idoris.domain.entities.Attribute;
+import edu.kit.datamanager.idoris.domain.entities.Operation;
 import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
-import edu.kit.datamanager.idoris.rules.validation.ValidationPolicyValidator;
+import edu.kit.datamanager.idoris.domain.services.OperationService;
+import edu.kit.datamanager.idoris.domain.services.TypeProfileService;
 import edu.kit.datamanager.idoris.rules.validation.ValidationResult;
+import edu.kit.datamanager.idoris.web.hateoas.TypeProfileModelAssembler;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.rest.webmvc.RepositoryRestController;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.Link;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
-@RepositoryRestController
+/**
+ * REST controller for TypeProfile entities.
+ * This controller provides endpoints for managing TypeProfile entities.
+ */
+@RestController
+@RequestMapping("/api/typeProfiles")
+@Tag(name = "TypeProfile", description = "API for managing TypeProfiles")
 public class TypeProfileController {
     @Autowired
-    ITypeProfileDao typeProfileDao;
+    private TypeProfileService typeProfileService;
 
     @Autowired
-    IDataTypeDao dataTypeDao;
+    private OperationService operationService;
 
-    @GetMapping("typeProfiles/{pid}/validate")
-    public ResponseEntity<?> validate(@PathVariable("pid") String pid) {
-        TypeProfile typeProfile = typeProfileDao.findById(pid).orElseThrow();
-        ValidationPolicyValidator validator = new ValidationPolicyValidator();
-        ValidationResult result = typeProfile.execute(validator);
+    @Autowired
+    private TypeProfileModelAssembler typeProfileModelAssembler;
+
+    /**
+     * Gets all TypeProfile entities.
+     *
+     * @return a collection of all TypeProfile entities
+     */
+    @GetMapping
+    @io.swagger.v3.oas.annotations.Operation(
+            summary = "Get all TypeProfiles",
+            description = "Returns a collection of all TypeProfile entities",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "TypeProfiles found",
+                            content = @Content(mediaType = "application/hal+json",
+                                    schema = @Schema(implementation = TypeProfile.class)))
+            }
+    )
+    public ResponseEntity<CollectionModel<EntityModel<TypeProfile>>> getAllTypeProfiles() {
+        List<EntityModel<TypeProfile>> typeProfiles = StreamSupport.stream(typeProfileService.getAllTypeProfiles().spliterator(), false)
+                .map(typeProfileModelAssembler::toModel)
+                .collect(Collectors.toList());
+
+        CollectionModel<EntityModel<TypeProfile>> collectionModel = CollectionModel.of(
+                typeProfiles,
+                linkTo(methodOn(TypeProfileController.class).getAllTypeProfiles()).withSelfRel()
+        );
+
+        return ResponseEntity.ok(collectionModel);
+    }
+
+    /**
+     * Gets a TypeProfile entity by its PID.
+     *
+     * @param pid the PID of the TypeProfile to retrieve
+     * @return the TypeProfile entity
+     */
+    @GetMapping("/{pid}")
+    @io.swagger.v3.oas.annotations.Operation(
+            summary = "Get a TypeProfile by PID",
+            description = "Returns a TypeProfile entity by its PID",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "TypeProfile found",
+                            content = @Content(mediaType = "application/hal+json",
+                                    schema = @Schema(implementation = TypeProfile.class))),
+                    @ApiResponse(responseCode = "404", description = "TypeProfile not found")
+            }
+    )
+    public ResponseEntity<EntityModel<TypeProfile>> getTypeProfile(
+            @Parameter(description = "PID of the TypeProfile", required = true)
+            @PathVariable String pid) {
+        return typeProfileService.getTypeProfile(pid)
+                .map(typeProfileModelAssembler::toModel)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Gets operations for a TypeProfile.
+     *
+     * @param pid the PID of the TypeProfile
+     * @return a collection of operations for the TypeProfile
+     */
+    @GetMapping("/{pid}/operations")
+    @io.swagger.v3.oas.annotations.Operation(
+            summary = "Get operations for a TypeProfile",
+            description = "Returns a collection of operations that can be executed on a TypeProfile",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Operations found",
+                            content = @Content(mediaType = "application/hal+json",
+                                    schema = @Schema(implementation = Operation.class))),
+                    @ApiResponse(responseCode = "404", description = "TypeProfile not found")
+            }
+    )
+    public ResponseEntity<CollectionModel<EntityModel<Operation>>> getOperationsForTypeProfile(
+            @Parameter(description = "PID of the TypeProfile", required = true)
+            @PathVariable String pid) {
+        if (!typeProfileService.getTypeProfile(pid).isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<EntityModel<Operation>> operations = StreamSupport.stream(operationService.getOperationsForDataType(pid).spliterator(), false)
+                .map(operation -> EntityModel.of(operation,
+                        linkTo(methodOn(TypeProfileController.class).getOperationsForTypeProfile(pid)).withSelfRel(),
+                        linkTo(methodOn(TypeProfileController.class).getTypeProfile(pid)).withRel("typeProfile")))
+                .collect(Collectors.toList());
+
+        CollectionModel<EntityModel<Operation>> collectionModel = CollectionModel.of(
+                operations,
+                linkTo(methodOn(TypeProfileController.class).getOperationsForTypeProfile(pid)).withSelfRel(),
+                linkTo(methodOn(TypeProfileController.class).getTypeProfile(pid)).withRel("typeProfile")
+        );
+
+        return ResponseEntity.ok(collectionModel);
+    }
+
+    /**
+     * Validates a TypeProfile entity.
+     *
+     * @param pid the PID of the TypeProfile to validate
+     * @return the validation result
+     */
+    @GetMapping("/{pid}/validate")
+    @io.swagger.v3.oas.annotations.Operation(
+            summary = "Validate a TypeProfile",
+            description = "Validates a TypeProfile entity and returns the validation result",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "TypeProfile is valid"),
+                    @ApiResponse(responseCode = "218", description = "TypeProfile is invalid"),
+                    @ApiResponse(responseCode = "404", description = "TypeProfile not found")
+            }
+    )
+    public ResponseEntity<?> validate(
+            @Parameter(description = "PID of the TypeProfile", required = true)
+            @PathVariable String pid) {
+        ValidationResult result = typeProfileService.validateTypeProfile(pid);
         if (result.isValid()) {
             return ResponseEntity.ok(result);
         } else {
@@ -60,35 +182,165 @@ public class TypeProfileController {
         }
     }
 
-    @GetMapping("typeProfiles/{pid}/inheritedAttributes")
-    public ResponseEntity<?> getInheritedAttributes(@PathVariable("pid") String pid) {
-        Iterable<TypeProfile> inheritanceChain = typeProfileDao.findAllTypeProfilesInInheritanceChain(pid);
+    /**
+     * Gets the inherited attributes of a TypeProfile.
+     *
+     * @param pid the PID of the TypeProfile
+     * @return a collection of inherited attributes
+     */
+    @GetMapping("/{pid}/inheritedAttributes")
+    @io.swagger.v3.oas.annotations.Operation(
+            summary = "Get inherited attributes of a TypeProfile",
+            description = "Returns a collection of attributes inherited by a TypeProfile",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Inherited attributes found",
+                            content = @Content(mediaType = "application/hal+json",
+                                    schema = @Schema(implementation = Attribute.class))),
+                    @ApiResponse(responseCode = "404", description = "TypeProfile not found")
+            }
+    )
+    public ResponseEntity<CollectionModel<EntityModel<Attribute>>> getInheritedAttributes(
+            @Parameter(description = "PID of the TypeProfile", required = true)
+            @PathVariable String pid) {
+        Iterable<TypeProfile> inheritanceChain = typeProfileService.getInheritanceChain(pid);
         List<EntityModel<Attribute>> attributes = new ArrayList<>();
         inheritanceChain.forEach(typeProfile -> {
-            typeProfileDao.findById(typeProfile.getPid()).orElseThrow().getAttributes().forEach(profileAttribute -> {
+            typeProfileService.getTypeProfile(typeProfile.getPid()).orElseThrow().getAttributes().forEach(profileAttribute -> {
                 EntityModel<Attribute> attribute = EntityModel.of(profileAttribute);
-                attribute.add(linkTo(IDataTypeDao.class).slash("api").slash("dataTypes").slash(profileAttribute.getDataType().getPid()).withRel("dataType"));
+                attribute.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(profileAttribute.getDataType().getPid())).withRel("dataType"));
                 attributes.add(attribute);
             });
         });
+
         CollectionModel<EntityModel<Attribute>> resources = CollectionModel.of(attributes);
-        resources.add(linkTo(TypeProfileController.class).slash("api").slash("typeProfiles").slash(pid).slash("inheritedAttributes").withSelfRel());
-        resources.add(linkTo(ITypeProfileDao.class).slash("api").slash("typeProfiles").slash(pid).withRel("typeProfile"));
+        resources.add(linkTo(methodOn(TypeProfileController.class).getInheritedAttributes(pid)).withSelfRel());
+        resources.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(pid)).withRel("typeProfile"));
+
         return ResponseEntity.ok(resources);
     }
 
-    @GetMapping("typeProfiles/{pid}/inheritanceTree")
-    public HttpEntity<EntityModel<TypeProfileInheritance>> getInheritanceTree(@NotNull @PathVariable("pid") String pid) {
-        EntityModel<TypeProfileInheritance> resources = buildInheritanceTree(typeProfileDao.findById(pid).orElseThrow());
-        resources.add(linkTo(TypeProfileController.class).slash("api").slash("typeProfiles").slash(pid).slash("inheritanceTree").withSelfRel());
-        return new ResponseEntity<>(resources, HttpStatus.OK);
+    /**
+     * Creates a new TypeProfile entity.
+     *
+     * @param typeProfile the TypeProfile entity to create
+     * @return the created TypeProfile entity
+     */
+    @PostMapping
+    @io.swagger.v3.oas.annotations.Operation(
+            summary = "Create a new TypeProfile",
+            description = "Creates a new TypeProfile entity",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "TypeProfile created",
+                            content = @Content(mediaType = "application/hal+json",
+                                    schema = @Schema(implementation = TypeProfile.class))),
+                    @ApiResponse(responseCode = "400", description = "Invalid input")
+            }
+    )
+    public ResponseEntity<EntityModel<TypeProfile>> createTypeProfile(
+            @Parameter(description = "TypeProfile to create", required = true)
+            @Valid @RequestBody TypeProfile typeProfile) {
+        TypeProfile createdTypeProfile = typeProfileService.createTypeProfile(typeProfile);
+        EntityModel<TypeProfile> entityModel = typeProfileModelAssembler.toModel(createdTypeProfile);
+        return ResponseEntity.status(HttpStatus.CREATED).body(entityModel);
     }
 
+    /**
+     * Updates an existing TypeProfile entity.
+     *
+     * @param pid         the PID of the TypeProfile to update
+     * @param typeProfile the updated TypeProfile entity
+     * @return the updated TypeProfile entity
+     */
+    @PutMapping("/{pid}")
+    @io.swagger.v3.oas.annotations.Operation(
+            summary = "Update a TypeProfile",
+            description = "Updates an existing TypeProfile entity",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "TypeProfile updated",
+                            content = @Content(mediaType = "application/hal+json",
+                                    schema = @Schema(implementation = TypeProfile.class))),
+                    @ApiResponse(responseCode = "400", description = "Invalid input"),
+                    @ApiResponse(responseCode = "404", description = "TypeProfile not found")
+            }
+    )
+    public ResponseEntity<EntityModel<TypeProfile>> updateTypeProfile(
+            @Parameter(description = "PID of the TypeProfile", required = true)
+            @PathVariable String pid,
+            @Parameter(description = "Updated TypeProfile", required = true)
+            @Valid @RequestBody TypeProfile typeProfile) {
+        if (!typeProfileService.getTypeProfile(pid).isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        typeProfile.setPid(pid);
+        TypeProfile updatedTypeProfile = typeProfileService.updateTypeProfile(typeProfile);
+        EntityModel<TypeProfile> entityModel = typeProfileModelAssembler.toModel(updatedTypeProfile);
+        return ResponseEntity.ok(entityModel);
+    }
+
+    /**
+     * Deletes a TypeProfile entity.
+     *
+     * @param pid the PID of the TypeProfile to delete
+     * @return no content
+     */
+    @DeleteMapping("/{pid}")
+    @io.swagger.v3.oas.annotations.Operation(
+            summary = "Delete a TypeProfile",
+            description = "Deletes a TypeProfile entity",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "TypeProfile deleted"),
+                    @ApiResponse(responseCode = "404", description = "TypeProfile not found")
+            }
+    )
+    public ResponseEntity<Void> deleteTypeProfile(
+            @Parameter(description = "PID of the TypeProfile", required = true)
+            @PathVariable String pid) {
+        if (!typeProfileService.getTypeProfile(pid).isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        typeProfileService.deleteTypeProfile(pid);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Gets the inheritance tree of a TypeProfile.
+     *
+     * @param pid the PID of the TypeProfile
+     * @return the inheritance tree
+     */
+    @GetMapping("/{pid}/inheritanceTree")
+    @io.swagger.v3.oas.annotations.Operation(
+            summary = "Get inheritance tree of a TypeProfile",
+            description = "Returns the inheritance tree of a TypeProfile",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Inheritance tree found",
+                            content = @Content(mediaType = "application/hal+json")),
+                    @ApiResponse(responseCode = "404", description = "TypeProfile not found")
+            }
+    )
+    public ResponseEntity<EntityModel<TypeProfileInheritance>> getInheritanceTree(
+            @Parameter(description = "PID of the TypeProfile", required = true)
+            @NotNull @PathVariable String pid) {
+        EntityModel<TypeProfileInheritance> resources = buildInheritanceTree(typeProfileService.getTypeProfile(pid).orElseThrow());
+        resources.add(linkTo(methodOn(TypeProfileController.class).getInheritanceTree(pid)).withSelfRel());
+        resources.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(pid)).withRel("typeProfile"));
+
+        return ResponseEntity.ok(resources);
+    }
+
+    /**
+     * Builds an inheritance tree for a TypeProfile.
+     *
+     * @param typeProfile the TypeProfile to build the inheritance tree for
+     * @return an EntityModel containing the inheritance tree
+     */
     private EntityModel<TypeProfileInheritance> buildInheritanceTree(TypeProfile typeProfile) {
         List<EntityModel<Attribute>> attributes = new ArrayList<>();
         typeProfile.getAttributes().forEach(profileAttribute -> {
             EntityModel<Attribute> attribute = EntityModel.of(profileAttribute);
-            attribute.add(linkTo(IDataTypeDao.class).slash("api").slash("dataTypes").slash(profileAttribute.getDataType().getPid()).withRel("dataType"));
+            attribute.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(profileAttribute.getDataType().getPid())).withRel("dataType"));
             attributes.add(attribute);
         });
 
@@ -104,38 +356,12 @@ public class TypeProfileController {
                         CollectionModel.of(attributes),
                         CollectionModel.of(inheritsFrom)));
 
-        node.add(linkTo(TypeProfileController.class)
-                .slash("api")
-                .slash("typeProfiles")
-                .slash(typeProfile.getPid())
-                .slash("inheritanceTree")
-                .withRel("inheritanceTree"));
-        node.add(linkTo(ITypeProfileDao.class)
-                .slash("api")
-                .slash("typeProfiles")
-                .slash(typeProfile.getPid())
-                .withRel("typeProfile"));
-        node.add(linkTo(TypeProfileController.class)
-                .slash("api")
-                .slash("typeProfiles")
-                .slash(typeProfile.getPid())
-                .slash("attributes")
-                .withRel("attributes"));
-        node.add(linkTo(TypeProfileController.class)
-                .slash("api")
-                .slash("typeProfiles")
-                .slash(typeProfile.getPid())
-                .slash("inheritedAttributes")
-                .withRel("inheritedAttributes"));
-        node.add(Link.of(
-                linkTo(IOperationDao.class)
-                        .slash("api")
-                        .slash("operations")
-                        .slash("search")
-                        .slash("getOperationsForDataType")
-                        .toUri() + "?pid=" + typeProfile.getPid(),
-                "operations")
-        );
+        // Add links
+        node.add(linkTo(methodOn(TypeProfileController.class).getInheritanceTree(typeProfile.getPid())).withRel("inheritanceTree"));
+        node.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(typeProfile.getPid())).withRel("typeProfile"));
+        node.add(linkTo(methodOn(TypeProfileController.class).getInheritedAttributes(typeProfile.getPid())).withRel("inheritedAttributes"));
+        node.add(linkTo(methodOn(TypeProfileController.class).getOperationsForTypeProfile(typeProfile.getPid())).withRel("operations"));
+
         return node;
     }
 
