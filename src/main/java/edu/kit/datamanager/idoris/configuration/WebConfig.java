@@ -29,7 +29,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @Configuration
 @EnableHypermediaSupport(type = {EnableHypermediaSupport.HypermediaType.HAL, EnableHypermediaSupport.HypermediaType.HAL_FORMS, EnableHypermediaSupport.HypermediaType.COLLECTION_JSON})
-public class WebConfig {
+public class WebConfig implements WebMvcConfigurer {
 
     /**
      * Configures CORS settings.
@@ -49,8 +49,8 @@ public class WebConfig {
         };
     }
 
+    @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/").setViewName("forward:/swagger-ui.html");
-        registry.addViewController("/explorer").setViewName("forward:/explorer/index.html");
     }
 }

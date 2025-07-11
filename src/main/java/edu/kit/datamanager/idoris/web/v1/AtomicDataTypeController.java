@@ -19,12 +19,13 @@ package edu.kit.datamanager.idoris.web.v1;
 import edu.kit.datamanager.idoris.configuration.ApplicationProperties;
 import edu.kit.datamanager.idoris.domain.entities.AtomicDataType;
 import edu.kit.datamanager.idoris.domain.entities.Operation;
-import edu.kit.datamanager.idoris.domain.services.AtomicDataTypeService;
-import edu.kit.datamanager.idoris.domain.services.OperationService;
 import edu.kit.datamanager.idoris.rules.logic.RuleService;
 import edu.kit.datamanager.idoris.rules.logic.RuleTask;
 import edu.kit.datamanager.idoris.rules.validation.ValidationResult;
+import edu.kit.datamanager.idoris.services.AtomicDataTypeService;
+import edu.kit.datamanager.idoris.services.OperationService;
 import edu.kit.datamanager.idoris.web.ValidationException;
+import edu.kit.datamanager.idoris.web.api.IAtomicDataTypeApi;
 import edu.kit.datamanager.idoris.web.hateoas.AtomicDataTypeModelAssembler;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -51,10 +52,10 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
  * This controller provides endpoints for managing AtomicDataType entities.
  */
 @RestController
-@RequestMapping("/v1/api/atomicDataTypes")
+@RequestMapping("/v1/atomicDataTypes")
 @Tag(name = "AtomicDataType", description = "API for managing AtomicDataTypes")
 @Slf4j
-public class AtomicDataTypeController {
+public class AtomicDataTypeController implements IAtomicDataTypeApi {
 
     private final AtomicDataTypeService atomicDataTypeService;
     private final OperationService operationService;
@@ -71,10 +72,9 @@ public class AtomicDataTypeController {
     }
 
     /**
-     * Gets all AtomicDataType entities.
-     *
-     * @return a collection of all AtomicDataType entities
+     * {@inheritDoc}
      */
+    @Override
     @GetMapping
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get all AtomicDataTypes",
@@ -99,11 +99,9 @@ public class AtomicDataTypeController {
     }
 
     /**
-     * Gets an AtomicDataType entity by its PID.
-     *
-     * @param pid the PID of the AtomicDataType to retrieve
-     * @return the AtomicDataType entity
+     * {@inheritDoc}
      */
+    @Override
     @GetMapping("/{pid}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get an AtomicDataType by PID",
@@ -125,25 +123,23 @@ public class AtomicDataTypeController {
     }
 
     /**
-     * Creates a new AtomicDataType entity.
-     *
-     * @param atomicDataType the AtomicDataType entity to create
-     * @return the created AtomicDataType entity
+     * {@inheritDoc}
      */
+    @Override
     @PostMapping
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Create a new AtomicDataType",
-            description = "Creates a new AtomicDataType entity",
+            description = "Creates a new AtomicDataType entity after validating it",
             responses = {
                     @ApiResponse(responseCode = "201", description = "AtomicDataType created",
                             content = @Content(mediaType = "application/hal+json",
                                     schema = @Schema(implementation = AtomicDataType.class))),
-                    @ApiResponse(responseCode = "400", description = "Invalid input")
+                    @ApiResponse(responseCode = "400", description = "Invalid input or validation failed")
             }
     )
     public ResponseEntity<EntityModel<AtomicDataType>> createAtomicDataType(
             @Parameter(description = "AtomicDataType to create", required = true)
-            @RequestBody AtomicDataType atomicDataType) {
+            @Valid @RequestBody AtomicDataType atomicDataType) {
 
         // Validate BEFORE saving
         ValidationResult validationResult = ruleService.executeRules(
@@ -165,21 +161,18 @@ public class AtomicDataTypeController {
     }
 
     /**
-     * Updates an existing AtomicDataType entity.
-     *
-     * @param pid            the PID of the AtomicDataType to update
-     * @param atomicDataType the updated AtomicDataType entity
-     * @return the updated AtomicDataType entity
+     * {@inheritDoc}
      */
+    @Override
     @PutMapping("/{pid}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Update an AtomicDataType",
-            description = "Updates an existing AtomicDataType entity",
+            description = "Updates an existing AtomicDataType entity after validating it",
             responses = {
                     @ApiResponse(responseCode = "200", description = "AtomicDataType updated",
                             content = @Content(mediaType = "application/hal+json",
                                     schema = @Schema(implementation = AtomicDataType.class))),
-                    @ApiResponse(responseCode = "400", description = "Invalid input"),
+                    @ApiResponse(responseCode = "400", description = "Invalid input or validation failed"),
                     @ApiResponse(responseCode = "404", description = "AtomicDataType not found")
             }
     )
@@ -193,17 +186,30 @@ public class AtomicDataTypeController {
         }
 
         atomicDataType.setPid(pid);
+
+        // Validate BEFORE saving
+        ValidationResult validationResult = ruleService.executeRules(
+                RuleTask.VALIDATE,
+                atomicDataType,
+                ValidationResult::new
+        );
+        log.debug("Validation result for AtomicDataType {}: {}", atomicDataType, validationResult);
+
+        // Check if validation failed based on your validation policy
+        if (hasValidationErrors(validationResult)) {
+            throw new ValidationException("Entity validation failed", validationResult);
+        }
+
+        // Only save if validation passes
         AtomicDataType updatedAtomicDataType = atomicDataTypeService.updateAtomicDataType(atomicDataType);
         EntityModel<AtomicDataType> entityModel = atomicDataTypeModelAssembler.toModel(updatedAtomicDataType);
         return ResponseEntity.ok(entityModel);
     }
 
     /**
-     * Deletes an AtomicDataType entity.
-     *
-     * @param pid the PID of the AtomicDataType to delete
-     * @return no content
+     * {@inheritDoc}
      */
+    @Override
     @DeleteMapping("/{pid}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Delete an AtomicDataType",
@@ -225,11 +231,9 @@ public class AtomicDataTypeController {
     }
 
     /**
-     * Gets operations for an AtomicDataType.
-     *
-     * @param pid the PID of the AtomicDataType
-     * @return a collection of operations for the AtomicDataType
+     * {@inheritDoc}
      */
+    @Override
     @GetMapping("/{pid}/operations")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get operations for an AtomicDataType",

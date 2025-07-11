@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
+ * Copyright (c) 2025 Karlsruhe Institute of Technology
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,54 +14,32 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.web.v1;
+package edu.kit.datamanager.idoris.web.api;
 
 import edu.kit.datamanager.idoris.domain.entities.Operation;
-import edu.kit.datamanager.idoris.rules.validation.ValidationPolicyValidator;
-import edu.kit.datamanager.idoris.rules.validation.ValidationResult;
-import edu.kit.datamanager.idoris.services.OperationService;
-import edu.kit.datamanager.idoris.web.ValidationException;
-import edu.kit.datamanager.idoris.web.api.IOperationApi;
-import edu.kit.datamanager.idoris.web.hateoas.OperationModelAssembler;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-
 /**
- * REST controller for Operation entities.
- * This controller provides endpoints for managing Operation entities.
+ * API interface for Operation endpoints.
+ * This interface defines the REST API for managing Operation entities.
  */
-@RestController
-@RequestMapping("/v1/operations")
 @Tag(name = "Operation", description = "API for managing Operations")
-public class OperationController implements IOperationApi {
-
-    @Autowired
-    private OperationService operationService;
-
-    @Autowired
-    private OperationModelAssembler operationModelAssembler;
+public interface IOperationApi {
 
     /**
-     * {@inheritDoc}
+     * Gets all Operation entities.
+     *
+     * @return a collection of all Operation entities
      */
-    @Override
     @GetMapping
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get all Operations",
@@ -72,23 +50,14 @@ public class OperationController implements IOperationApi {
                                     schema = @Schema(implementation = Operation.class)))
             }
     )
-    public ResponseEntity<CollectionModel<EntityModel<Operation>>> getAllOperations() {
-        List<EntityModel<Operation>> operations = StreamSupport.stream(operationService.getAllOperations().spliterator(), false)
-                .map(operationModelAssembler::toModel)
-                .collect(Collectors.toList());
-
-        CollectionModel<EntityModel<Operation>> collectionModel = CollectionModel.of(
-                operations,
-                linkTo(methodOn(OperationController.class).getAllOperations()).withSelfRel()
-        );
-
-        return ResponseEntity.ok(collectionModel);
-    }
+    ResponseEntity<CollectionModel<EntityModel<Operation>>> getAllOperations();
 
     /**
-     * {@inheritDoc}
+     * Gets an Operation entity by its PID.
+     *
+     * @param pid the PID of the Operation to retrieve
+     * @return the Operation entity
      */
-    @Override
     @GetMapping("/{pid}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get an Operation by PID",
@@ -100,19 +69,17 @@ public class OperationController implements IOperationApi {
                     @ApiResponse(responseCode = "404", description = "Operation not found")
             }
     )
-    public ResponseEntity<EntityModel<Operation>> getOperation(
+    ResponseEntity<EntityModel<Operation>> getOperation(
             @Parameter(description = "PID of the Operation", required = true)
-            @PathVariable String pid) {
-        return operationService.getOperation(pid)
-                .map(operationModelAssembler::toModel)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+            @PathVariable String pid);
 
     /**
-     * {@inheritDoc}
+     * Creates a new Operation entity.
+     * The entity is validated before saving.
+     *
+     * @param operation the Operation entity to create
+     * @return the created Operation entity
      */
-    @Override
     @PostMapping
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Create a new Operation",
@@ -124,28 +91,18 @@ public class OperationController implements IOperationApi {
                     @ApiResponse(responseCode = "400", description = "Invalid input or validation failed")
             }
     )
-    public ResponseEntity<EntityModel<Operation>> createOperation(
+    ResponseEntity<EntityModel<Operation>> createOperation(
             @Parameter(description = "Operation to create", required = true)
-            @Valid @RequestBody Operation operation) {
-        // Validate the operation using the ValidationPolicyValidator
-        ValidationPolicyValidator validator = new ValidationPolicyValidator();
-        ValidationResult validationResult = operation.execute(validator);
-
-        // Check if validation failed
-        if (!validationResult.isValid()) {
-            throw new ValidationException("Operation validation failed", validationResult);
-        }
-
-        // Only save if validation passes
-        Operation createdOperation = operationService.createOperation(operation);
-        EntityModel<Operation> entityModel = operationModelAssembler.toModel(createdOperation);
-        return ResponseEntity.status(HttpStatus.CREATED).body(entityModel);
-    }
+            @Valid @RequestBody Operation operation);
 
     /**
-     * {@inheritDoc}
+     * Updates an existing Operation entity.
+     * The entity is validated before saving.
+     *
+     * @param pid       the PID of the Operation to update
+     * @param operation the updated Operation entity
+     * @return the updated Operation entity
      */
-    @Override
     @PutMapping("/{pid}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Update an Operation",
@@ -158,36 +115,18 @@ public class OperationController implements IOperationApi {
                     @ApiResponse(responseCode = "404", description = "Operation not found")
             }
     )
-    public ResponseEntity<EntityModel<Operation>> updateOperation(
+    ResponseEntity<EntityModel<Operation>> updateOperation(
             @Parameter(description = "PID of the Operation", required = true)
             @PathVariable String pid,
             @Parameter(description = "Updated Operation", required = true)
-            @Valid @RequestBody Operation operation) {
-        if (!operationService.getOperation(pid).isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        operation.setPid(pid);
-
-        // Validate the operation using the ValidationPolicyValidator
-        ValidationPolicyValidator validator = new ValidationPolicyValidator();
-        ValidationResult validationResult = operation.execute(validator);
-
-        // Check if validation failed
-        if (!validationResult.isValid()) {
-            throw new ValidationException("Operation validation failed", validationResult);
-        }
-
-        // Only save if validation passes
-        Operation updatedOperation = operationService.updateOperation(operation);
-        EntityModel<Operation> entityModel = operationModelAssembler.toModel(updatedOperation);
-        return ResponseEntity.ok(entityModel);
-    }
+            @Valid @RequestBody Operation operation);
 
     /**
-     * {@inheritDoc}
+     * Deletes an Operation entity.
+     *
+     * @param pid the PID of the Operation to delete
+     * @return no content
      */
-    @Override
     @DeleteMapping("/{pid}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Delete an Operation",
@@ -197,21 +136,16 @@ public class OperationController implements IOperationApi {
                     @ApiResponse(responseCode = "404", description = "Operation not found")
             }
     )
-    public ResponseEntity<Void> deleteOperation(
+    ResponseEntity<Void> deleteOperation(
             @Parameter(description = "PID of the Operation", required = true)
-            @PathVariable String pid) {
-        if (!operationService.getOperation(pid).isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        operationService.deleteOperation(pid);
-        return ResponseEntity.noContent().build();
-    }
+            @PathVariable String pid);
 
     /**
-     * {@inheritDoc}
+     * Validates an Operation entity.
+     *
+     * @param pid the PID of the Operation to validate
+     * @return the validation result
      */
-    @Override
     @GetMapping("/{pid}/validate")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Validate an Operation",
@@ -222,28 +156,16 @@ public class OperationController implements IOperationApi {
                     @ApiResponse(responseCode = "404", description = "Operation not found")
             }
     )
-    public ResponseEntity<?> validate(
+    ResponseEntity<?> validate(
             @Parameter(description = "PID of the Operation", required = true)
-            @PathVariable String pid) {
-        if (!operationService.getOperation(pid).isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Operation operation = operationService.getOperation(pid).get();
-        ValidationPolicyValidator validator = new ValidationPolicyValidator();
-        ValidationResult result = operation.execute(validator);
-
-        if (result.isValid()) {
-            return ResponseEntity.ok(result);
-        } else {
-            return ResponseEntity.status(218).body(result);
-        }
-    }
+            @PathVariable String pid);
 
     /**
-     * {@inheritDoc}
+     * Gets operations for a data type.
+     *
+     * @param pid the PID of the data type
+     * @return a collection of operations for the data type
      */
-    @Override
     @GetMapping("/search/getOperationsForDataType")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get operations for a data type",
@@ -254,18 +176,7 @@ public class OperationController implements IOperationApi {
                                     schema = @Schema(implementation = Operation.class)))
             }
     )
-    public ResponseEntity<CollectionModel<EntityModel<Operation>>> getOperationsForDataType(
+    ResponseEntity<CollectionModel<EntityModel<Operation>>> getOperationsForDataType(
             @Parameter(description = "PID of the data type", required = true)
-            @RequestParam String pid) {
-        List<EntityModel<Operation>> operations = StreamSupport.stream(operationService.getOperationsForDataType(pid).spliterator(), false)
-                .map(operationModelAssembler::toModel)
-                .collect(Collectors.toList());
-
-        CollectionModel<EntityModel<Operation>> collectionModel = CollectionModel.of(
-                operations,
-                linkTo(methodOn(OperationController.class).getOperationsForDataType(pid)).withSelfRel()
-        );
-
-        return ResponseEntity.ok(collectionModel);
-    }
+            @RequestParam String pid);
 }

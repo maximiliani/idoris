@@ -18,7 +18,7 @@ package edu.kit.datamanager.idoris.web.v1;
 
 import edu.kit.datamanager.idoris.domain.entities.Attribute;
 import edu.kit.datamanager.idoris.domain.entities.DataType;
-import edu.kit.datamanager.idoris.domain.services.AttributeService;
+import edu.kit.datamanager.idoris.services.AttributeService;
 import edu.kit.datamanager.idoris.web.api.IAttributeApi;
 import edu.kit.datamanager.idoris.web.hateoas.AttributeModelAssembler;
 import edu.kit.datamanager.idoris.web.hateoas.DataTypeModelAssembler;
@@ -42,7 +42,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
  * This controller provides endpoints for managing Attribute entities.
  */
 @RestController
-@RequestMapping("/api/attributes")
+@RequestMapping("/v1/attributes")
 public class AttributeController implements IAttributeApi {
 
     @Autowired

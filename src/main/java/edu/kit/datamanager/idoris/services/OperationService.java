@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.domain.services;
+package edu.kit.datamanager.idoris.services;
 
 import edu.kit.datamanager.idoris.core.events.EventPublisherService;
 import edu.kit.datamanager.idoris.dao.IOperationDao;

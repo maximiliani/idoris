@@ -16,12 +16,17 @@
 
 package edu.kit.datamanager.idoris.web.v1;
 
+import edu.kit.datamanager.idoris.configuration.ApplicationProperties;
 import edu.kit.datamanager.idoris.domain.entities.Attribute;
 import edu.kit.datamanager.idoris.domain.entities.Operation;
 import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
-import edu.kit.datamanager.idoris.domain.services.OperationService;
-import edu.kit.datamanager.idoris.domain.services.TypeProfileService;
+import edu.kit.datamanager.idoris.rules.logic.RuleService;
+import edu.kit.datamanager.idoris.rules.logic.RuleTask;
 import edu.kit.datamanager.idoris.rules.validation.ValidationResult;
+import edu.kit.datamanager.idoris.services.OperationService;
+import edu.kit.datamanager.idoris.services.TypeProfileService;
+import edu.kit.datamanager.idoris.web.ValidationException;
+import edu.kit.datamanager.idoris.web.api.ITypeProfileApi;
 import edu.kit.datamanager.idoris.web.hateoas.TypeProfileModelAssembler;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,7 +35,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
@@ -50,23 +54,31 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
  * This controller provides endpoints for managing TypeProfile entities.
  */
 @RestController
-@RequestMapping("/api/typeProfiles")
+@RequestMapping("/v1/typeProfiles")
 @Tag(name = "TypeProfile", description = "API for managing TypeProfiles")
-public class TypeProfileController {
-    @Autowired
-    private TypeProfileService typeProfileService;
+public class TypeProfileController implements ITypeProfileApi {
+    private final TypeProfileService typeProfileService;
+    private final OperationService operationService;
+    private final TypeProfileModelAssembler typeProfileModelAssembler;
+    private final RuleService ruleService;
+    private final ApplicationProperties applicationProperties;
 
-    @Autowired
-    private OperationService operationService;
-
-    @Autowired
-    private TypeProfileModelAssembler typeProfileModelAssembler;
+    public TypeProfileController(TypeProfileService typeProfileService,
+                                 OperationService operationService,
+                                 TypeProfileModelAssembler typeProfileModelAssembler,
+                                 RuleService ruleService,
+                                 ApplicationProperties applicationProperties) {
+        this.typeProfileService = typeProfileService;
+        this.operationService = operationService;
+        this.typeProfileModelAssembler = typeProfileModelAssembler;
+        this.ruleService = ruleService;
+        this.applicationProperties = applicationProperties;
+    }
 
     /**
-     * Gets all TypeProfile entities.
-     *
-     * @return a collection of all TypeProfile entities
+     * {@inheritDoc}
      */
+    @Override
     @GetMapping
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get all TypeProfiles",
@@ -91,11 +103,9 @@ public class TypeProfileController {
     }
 
     /**
-     * Gets a TypeProfile entity by its PID.
-     *
-     * @param pid the PID of the TypeProfile to retrieve
-     * @return the TypeProfile entity
+     * {@inheritDoc}
      */
+    @Override
     @GetMapping("/{pid}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get a TypeProfile by PID",
@@ -117,11 +127,9 @@ public class TypeProfileController {
     }
 
     /**
-     * Gets operations for a TypeProfile.
-     *
-     * @param pid the PID of the TypeProfile
-     * @return a collection of operations for the TypeProfile
+     * {@inheritDoc}
      */
+    @Override
     @GetMapping("/{pid}/operations")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get operations for a TypeProfile",
@@ -156,11 +164,9 @@ public class TypeProfileController {
     }
 
     /**
-     * Validates a TypeProfile entity.
-     *
-     * @param pid the PID of the TypeProfile to validate
-     * @return the validation result
+     * {@inheritDoc}
      */
+    @Override
     @GetMapping("/{pid}/validate")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Validate a TypeProfile",
@@ -183,11 +189,9 @@ public class TypeProfileController {
     }
 
     /**
-     * Gets the inherited attributes of a TypeProfile.
-     *
-     * @param pid the PID of the TypeProfile
-     * @return a collection of inherited attributes
+     * {@inheritDoc}
      */
+    @Override
     @GetMapping("/{pid}/inheritedAttributes")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get inherited attributes of a TypeProfile",
@@ -220,46 +224,55 @@ public class TypeProfileController {
     }
 
     /**
-     * Creates a new TypeProfile entity.
-     *
-     * @param typeProfile the TypeProfile entity to create
-     * @return the created TypeProfile entity
+     * {@inheritDoc}
      */
+    @Override
     @PostMapping
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Create a new TypeProfile",
-            description = "Creates a new TypeProfile entity",
+            description = "Creates a new TypeProfile entity after validating it",
             responses = {
                     @ApiResponse(responseCode = "201", description = "TypeProfile created",
                             content = @Content(mediaType = "application/hal+json",
                                     schema = @Schema(implementation = TypeProfile.class))),
-                    @ApiResponse(responseCode = "400", description = "Invalid input")
+                    @ApiResponse(responseCode = "400", description = "Invalid input or validation failed")
             }
     )
     public ResponseEntity<EntityModel<TypeProfile>> createTypeProfile(
             @Parameter(description = "TypeProfile to create", required = true)
             @Valid @RequestBody TypeProfile typeProfile) {
+
+        // Validate BEFORE saving
+        ValidationResult validationResult = ruleService.executeRules(
+                RuleTask.VALIDATE,
+                typeProfile,
+                ValidationResult::new
+        );
+
+        // Check if validation failed based on your validation policy
+        if (hasValidationErrors(validationResult)) {
+            throw new ValidationException("Entity validation failed", validationResult);
+        }
+
+        // Only save if validation passes
         TypeProfile createdTypeProfile = typeProfileService.createTypeProfile(typeProfile);
         EntityModel<TypeProfile> entityModel = typeProfileModelAssembler.toModel(createdTypeProfile);
         return ResponseEntity.status(HttpStatus.CREATED).body(entityModel);
     }
 
     /**
-     * Updates an existing TypeProfile entity.
-     *
-     * @param pid         the PID of the TypeProfile to update
-     * @param typeProfile the updated TypeProfile entity
-     * @return the updated TypeProfile entity
+     * {@inheritDoc}
      */
+    @Override
     @PutMapping("/{pid}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Update a TypeProfile",
-            description = "Updates an existing TypeProfile entity",
+            description = "Updates an existing TypeProfile entity after validating it",
             responses = {
                     @ApiResponse(responseCode = "200", description = "TypeProfile updated",
                             content = @Content(mediaType = "application/hal+json",
                                     schema = @Schema(implementation = TypeProfile.class))),
-                    @ApiResponse(responseCode = "400", description = "Invalid input"),
+                    @ApiResponse(responseCode = "400", description = "Invalid input or validation failed"),
                     @ApiResponse(responseCode = "404", description = "TypeProfile not found")
             }
     )
@@ -273,17 +286,29 @@ public class TypeProfileController {
         }
 
         typeProfile.setPid(pid);
+
+        // Validate BEFORE saving
+        ValidationResult validationResult = ruleService.executeRules(
+                RuleTask.VALIDATE,
+                typeProfile,
+                ValidationResult::new
+        );
+
+        // Check if validation failed based on your validation policy
+        if (hasValidationErrors(validationResult)) {
+            throw new ValidationException("Entity validation failed", validationResult);
+        }
+
+        // Only save if validation passes
         TypeProfile updatedTypeProfile = typeProfileService.updateTypeProfile(typeProfile);
         EntityModel<TypeProfile> entityModel = typeProfileModelAssembler.toModel(updatedTypeProfile);
         return ResponseEntity.ok(entityModel);
     }
 
     /**
-     * Deletes a TypeProfile entity.
-     *
-     * @param pid the PID of the TypeProfile to delete
-     * @return no content
+     * {@inheritDoc}
      */
+    @Override
     @DeleteMapping("/{pid}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Delete a TypeProfile",
@@ -305,11 +330,9 @@ public class TypeProfileController {
     }
 
     /**
-     * Gets the inheritance tree of a TypeProfile.
-     *
-     * @param pid the PID of the TypeProfile
-     * @return the inheritance tree
+     * {@inheritDoc}
      */
+    @Override
     @GetMapping("/{pid}/inheritanceTree")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get inheritance tree of a TypeProfile",
@@ -363,6 +386,20 @@ public class TypeProfileController {
         node.add(linkTo(methodOn(TypeProfileController.class).getOperationsForTypeProfile(typeProfile.getPid())).withRel("operations"));
 
         return node;
+    }
+
+    /**
+     * Checks if a validation result contains errors based on the configured validation level.
+     *
+     * @param validationResult the validation result to check
+     * @return true if the validation result contains errors, false otherwise
+     */
+    private boolean hasValidationErrors(ValidationResult validationResult) {
+        return validationResult.getOutputMessages()
+                .entrySet()
+                .stream()
+                .anyMatch(entry -> entry.getKey().isHigherOrEqualTo(applicationProperties.getValidationLevel())
+                        && !entry.getValue().isEmpty());
     }
 
     public record TypeProfileInheritance(

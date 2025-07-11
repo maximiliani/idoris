@@ -19,4 +19,4 @@
  * This package contains service classes that implement business logic for domain entities.
  * These services use repositories for data access and publish domain events when entities change.
  */
-package edu.kit.datamanager.idoris.domain.services;
+package edu.kit.datamanager.idoris.services;

@@ -18,7 +18,7 @@ package edu.kit.datamanager.idoris.web.v1;
 
 import edu.kit.datamanager.idoris.domain.entities.Attribute;
 import edu.kit.datamanager.idoris.domain.entities.TechnologyInterface;
-import edu.kit.datamanager.idoris.domain.services.TechnologyInterfaceService;
+import edu.kit.datamanager.idoris.services.TechnologyInterfaceService;
 import edu.kit.datamanager.idoris.web.api.ITechnologyInterfaceApi;
 import edu.kit.datamanager.idoris.web.hateoas.AttributeModelAssembler;
 import edu.kit.datamanager.idoris.web.hateoas.TechnologyInterfaceModelAssembler;
@@ -42,7 +42,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
  * This controller provides endpoints for managing TechnologyInterface entities.
  */
 @RestController
-@RequestMapping("/api/technologyInterfaces")
+@RequestMapping("/v1/technologyInterfaces")
 public class TechnologyInterfaceController implements ITechnologyInterfaceApi {
 
     @Autowired

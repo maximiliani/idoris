@@ -81,7 +81,6 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-hateoas"
     implementation "org.springframework.boot:spring-boot-starter-validation"
     implementation "org.springframework:spring-web"
-    implementation 'org.springframework.data:spring-data-rest-hal-explorer'
     implementation "org.springframework.modulith:spring-modulith-starter-core"
     implementation "org.springframework.modulith:spring-modulith-starter-neo4j:${springModulithVersion}"
     implementation "org.springframework.modulith:spring-modulith-events-api:${springModulithVersion}"
