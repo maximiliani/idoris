@@ -17,7 +17,6 @@
 package edu.kit.datamanager.idoris.rules.logic;
 
 import edu.kit.datamanager.idoris.domain.VisitableElement;
-import edu.kit.datamanager.idoris.utils.annotations.RequiresInterface;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.*;
@@ -33,7 +32,6 @@ import java.lang.annotation.*;
 @Inherited
 @Documented
 @Component
-@RequiresInterface(RuleProcessor.class) // Ensures that the annotated class implements RuleProcessor
 public @interface Rule {
     /**
      * Specifies the types of elements this rule applies to.
@@ -48,25 +46,25 @@ public @interface Rule {
      * These processors can be used to prepare the input for the rule or to perform preliminary checks.
      * These processors can modify the input or output of the rule.
      *
-     * @return arrays of classes that implement RuleProcessor
+     * @return arrays of classes that implement IRuleProcessor
      */
-    Class<? extends RuleProcessor>[] dependsOn() default {};
+    Class<? extends IRuleProcessor>[] dependsOn() default {};
 
     /**
      * Specifies the processors that should be executed after the main rule processing.
      * This can be used for additional validation, transformation, or other post-processing tasks.
      *
-     * @return an array of classes that implement RuleProcessor
+     * @return an array of classes that implement IRuleProcessor
      */
-    Class<? extends RuleProcessor>[] executeBefore() default {};
+    Class<? extends IRuleProcessor>[] executeBefore() default {};
 
     /**
      * Specifies the processors that should be executed in case of an error during rule processing.
      * This can be used for error handling, logging, or alternative processing paths.
      *
-     * @return an array of classes that implement RuleProcessor
+     * @return an array of classes that implement IRuleProcessor
      */
-    Class<? extends RuleProcessor>[] onError() default {};
+    Class<? extends IRuleProcessor>[] onError() default {};
 
     /**
      * Specifies the events that trigger the execution of this rule.

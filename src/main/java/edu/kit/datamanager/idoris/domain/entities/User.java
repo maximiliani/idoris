@@ -24,7 +24,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -43,6 +45,7 @@ public abstract sealed class User implements Serializable permits ORCiDUser, Tex
     @CreatedDate
     Instant createdAt;
     @Id
+    @GeneratedValue(UUIDStringGenerator.class)
     private String internalId;
     private String type;
 }

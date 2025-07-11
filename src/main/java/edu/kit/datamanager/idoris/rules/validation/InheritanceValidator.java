@@ -1,0 +1,169 @@
+/*
+ * Copyright (c) 2024-2025 Karlsruhe Institute of Technology
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package edu.kit.datamanager.idoris.rules.validation;
+
+import edu.kit.datamanager.idoris.domain.VisitableElement;
+import edu.kit.datamanager.idoris.domain.entities.*;
+import edu.kit.datamanager.idoris.rules.logic.IRuleProcessor;
+import edu.kit.datamanager.idoris.rules.logic.Rule;
+import edu.kit.datamanager.idoris.rules.logic.RuleTask;
+import lombok.extern.slf4j.Slf4j;
+
+import static edu.kit.datamanager.idoris.rules.logic.OutputMessage.MessageSeverity.ERROR;
+
+
+/**
+ * Rule-based validator that checks inheritance constraints for entities.
+ * This validator ensures that inheritance relationships are valid and that
+ * inherited properties maintain consistency with parent entities.
+ */
+@Slf4j
+@Rule(
+        appliesTo = {
+                AtomicDataType.class,
+                Attribute.class,
+                AttributeMapping.class,
+                Operation.class,
+                OperationStep.class,
+                TechnologyInterface.class,
+                TypeProfile.class
+        },
+        name = "InheritanceValidationRule",
+        description = "Validates that entities properly follow inheritance rules and constraints",
+        tasks = {RuleTask.VALIDATE}
+)
+public class InheritanceValidator extends ValidationVisitor implements IRuleProcessor<VisitableElement, ValidationResult> {
+
+    /**
+     * Process method required by IRuleProcessor interface.
+     * Delegates to the appropriate validate method based on element type.
+     *
+     * @param input  the element to process
+     * @param output the output to update with processing results
+     */
+    @Override
+    public void process(VisitableElement input, ValidationResult output) {
+        ValidationResult result = input.execute(this);
+        output.merge(result);
+    }
+
+    /**
+     * Validates inheritance relationships for Attribute entities
+     *
+     * @param attribute The attribute to validate
+     * @return ValidationResult containing any validation errors
+     */
+    public ValidationResult validate(Attribute attribute) {
+        ValidationResult result = new ValidationResult();
+
+        if (attribute.getOverride() != null && attribute.getOverride().getDataType() != null) {
+            Attribute override = attribute.getOverride();
+
+            if (!attribute.getDataType().inheritsFrom(override.getDataType()))
+                result.addMessage("The data type of an attribute MUST be inherited from the data type of the attribute that was overwritten.",
+                        attribute, ERROR);
+
+            if (attribute.getLowerBoundCardinality() < override.getLowerBoundCardinality())
+                result.addMessage("The lower bound cardinality of an attribute MUST be more or equally restrictive than the lower bound cardinality of the attribute that was overwritten. Overriding a more restrictive attribute as a less restrictive attribute is NOT possible.",
+                        attribute, ERROR);
+
+            if (attribute.getUpperBoundCardinality() == null && override.getUpperBoundCardinality() != null) {
+                result.addMessage("The upper bound cardinality of an attribute MUST be defined if the attribute that was overwritten has an upper bound cardinality defined.",
+                        attribute, ERROR);
+            } else if (override.getUpperBoundCardinality() != null && attribute.getUpperBoundCardinality() > override.getUpperBoundCardinality())
+                result.addMessage("The upper bound cardinality of an attribute MUST be more or equally restrictive than the upper bound cardinality of the attribute that was overwritten. Overriding a less restrictive attribute as a more restrictive attribute is NOT possible.",
+                        attribute, ERROR);
+        }
+
+        return result;
+    }
+
+    /**
+     * Validates inheritance relationships for AtomicDataType entities
+     *
+     * @param atomicDataType The atomic data type to validate
+     * @return ValidationResult containing any validation errors
+     */
+    public ValidationResult validate(AtomicDataType atomicDataType) {
+        ValidationResult result = new ValidationResult();
+
+        AtomicDataType parent = atomicDataType.getInheritsFrom();
+        if (parent != null) {
+            if (!atomicDataType.getPrimitiveDataType().equals(parent.getPrimitiveDataType()))
+                result.addMessage("Primitive data type does not match parent", atomicDataType, ERROR);
+
+            // Compare permitted values with parent
+            if (parent.getPermittedValues() != null && parent.getPermittedValues().size() > 0) {
+                if (atomicDataType.getPermittedValues() == null || atomicDataType.getPermittedValues().isEmpty())
+                    result.addMessage("Permitted values are not defined for atomic data type, but should contain at least those defined by the parent",
+                            atomicDataType, ERROR);
+                else if (!atomicDataType.getPermittedValues().containsAll(parent.getPermittedValues()))
+                    result.addMessage("Permitted values do not match parent", atomicDataType, ERROR);
+            }
+
+            // Compare forbidden values with parent
+            if (parent.getForbiddenValues() != null && parent.getForbiddenValues().size() > 0) {
+                if (atomicDataType.getForbiddenValues() == null || atomicDataType.getForbiddenValues().isEmpty())
+                    result.addMessage("Forbidden values are not defined for atomic data type, but should contain at least those defined by the parent",
+                            atomicDataType, ERROR);
+                else if (!atomicDataType.getForbiddenValues().containsAll(parent.getForbiddenValues()))
+                    result.addMessage("Forbidden values do not match parent", atomicDataType, ERROR);
+            }
+
+            // Detect conflicts between permitted and forbidden values in atomic data type and parent
+            if (atomicDataType.getPermittedValues() != null && atomicDataType.getForbiddenValues() != null &&
+                    !atomicDataType.getPermittedValues().isEmpty() && !atomicDataType.getForbiddenValues().isEmpty() &&
+                    atomicDataType.getPermittedValues().stream().anyMatch(atomicDataType.getForbiddenValues()::contains)) {
+                result.addMessage("Atomic data type has conflicting permitted and forbidden values", atomicDataType, ERROR);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Validates inheritance relationships for TypeProfile entities
+     *
+     * @param typeProfile The type profile to validate
+     * @return ValidationResult containing any validation errors
+     */
+    public ValidationResult validate(TypeProfile typeProfile) {
+        ValidationResult result = new ValidationResult();
+
+        if (typeProfile.getInheritsFrom() != null && typeProfile.getInheritsFrom().size() > 0) {
+            for (TypeProfile parent : typeProfile.getInheritsFrom()) {
+                if (parent.isAbstract() && !typeProfile.isAbstract()) {
+                    result.addMessage("TypeProfile " + typeProfile.getPid() + " is not abstract, but inherits from the TypeProfile " +
+                            parent.getPid() + " that is abstract.", typeProfile, ERROR);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Default handler for any VisitableElement that doesn't have a specific validation method
+     *
+     * @param element The element to validate
+     * @return Empty ValidationResult as default
+     */
+    public ValidationResult validate(VisitableElement element) {
+        // Default implementation for other types
+        return new ValidationResult();
+    }
+}

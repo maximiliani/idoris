@@ -257,15 +257,25 @@ public class RuleService {
             T input,
             Supplier<R> resultSupplier
     ) {
+        log.debug("Starting rule processing for task={}, inputType={}, inputDetails={}",
+                task, input.getClass().getSimpleName(), input);
+
         List<RuleNode> applicableRules = getRulesForTaskAndType(task, input.getClass());
 
         if (applicableRules.isEmpty()) {
-            log.debug("No rules found for task {} and element type {}", task, input.getClass().getSimpleName());
+            log.debug("No rules found for task={} and element type={}", task, input.getClass().getSimpleName());
             return resultSupplier.get();
         }
 
-        log.debug("Processing {} rules for task {} and element type {}",
+        log.debug("Found {} applicable rules for task={} and element type={}",
                 applicableRules.size(), task, input.getClass().getSimpleName());
+
+        // Log each applicable rule for debugging
+        applicableRules.forEach(rule -> {
+            log.debug("Will execute rule: {}, dependencies: {}",
+                    rule.instance().getClass().getSimpleName(),
+                    Arrays.toString(rule.annotation().dependsOn()));
+        });
 
         return executeRulesAsync(applicableRules, input, resultSupplier);
     }
@@ -334,23 +344,46 @@ public class RuleService {
             T input,
             Supplier<R> resultSupplier
     ) {
+        log.debug("Scheduling execution for rule {}", ruleClass.getSimpleName());
+
         return executionFutures.computeIfAbsent(ruleClass, rc -> {
+            log.debug("Rule {} not yet scheduled, computing dependencies", rc.getSimpleName());
+
+            // Get and log dependencies
+            List<Class<?>> dependencies = dependencyGraph.getOrDefault(rc, Collections.emptyList());
+            if (dependencies.isEmpty()) {
+                log.debug("Rule {} has no dependencies", rc.getSimpleName());
+            } else {
+                log.debug("Rule {} has {} dependencies: {}",
+                        rc.getSimpleName(),
+                        dependencies.size(),
+                        dependencies.stream().map(Class::getSimpleName).collect(Collectors.joining(", ")));
+            }
+
             // Schedule all dependencies first
-            List<CompletableFuture<R>> dependencyFutures = dependencyGraph
-                    .getOrDefault(rc, Collections.emptyList())
+            List<CompletableFuture<R>> dependencyFutures = dependencies
                     .stream()
-                    .map(dependencyClass -> scheduleRuleExecution(
-                            dependencyClass, dependencyGraph, ruleNodeMap, executionFutures, input, resultSupplier))
+                    .map(dependencyClass -> {
+                        log.debug("Scheduling dependency {} for rule {}",
+                                dependencyClass.getSimpleName(), rc.getSimpleName());
+                        return scheduleRuleExecution(
+                                dependencyClass, dependencyGraph, ruleNodeMap, executionFutures, input, resultSupplier);
+                    })
                     .toList();
+
+            log.debug("All dependencies for rule {} have been scheduled", rc.getSimpleName());
 
             // Execute rule after all dependencies complete
             return CompletableFuture
                     .allOf(dependencyFutures.toArray(CompletableFuture[]::new))
-                    .thenApplyAsync(ignored -> executeRuleWithDependencies(
-                            ruleClass, dependencyFutures, ruleNodeMap, input, resultSupplier))
+                    .thenApplyAsync(ignored -> {
+                        log.debug("All dependencies for rule {} completed, executing rule", rc.getSimpleName());
+                        return executeRuleWithDependencies(rc, dependencyFutures, ruleNodeMap, input, resultSupplier);
+                    })
                     .exceptionally(throwable -> {
-                        log.error("Error executing rule {}", ruleClass.getSimpleName(), throwable);
-                        throw new RuntimeException("Rule execution failed for " + ruleClass.getSimpleName(), throwable);
+                        log.error("Error executing rule {}: {}", rc.getSimpleName(), throwable.getMessage());
+                        log.error("Error executing rule {}", rc.getSimpleName(), throwable);
+                        throw new RuntimeException("Rule execution failed for " + rc.getSimpleName(), throwable);
                     });
         });
     }
@@ -365,21 +398,55 @@ public class RuleService {
             T input,
             Supplier<R> resultSupplier
     ) {
+        log.debug("Starting execution of rule {}", ruleClass.getSimpleName());
+
+        // Log dependency information
+        log.debug("Rule {} has {} dependencies", ruleClass.getSimpleName(), dependencyFutures.size());
+
         // Merge dependency results
         R aggregatedResult = mergeResults(dependencyFutures, resultSupplier);
+        log.debug("Merged dependency results for rule {}, result before execution: {}",
+                ruleClass.getSimpleName(), aggregatedResult);
 
         // Execute the rule itself
         RuleNode ruleNode = ruleNodeMap.get(ruleClass);
         if (ruleNode != null) {
             try {
+                log.debug("Executing rule {} with input {}", ruleClass.getSimpleName(), input);
+
                 @SuppressWarnings("unchecked")
-                RuleProcessor<T, R> processor = (RuleProcessor<T, R>) ruleNode.instance();
+                IRuleProcessor<T, R> processor = (IRuleProcessor<T, R>) ruleNode.instance();
+
+                // Capture result state before processing
+                R beforeResult = null;
+                if (aggregatedResult instanceof Cloneable) {
+                    try {
+                        beforeResult = (R) aggregatedResult.getClass().getMethod("clone").invoke(aggregatedResult);
+                    } catch (Exception e) {
+                        log.debug("Couldn't clone result for comparison: {}", e.getMessage());
+                    }
+                }
+
+                // Execute the rule
                 processor.process(input, aggregatedResult);
+
+                // Log detailed result after processing
+                if (beforeResult != null) {
+                    log.debug("Rule {} result changed from {} to {}",
+                            ruleClass.getSimpleName(), beforeResult, aggregatedResult);
+                } else {
+                    log.debug("Rule {} execution completed, result: {}",
+                            ruleClass.getSimpleName(), aggregatedResult);
+                }
+
                 log.debug("Successfully executed rule {}", ruleClass.getSimpleName());
             } catch (Exception e) {
+                log.error("Error in rule execution for {}: {}", ruleClass.getSimpleName(), e.getMessage());
                 log.error("Error in rule execution for {}", ruleClass.getSimpleName(), e);
                 throw new RuntimeException("Rule execution failed", e);
             }
+        } else {
+            log.warn("Rule node for class {} not found in rule node map", ruleClass.getSimpleName());
         }
 
         return aggregatedResult;
@@ -390,24 +457,49 @@ public class RuleService {
      * Properly handles the generic types to avoid unchecked warnings.
      */
     private <R extends RuleOutput<R>> R mergeResults(Collection<CompletableFuture<R>> futures, Supplier<R> resultSupplier) {
+        log.debug("Merging {} future results", futures.size());
+
+        R initialResult = resultSupplier.get();
+        log.debug("Initial result before merging: {}", initialResult);
+
+        if (futures.isEmpty()) {
+            log.debug("No futures to merge, returning initial result");
+            return initialResult;
+        }
+
         return futures.stream()
                 .map(future -> {
                     try {
-                        return future.join();
+                        R result = future.join();
+                        log.debug("Joined future result: {}", result);
+                        return result;
                     } catch (Exception e) {
+                        log.error("Error joining future result: {}", e.getMessage());
                         log.error("Error joining future result", e);
                         throw new RuntimeException("Failed to merge rule results", e);
                     }
                 })
-                .reduce(resultSupplier.get(), (accumulator, result) -> {
+                .reduce(initialResult, (accumulator, result) -> {
                     try {
+                        log.debug("Merging result: {}\ninto accumulator: {}", result, accumulator);
+
                         if (result == null) {
+                            log.debug("Result is null, skipping merge");
                             return accumulator; // Skip null results
                         }
-                        return accumulator;
+
+                        // Fix for ClassCastException: Use individual result objects rather than an array
+                        // The merge method expects an array of the correct type, but we only have a single result here
+                        @SuppressWarnings("unchecked")
+                        R mergedResult = accumulator.merge(result);
+                        log.debug("After merge: {}", mergedResult);
+                        return mergedResult;
                     } catch (Exception e) {
+                        log.error("Error merging rule results: {}", e.getMessage());
                         log.error("Error merging rule results", e);
-                        throw new RuntimeException("Failed to merge rule results", e);
+                        // Instead of failing, return the accumulator and continue processing
+                        log.warn("Continuing with unmerged results due to error");
+                        return accumulator;
                     }
                 });
     }

@@ -15,14 +15,14 @@
  */
 package edu.kit.datamanager.idoris.configuration;
 
-import edu.kit.datamanager.idoris.validators.ValidationMessage;
+import edu.kit.datamanager.idoris.rules.logic.OutputMessage;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.annotation.Validated;
 
-import static edu.kit.datamanager.idoris.validators.ValidationMessage.MessageSeverity.INFO;
+import static edu.kit.datamanager.idoris.rules.logic.OutputMessage.MessageSeverity.INFO;
 
 /**
  * This class is used to configure the application.
@@ -38,7 +38,7 @@ public class ApplicationProperties {
     /**
      * The base URL of the IDORIS service, used in e.g., the PID records.
      */
-    @Value("${idoris.base-url:#{null}")
+    @Value("${idoris.base-url")
     @NotNull(message = "Base URL is required")
     private String baseUrl;
 
@@ -54,11 +54,11 @@ public class ApplicationProperties {
     /**
      * The lowest severity level that is shown to the user.
      *
-     * @see ValidationMessage.MessageSeverity
+     * @see OutputMessage.MessageSeverity
      */
     @Value("${idoris.validation-level:INFO}")
     @NotNull
-    private ValidationMessage.MessageSeverity validationLevel = INFO;
+    private OutputMessage.MessageSeverity validationLevel = INFO;
 
     /**
      * The PID generation strategy to use.
@@ -72,7 +72,7 @@ public class ApplicationProperties {
      * @see PIDGeneration
      * @see TypedPIDMakerConfig
      */
-    @Value("${idoris.pid-generation:LOCAL}")
+    @Value("${idoris.pid-generation}")
     @NotNull
     private PIDGeneration pidGeneration = PIDGeneration.LOCAL;
 

@@ -17,7 +17,8 @@
 package edu.kit.datamanager.idoris.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import edu.kit.datamanager.idoris.visitors.Visitor;
+import edu.kit.datamanager.idoris.rules.logic.RuleOutput;
+import edu.kit.datamanager.idoris.rules.logic.Visitor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -46,7 +47,7 @@ public abstract class VisitableElement {
     @GeneratedValue(UUIDStringGenerator.class)
     private String internalId;
 
-    public <T> T execute(Visitor<T> visitor, Object... args) {
+    public <T extends RuleOutput<T>> T execute(Visitor<T> visitor, Object... args) {
 //        if (isVisitedBy(visitor)) {
 //            LOG.info("Class {} already visited by visitor {}. ABORTING!", this.getClass().getName(), visitor.getClass().getName());
 //            return null;
@@ -57,7 +58,7 @@ public abstract class VisitableElement {
 //        }
     }
 
-    protected abstract <T> T accept(Visitor<T> visitor, Object... args);
+    protected abstract <T extends RuleOutput<T>> T accept(Visitor<T> visitor, Object... args);
 
     public Instant wasVisistedBy(Visitor<?> visitor) {
         return visitedBy.get(visitor.getClass().getName());

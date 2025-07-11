@@ -17,7 +17,8 @@
 package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.enums.CombinationOptions;
-import edu.kit.datamanager.idoris.visitors.Visitor;
+import edu.kit.datamanager.idoris.rules.logic.RuleOutput;
+import edu.kit.datamanager.idoris.rules.logic.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -46,7 +47,7 @@ public final class TypeProfile extends DataType {
     private CombinationOptions validationPolicy = CombinationOptions.ALL;
 
     @Override
-    protected <T> T accept(Visitor<T> visitor, Object... args) {
+    protected <T extends RuleOutput<T>> T accept(Visitor<T> visitor, Object... args) {
         return visitor.visit(this, args);
     }
 

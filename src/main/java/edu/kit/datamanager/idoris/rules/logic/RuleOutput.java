@@ -16,6 +16,7 @@
 
 package edu.kit.datamanager.idoris.rules.logic;
 
+
 public interface RuleOutput<T extends RuleOutput<T>> {
 
     /**
@@ -23,9 +24,35 @@ public interface RuleOutput<T extends RuleOutput<T>> {
      * This method should be implemented to define how outputs are combined.
      *
      * @param others the other outputs to merge with
+     * @return the merged output
      */
-    @SuppressWarnings("unchecked")
-    default void merge(T... others) {
-        throw new UnsupportedOperationException("Implement me");
+    T merge(T... others);
+
+    /**
+     * Generates an empty output of the same type.
+     * This method should be implemented to create a new instance of the output type.
+     *
+     * @return a new empty instance of the same type
+     */
+    T empty();
+
+    /**
+     * Adds a message to the output with additional elements.
+     *
+     * @param message  the message to add
+     * @param severity the severity of the message
+     * @param elements additional elements related to the message
+     * @return the updated output with the added message
+     */
+    default T addMessage(String message, OutputMessage.MessageSeverity severity, Object... elements) {
+        return addMessage(new OutputMessage(message, severity, elements));
     }
+
+    /**
+     * Adds a message to the output.
+     *
+     * @param message the message to add
+     * @return the updated output with the added message
+     */
+    T addMessage(OutputMessage message);
 }

@@ -17,7 +17,8 @@
 package edu.kit.datamanager.idoris.domain.entities;
 
 import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
-import edu.kit.datamanager.idoris.visitors.Visitor;
+import edu.kit.datamanager.idoris.rules.logic.RuleOutput;
+import edu.kit.datamanager.idoris.rules.logic.Visitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +44,7 @@ public class TechnologyInterface extends GenericIDORISEntity {
     private Set<String> adapters = Set.of();
 
     @Override
-    protected <T> T accept(Visitor<T> visitor, Object... args) {
+    protected <T extends RuleOutput<T>> T accept(Visitor<T> visitor, Object... args) {
         return visitor.visit(this, args);
     }
 }
