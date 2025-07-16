@@ -30,7 +30,7 @@ package edu.kit.datamanager.idoris.rules.validation;
  * need validation capabilities.</p>
  */
 
-import edu.kit.datamanager.idoris.domain.VisitableElement;
+import edu.kit.datamanager.idoris.core.domain.VisitableElement;
 import edu.kit.datamanager.idoris.rules.logic.IRule;
 import edu.kit.datamanager.idoris.rules.logic.Visitor;
 

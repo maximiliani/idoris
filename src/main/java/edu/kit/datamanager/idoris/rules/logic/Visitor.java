@@ -16,8 +16,13 @@
 
 package edu.kit.datamanager.idoris.rules.logic;
 
-import edu.kit.datamanager.idoris.domain.VisitableElement;
-import edu.kit.datamanager.idoris.domain.entities.*;
+import edu.kit.datamanager.idoris.attributes.entities.Attribute;
+import edu.kit.datamanager.idoris.datatypes.entities.AtomicDataType;
+import edu.kit.datamanager.idoris.datatypes.entities.TypeProfile;
+import edu.kit.datamanager.idoris.operations.entities.AttributeMapping;
+import edu.kit.datamanager.idoris.operations.entities.Operation;
+import edu.kit.datamanager.idoris.operations.entities.OperationStep;
+import edu.kit.datamanager.idoris.technologyinterfaces.entities.TechnologyInterface;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -81,6 +86,7 @@ public abstract class Visitor<T extends RuleOutput<T>> {
     public T visit(Attribute attribute, Object... args) {
         return notAllowed(attribute);
     }
+
 
     /**
      * Visits an AttributeMapping element and processes it.

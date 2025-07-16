@@ -16,7 +16,7 @@
 
 package edu.kit.datamanager.idoris.core.events;
 
-import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
+import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -45,13 +45,13 @@ public class EventPublisherService {
      * @param entity the newly created entity
      * @param <T>    the type of entity
      */
-    public <T extends GenericIDORISEntity> void publishEntityCreated(T entity) {
+    public <T extends AdministrativeMetadata> void publishEntityCreated(T entity) {
         log.debug("Publishing EntityCreatedEvent for entity: {}", entity);
         eventPublisher.publishEvent(new EntityCreatedEvent<>(entity));
     }
 
     /**
-     * Publishes an entity created event for non-GenericIDORISEntity entities.
+     * Publishes an entity created event for non-AdministrativeMetadata entities.
      *
      * @param entity     the newly created entity
      * @param entityType the type identifier for the entity
@@ -68,13 +68,13 @@ public class EventPublisherService {
      * @param previousVersion the version of the entity before the update
      * @param <T>             the type of entity
      */
-    public <T extends GenericIDORISEntity> void publishEntityUpdated(T entity, Long previousVersion) {
+    public <T extends AdministrativeMetadata> void publishEntityUpdated(T entity, Long previousVersion) {
         log.debug("Publishing EntityUpdatedEvent for entity: {}, previous version: {}", entity, previousVersion);
         eventPublisher.publishEvent(new EntityUpdatedEvent<>(entity, previousVersion));
     }
 
     /**
-     * Publishes an entity updated event for non-GenericIDORISEntity entities.
+     * Publishes an entity updated event for non-AdministrativeMetadata entities.
      *
      * @param entity     the updated entity
      * @param entityType the type identifier for the entity
@@ -90,13 +90,13 @@ public class EventPublisherService {
      * @param entity the deleted entity
      * @param <T>    the type of entity
      */
-    public <T extends GenericIDORISEntity> void publishEntityDeleted(T entity) {
+    public <T extends AdministrativeMetadata> void publishEntityDeleted(T entity) {
         log.debug("Publishing EntityDeletedEvent for entity: {}", entity);
         eventPublisher.publishEvent(new EntityDeletedEvent<>(entity));
     }
 
     /**
-     * Publishes an entity deleted event for non-GenericIDORISEntity entities.
+     * Publishes an entity deleted event for non-AdministrativeMetadata entities.
      *
      * @param entity     the deleted entity
      * @param entityType the type identifier for the entity
@@ -114,7 +114,7 @@ public class EventPublisherService {
      * @param isNewPID indicates whether this is a newly generated PID or an existing one
      * @param <T>      the type of entity
      */
-    public <T extends GenericIDORISEntity> void publishPIDGenerated(T entity, String pid, boolean isNewPID) {
+    public <T extends AdministrativeMetadata> void publishPIDGenerated(T entity, String pid, boolean isNewPID) {
         log.debug("Publishing PIDGeneratedEvent for entity: {}, PID: {}, isNewPID: {}", entity, pid, isNewPID);
         eventPublisher.publishEvent(new PIDGeneratedEvent<>(entity, pid, isNewPID));
     }
@@ -127,8 +127,31 @@ public class EventPublisherService {
      * @param pid    the generated PID
      * @param <T>    the type of entity
      */
-    public <T extends GenericIDORISEntity> void publishPIDGenerated(T entity, String pid) {
+    public <T extends AdministrativeMetadata> void publishPIDGenerated(T entity, String pid) {
         publishPIDGenerated(entity, pid, true);
+    }
+
+    /**
+     * Publishes an entity patched event.
+     *
+     * @param entity          the patched entity
+     * @param previousVersion the version of the entity before the patch
+     * @param <T>             the type of entity
+     */
+    public <T extends AdministrativeMetadata> void publishEntityPatched(T entity, Long previousVersion) {
+        log.debug("Publishing EntityPatchedEvent for entity: {}, previous version: {}", entity, previousVersion);
+        eventPublisher.publishEvent(new EntityPatchedEvent<>(entity, previousVersion));
+    }
+
+    /**
+     * Publishes an entity patched event for non-AdministrativeMetadata entities.
+     *
+     * @param entity     the patched entity
+     * @param entityType the type identifier for the entity
+     */
+    public void publishEntityPatched(Object entity, String entityType) {
+        log.debug("Publishing EntityPatchedEvent for entity: {}, type: {}", entity, entityType);
+        eventPublisher.publishEvent(new GenericEntityPatchedEvent(entity, entityType));
     }
 
     /**

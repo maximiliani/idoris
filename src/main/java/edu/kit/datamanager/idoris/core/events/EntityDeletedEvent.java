@@ -16,7 +16,7 @@
 
 package edu.kit.datamanager.idoris.core.events;
 
-import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
+import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -25,11 +25,11 @@ import lombok.ToString;
  * This event carries the deleted entity and can be used by listeners
  * to perform additional operations like cleanup, notification, etc.
  *
- * @param <T> the type of entity that was deleted, must extend GenericIDORISEntity
+ * @param <T> the type of entity that was deleted, must extend AdministrativeMetadata
  */
 @Getter
 @ToString(callSuper = true)
-public class EntityDeletedEvent<T extends GenericIDORISEntity> extends AbstractDomainEvent {
+public class EntityDeletedEvent<T extends AdministrativeMetadata> extends AbstractDomainEvent {
     private final T entity;
     private final String entityType;
     private final String entityPid;

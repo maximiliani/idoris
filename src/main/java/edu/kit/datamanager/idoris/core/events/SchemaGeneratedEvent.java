@@ -16,7 +16,7 @@
 
 package edu.kit.datamanager.idoris.core.events;
 
-import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
+import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -28,7 +28,7 @@ import lombok.ToString;
 @Getter
 @ToString(callSuper = true)
 public class SchemaGeneratedEvent extends AbstractDomainEvent {
-    private final GenericIDORISEntity entity;
+    private final AdministrativeMetadata entity;
     private final String schemaFormat;
     private final String schemaContent;
     private final boolean isValid;
@@ -41,7 +41,7 @@ public class SchemaGeneratedEvent extends AbstractDomainEvent {
      * @param schemaContent the content of the schema
      * @param isValid       indicates whether the schema is valid
      */
-    public SchemaGeneratedEvent(GenericIDORISEntity entity, String schemaFormat, String schemaContent, boolean isValid) {
+    public SchemaGeneratedEvent(AdministrativeMetadata entity, String schemaFormat, String schemaContent, boolean isValid) {
         this.entity = entity;
         this.schemaFormat = schemaFormat;
         this.schemaContent = schemaContent;
@@ -53,7 +53,7 @@ public class SchemaGeneratedEvent extends AbstractDomainEvent {
      *
      * @return the entity
      */
-    public GenericIDORISEntity getEntity() {
+    public AdministrativeMetadata getEntity() {
         return entity;
     }
 

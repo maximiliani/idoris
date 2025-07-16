@@ -16,7 +16,7 @@
 
 package edu.kit.datamanager.idoris.core.events;
 
-import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
+import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -27,11 +27,11 @@ import java.util.Map;
  * This event carries the current entity, the previous version, and change information.
  * It can be used by listeners to perform additional operations like version tracking, notification, or audit logging.
  *
- * @param <T> the type of entity that was versioned, must extend GenericIDORISEntity
+ * @param <T> the type of entity that was versioned, must extend AdministrativeMetadata
  */
 @Getter
 @ToString(callSuper = true)
-public class VersionCreatedEvent<T extends GenericIDORISEntity> extends AbstractDomainEvent {
+public class VersionCreatedEvent<T extends AdministrativeMetadata> extends AbstractDomainEvent {
     private final T currentEntity;
     private final T previousEntity;
     private final Long previousVersion;

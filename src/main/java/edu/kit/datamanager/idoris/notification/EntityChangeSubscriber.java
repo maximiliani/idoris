@@ -16,7 +16,7 @@
 
 package edu.kit.datamanager.idoris.notification;
 
-import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
+import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
 
 /**
  * Interface for subscribers that want to be notified of entity changes.
@@ -30,7 +30,7 @@ public interface EntityChangeSubscriber {
      *
      * @param entity the created entity
      */
-    void onEntityCreated(GenericIDORISEntity entity);
+    void onEntityCreated(AdministrativeMetadata entity);
 
     /**
      * Called when an entity is updated.
@@ -38,12 +38,12 @@ public interface EntityChangeSubscriber {
      * @param entity          the updated entity
      * @param previousVersion the version of the entity before the update
      */
-    void onEntityUpdated(GenericIDORISEntity entity, Long previousVersion);
+    void onEntityUpdated(AdministrativeMetadata entity, Long previousVersion);
 
     /**
      * Called when an entity is deleted.
      *
      * @param entity the deleted entity
      */
-    void onEntityDeleted(GenericIDORISEntity entity);
+    void onEntityDeleted(AdministrativeMetadata entity);
 }

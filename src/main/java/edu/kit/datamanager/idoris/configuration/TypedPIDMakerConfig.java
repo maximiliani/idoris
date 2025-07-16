@@ -38,14 +38,14 @@ import org.springframework.validation.annotation.Validated;
 @Setter
 public class TypedPIDMakerConfig {
     /**
-     * Put metadata of the GenericIDORISEntity into the PID record.
+     * Put metadata of the AdministrativeMetadata into the PID record.
      *
      * @see edu.kit.datamanager.idoris.domain.GenericIDORISEntity
      */
     private boolean meaningfulPIDRecords = true;
 
     /**
-     * Update existing PID records with the latest metadata from the GenericIDORISEntity.
+     * Update existing PID records with the latest metadata from the AdministrativeMetadata.
      * If set to false, existing PID records will not be updated,
      * but new records will still be created with the latest metadata.
      */

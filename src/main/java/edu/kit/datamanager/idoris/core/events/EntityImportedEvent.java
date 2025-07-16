@@ -16,7 +16,7 @@
 
 package edu.kit.datamanager.idoris.core.events;
 
-import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
+import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -25,11 +25,11 @@ import lombok.ToString;
  * This event carries the imported entity, the source system, and import metadata.
  * It can be used by listeners to perform additional operations like validation, enrichment, or notification.
  *
- * @param <T> the type of entity that was imported, must extend GenericIDORISEntity
+ * @param <T> the type of entity that was imported, must extend AdministrativeMetadata
  */
 @Getter
 @ToString(callSuper = true)
-public class EntityImportedEvent<T extends GenericIDORISEntity> extends AbstractDomainEvent {
+public class EntityImportedEvent<T extends AdministrativeMetadata> extends AbstractDomainEvent {
     private final T entity;
     private final String sourceSystem;
     private final String sourceIdentifier;

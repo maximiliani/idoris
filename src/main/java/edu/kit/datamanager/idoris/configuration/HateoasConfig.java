@@ -16,11 +16,11 @@
 
 package edu.kit.datamanager.idoris.configuration;
 
-import edu.kit.datamanager.idoris.domain.entities.AtomicDataType;
-import edu.kit.datamanager.idoris.domain.entities.DataType;
-import edu.kit.datamanager.idoris.domain.entities.TypeProfile;
-import edu.kit.datamanager.idoris.web.v1.AtomicDataTypeController;
-import edu.kit.datamanager.idoris.web.v1.TypeProfileController;
+import edu.kit.datamanager.idoris.datatypes.entities.AtomicDataType;
+import edu.kit.datamanager.idoris.datatypes.entities.DataType;
+import edu.kit.datamanager.idoris.datatypes.entities.TypeProfile;
+import edu.kit.datamanager.idoris.datatypes.web.v1.AtomicDataTypeController;
+import edu.kit.datamanager.idoris.datatypes.web.v1.TypeProfileController;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.hateoas.EntityModel;

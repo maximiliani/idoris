@@ -16,12 +16,19 @@
 
 package edu.kit.datamanager.idoris.rules.validation;
 
-import edu.kit.datamanager.idoris.domain.entities.*;
-import edu.kit.datamanager.idoris.domain.enums.CombinationOptions;
-import edu.kit.datamanager.idoris.domain.enums.ExecutionMode;
-import edu.kit.datamanager.idoris.domain.enums.PrimitiveDataTypes;
+import edu.kit.datamanager.idoris.attributes.entities.Attribute;
+import edu.kit.datamanager.idoris.core.domain.enums.CombinationOptions;
+import edu.kit.datamanager.idoris.datatypes.entities.AtomicDataType;
+import edu.kit.datamanager.idoris.datatypes.entities.DataType;
+import edu.kit.datamanager.idoris.datatypes.entities.TypeProfile;
+import edu.kit.datamanager.idoris.datatypes.enums.PrimitiveDataTypes;
+import edu.kit.datamanager.idoris.operations.entities.AttributeMapping;
+import edu.kit.datamanager.idoris.operations.entities.Operation;
+import edu.kit.datamanager.idoris.operations.entities.OperationStep;
+import edu.kit.datamanager.idoris.operations.entities.enums.ExecutionMode;
 import edu.kit.datamanager.idoris.rules.logic.Rule;
 import edu.kit.datamanager.idoris.rules.logic.RuleTask;
+import edu.kit.datamanager.idoris.technologyinterfaces.entities.TechnologyInterface;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;

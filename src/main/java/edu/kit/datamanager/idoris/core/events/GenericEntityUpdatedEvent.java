@@ -21,7 +21,7 @@ import lombok.ToString;
 
 /**
  * Event that is published when an entity is updated in the system.
- * This event is for entities that don't extend GenericIDORISEntity.
+ * This event is for entities that don't extend AdministrativeMetadata.
  */
 @Getter
 @ToString(callSuper = true)

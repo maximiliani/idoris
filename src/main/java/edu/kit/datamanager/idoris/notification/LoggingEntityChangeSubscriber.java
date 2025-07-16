@@ -16,7 +16,7 @@
 
 package edu.kit.datamanager.idoris.notification;
 
-import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
+import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -36,7 +36,7 @@ public class LoggingEntityChangeSubscriber implements EntityChangeSubscriber {
      * @param entity the created entity
      */
     @Override
-    public void onEntityCreated(GenericIDORISEntity entity) {
+    public void onEntityCreated(AdministrativeMetadata entity) {
         log.info("Entity created: type={}, pid={}, name={}",
                 entity.getClass().getSimpleName(),
                 entity.getPid(),
@@ -51,7 +51,7 @@ public class LoggingEntityChangeSubscriber implements EntityChangeSubscriber {
      * @param previousVersion the version of the entity before the update
      */
     @Override
-    public void onEntityUpdated(GenericIDORISEntity entity, Long previousVersion) {
+    public void onEntityUpdated(AdministrativeMetadata entity, Long previousVersion) {
         log.info("Entity updated: type={}, pid={}, name={}, previousVersion={}, newVersion={}",
                 entity.getClass().getSimpleName(),
                 entity.getPid(),
@@ -67,7 +67,7 @@ public class LoggingEntityChangeSubscriber implements EntityChangeSubscriber {
      * @param entity the deleted entity
      */
     @Override
-    public void onEntityDeleted(GenericIDORISEntity entity) {
+    public void onEntityDeleted(AdministrativeMetadata entity) {
         log.info("Entity deleted: type={}, pid={}, name={}",
                 entity.getClass().getSimpleName(),
                 entity.getPid(),

@@ -4,18 +4,6 @@
 
 IDORIS is an **Integrated Data Type and Operations Registry with Inheritance System**.
 
-## Cloning this repository
-
-This repository includes files that are stored using Git LFS.
-Please install Git LFS before cloning this repository.
-For more information, see https://git-lfs.com/.
-Then execute the following command to clone this repository:
-
-```
-git lfs install
-git lfs clone https://github.com/maximiliani/idoris.git
-```
-
 ## Installation of Neo4j
 
 IDORIS relies on the Neo4j graph database.
@@ -76,17 +64,6 @@ You can access the IDORIS API at http://localhost:8095/api.
 ## Architecture
 
 IDORIS is built using Spring Boot and follows a modular, event-driven architecture using Spring Modulith.
-
-### Event-Based Architecture
-
-IDORIS uses an event-based architecture to decouple components and improve maintainability. Key events include:
-
-- EntityCreatedEvent: Published when a new entity is created
-- EntityUpdatedEvent: Published when an entity is updated
-- EntityDeletedEvent: Published when an entity is deleted
-- PIDGeneratedEvent: Published when a PID is generated for an entity
-
-For more details, see [event-based-architecture.md](event-based-architecture.md).
 
 ### API Documentation
 

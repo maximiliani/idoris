@@ -16,7 +16,7 @@
 
 package edu.kit.datamanager.idoris.configuration;
 
-import edu.kit.datamanager.idoris.domain.VisitableElement;
+import edu.kit.datamanager.idoris.core.domain.VisitableElement;
 import edu.kit.datamanager.idoris.rules.logic.OutputMessage;
 import edu.kit.datamanager.idoris.rules.logic.RuleService;
 import edu.kit.datamanager.idoris.rules.logic.RuleTask;

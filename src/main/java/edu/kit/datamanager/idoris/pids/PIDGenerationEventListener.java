@@ -16,9 +16,9 @@
 
 package edu.kit.datamanager.idoris.pids;
 
+import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
 import edu.kit.datamanager.idoris.core.events.EntityCreatedEvent;
 import edu.kit.datamanager.idoris.core.events.EventPublisherService;
-import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -55,8 +55,8 @@ public class PIDGenerationEventListener {
      */
     @EventListener
     @Transactional
-    public void handleEntityCreatedEvent(EntityCreatedEvent<GenericIDORISEntity> event) {
-        GenericIDORISEntity entity = event.getEntity();
+    public void handleEntityCreatedEvent(EntityCreatedEvent<AdministrativeMetadata> event) {
+        AdministrativeMetadata entity = event.getEntity();
         log.debug("Handling EntityCreatedEvent for entity: {}", entity);
 
         if (entity.getPid() == null || entity.getPid().isEmpty()) {

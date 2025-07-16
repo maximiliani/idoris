@@ -17,7 +17,7 @@
 package edu.kit.datamanager.idoris.pids;
 
 import edu.kit.datamanager.idoris.configuration.ApplicationProperties;
-import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
+import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -50,7 +50,7 @@ public class ConfigurablePIDGenerator implements IdGenerator<String> {
      * @param primaryLabel The primary label of the entity.
      * @param entity       The entity for which the PID is generated.
      * @return A generated PID as a String.
-     * @throws IllegalArgumentException if the primary label is null or empty, or if the entity is not an instance of GenericIDORISEntity.
+     * @throws IllegalArgumentException if the primary label is null or empty, or if the entity is not an instance of AdministrativeMetadata.
      * @throws IllegalStateException    if the configured PID generation strategy is not available.
      */
     @Override
@@ -68,9 +68,9 @@ public class ConfigurablePIDGenerator implements IdGenerator<String> {
             log.error("Primary label is null or empty");
             throw new IllegalArgumentException("Primary label must not be null or empty.");
         }
-        if (!(entity instanceof GenericIDORISEntity)) {
-            log.error("Entity is null or not an instance of GenericIDORISEntity");
-            throw new IllegalArgumentException("Entity must be a non-null instance of GenericIDORISEntity.");
+        if (!(entity instanceof AdministrativeMetadata)) {
+            log.error("Entity is null or not an instance of AdministrativeMetadata");
+            throw new IllegalArgumentException("Entity must be a non-null instance of AdministrativeMetadata.");
         }
 
         switch (strategy) {

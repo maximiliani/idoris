@@ -16,7 +16,7 @@
 
 package edu.kit.datamanager.idoris.core.events;
 
-import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
+import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -25,11 +25,11 @@ import lombok.ToString;
  * This event carries the entity and the generated PID, and can be used by listeners
  * to perform additional operations like PID record creation, indexing, etc.
  *
- * @param <T> the type of entity for which the PID was generated, must extend GenericIDORISEntity
+ * @param <T> the type of entity for which the PID was generated, must extend AdministrativeMetadata
  */
 @Getter
 @ToString(callSuper = true)
-public class PIDGeneratedEvent<T extends GenericIDORISEntity> extends AbstractDomainEvent {
+public class PIDGeneratedEvent<T extends AdministrativeMetadata> extends AbstractDomainEvent {
     private final T entity;
     private final String pid;
     private final boolean isNewPID;

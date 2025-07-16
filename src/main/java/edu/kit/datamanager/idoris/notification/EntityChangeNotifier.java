@@ -16,10 +16,10 @@
 
 package edu.kit.datamanager.idoris.notification;
 
+import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
 import edu.kit.datamanager.idoris.core.events.EntityCreatedEvent;
 import edu.kit.datamanager.idoris.core.events.EntityDeletedEvent;
 import edu.kit.datamanager.idoris.core.events.EntityUpdatedEvent;
-import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -100,8 +100,8 @@ public class EntityChangeNotifier {
      * @param event the entity created event
      */
     @EventListener
-    public void handleEntityCreated(EntityCreatedEvent<GenericIDORISEntity> event) {
-        GenericIDORISEntity entity = event.getEntity();
+    public void handleEntityCreated(EntityCreatedEvent<AdministrativeMetadata> event) {
+        AdministrativeMetadata entity = event.getEntity();
         String entityType = entity.getClass().getSimpleName();
         String entityPid = entity.getPid();
 
@@ -141,8 +141,8 @@ public class EntityChangeNotifier {
      * @param event the entity updated event
      */
     @EventListener
-    public void handleEntityUpdated(EntityUpdatedEvent<GenericIDORISEntity> event) {
-        GenericIDORISEntity entity = event.getEntity();
+    public void handleEntityUpdated(EntityUpdatedEvent<AdministrativeMetadata> event) {
+        AdministrativeMetadata entity = event.getEntity();
         String entityType = entity.getClass().getSimpleName();
         String entityPid = entity.getPid();
 
@@ -182,8 +182,8 @@ public class EntityChangeNotifier {
      * @param event the entity deleted event
      */
     @EventListener
-    public void handleEntityDeleted(EntityDeletedEvent<GenericIDORISEntity> event) {
-        GenericIDORISEntity entity = event.getEntity();
+    public void handleEntityDeleted(EntityDeletedEvent<AdministrativeMetadata> event) {
+        AdministrativeMetadata entity = event.getEntity();
         String entityType = event.getEntityType();
         String entityPid = event.getEntityPid();
 

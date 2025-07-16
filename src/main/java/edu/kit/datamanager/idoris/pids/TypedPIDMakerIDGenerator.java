@@ -19,11 +19,11 @@ package edu.kit.datamanager.idoris.pids;
 import com.google.common.base.Ascii;
 import edu.kit.datamanager.idoris.configuration.ApplicationProperties;
 import edu.kit.datamanager.idoris.configuration.TypedPIDMakerConfig;
-import edu.kit.datamanager.idoris.domain.GenericIDORISEntity;
-import edu.kit.datamanager.idoris.domain.entities.ORCiDUser;
+import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
 import edu.kit.datamanager.idoris.pids.client.TypedPIDMakerClient;
 import edu.kit.datamanager.idoris.pids.client.model.PIDRecord;
 import edu.kit.datamanager.idoris.pids.client.model.PIDRecordEntry;
+import edu.kit.datamanager.idoris.users.entities.ORCiDUser;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +38,7 @@ import java.util.List;
 
 /**
  * ID generator that uses the Typed PID Maker service to generate PIDs.
- * It also creates PID records with metadata from the GenericIDORISEntity.
+ * It also creates PID records with metadata from the AdministrativeMetadata.
  */
 @Component
 @Slf4j
@@ -83,8 +83,8 @@ public class TypedPIDMakerIDGenerator implements IdGenerator<String> {
     @Override
     @Nonnull
     public String generateId(String primaryLabel, Object entity) {
-        if (!(entity instanceof GenericIDORISEntity idorisEntity)) {
-            log.warn("Entity is not a GenericIDORISEntity, falling back to UUID generation");
+        if (!(entity instanceof AdministrativeMetadata idorisEntity)) {
+            log.warn("Entity is not a AdministrativeMetadata, falling back to UUID generation");
             return java.util.UUID.randomUUID().toString();
         }
 
@@ -123,13 +123,13 @@ public class TypedPIDMakerIDGenerator implements IdGenerator<String> {
     }
 
     /**
-     * Creates a PID record with metadata from the GenericIDORISEntity.
+     * Creates a PID record with metadata from the AdministrativeMetadata.
      * Note: This method only adds metadata if the Helmholtz Kernel Information Profile allows it.
      *
-     * @param entity The GenericIDORISEntity
+     * @param entity The AdministrativeMetadata
      * @return The PID record
      */
-    private PIDRecord createPIDRecord(GenericIDORISEntity entity) {
+    private PIDRecord createPIDRecord(AdministrativeMetadata entity) {
         List<PIDRecordEntry> recordEntries = new ArrayList<>();
 
         // Only add metadata if configured to do so
