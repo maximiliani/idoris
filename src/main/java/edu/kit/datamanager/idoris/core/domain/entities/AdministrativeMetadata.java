@@ -38,6 +38,11 @@ import java.util.Set;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Node("IDORIS")
 public abstract class AdministrativeMetadata extends VisitableElement implements Serializable {
+    /**
+     * @deprecated This field is deprecated and will be removed in a future release.
+     * Use PersistentIdentifierService to get the PID for an entity instead.
+     */
+    @Deprecated
     @GeneratedValue(ConfigurablePIDGenerator.class)
     String pid;
 

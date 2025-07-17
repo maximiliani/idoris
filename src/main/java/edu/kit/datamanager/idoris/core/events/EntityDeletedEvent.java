@@ -32,7 +32,7 @@ import lombok.ToString;
 public class EntityDeletedEvent<T extends AdministrativeMetadata> extends AbstractDomainEvent {
     private final T entity;
     private final String entityType;
-    private final String entityPid;
+    private final String entityInternalId;
 
     /**
      * Creates a new EntityDeletedEvent for the given entity.
@@ -42,7 +42,7 @@ public class EntityDeletedEvent<T extends AdministrativeMetadata> extends Abstra
     public EntityDeletedEvent(T entity) {
         this.entity = entity;
         this.entityType = entity.getClass().getSimpleName();
-        this.entityPid = entity.getPid();
+        this.entityInternalId = entity.getInternalId();
     }
 
     /**
@@ -64,11 +64,11 @@ public class EntityDeletedEvent<T extends AdministrativeMetadata> extends Abstra
     }
 
     /**
-     * Gets the PID of the entity that was deleted.
+     * Gets the internal ID of the entity that was deleted.
      *
-     * @return the entity PID
+     * @return the entity internal ID
      */
-    public String getEntityPid() {
-        return entityPid;
+    public String getEntityInternalId() {
+        return entityInternalId;
     }
 }

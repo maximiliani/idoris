@@ -20,6 +20,7 @@ import edu.kit.datamanager.idoris.core.domain.web.hateoas.EntityModelAssembler;
 import edu.kit.datamanager.idoris.datatypes.entities.TypeProfile;
 import edu.kit.datamanager.idoris.datatypes.web.v1.TypeProfileController;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.RepresentationModelProcessor;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.stereotype.Component;
 
@@ -28,12 +29,18 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 /**
  * Assembler for converting TypeProfile entities to EntityModel objects with HATEOAS links.
+ * <p>
+ * This class combines the functionality of both an EntityModelAssembler and a
+ * RepresentationModelProcessor, handling all HATEOAS concerns for TypeProfile entities
+ * in one place, according to Domain-Driven Design principles.
  */
 @Component
-public class TypeProfileModelAssembler implements EntityModelAssembler<TypeProfile> {
+public class TypeProfileModelAssembler implements
+        EntityModelAssembler<TypeProfile>,
+        RepresentationModelProcessor<EntityModel<TypeProfile>> {
 
     /**
-     * Converts a TypeProfile entity to an EntityModel with HATEOAS links.
+     * Converts a TypeProfile entity to an EntityModel with basic HATEOAS links.
      *
      * @param typeProfile the TypeProfile entity to convert
      * @return an EntityModel containing the TypeProfile and links
@@ -45,22 +52,41 @@ public class TypeProfileModelAssembler implements EntityModelAssembler<TypeProfi
         // Add self link
         entityModel.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(typeProfile.getPid())).withSelfRel());
 
-        // Add link to validate
-        entityModel.add(linkTo(methodOn(TypeProfileController.class).validate(typeProfile.getPid())).withRel("validate"));
-
-        // Add link to inherited attributes
-        entityModel.add(linkTo(methodOn(TypeProfileController.class).getInheritedAttributes(typeProfile.getPid())).withRel("inheritedAttributes"));
-
-        // Add link to inheritance tree
-        entityModel.add(linkTo(methodOn(TypeProfileController.class).getInheritanceTree(typeProfile.getPid())).withRel("inheritanceTree"));
-
-        // Add link to operations
-        WebMvcLinkBuilder operationsLinkBuilder = linkTo(methodOn(TypeProfileController.class).getOperationsForTypeProfile(typeProfile.getPid()));
-        entityModel.add(operationsLinkBuilder.withRel("operations"));
-
         // Add link to all type profiles
         entityModel.add(linkTo(methodOn(TypeProfileController.class).getAllTypeProfiles()).withRel("typeProfiles"));
 
         return entityModel;
+    }
+
+    /**
+     * Processes an EntityModel of TypeProfile to add additional HATEOAS links.
+     * This method is called after toModel() and enhances the model with more context-specific links.
+     *
+     * @param model the EntityModel to process
+     * @return the processed EntityModel with additional links
+     */
+    @Override
+    public EntityModel<TypeProfile> process(EntityModel<TypeProfile> model) {
+        TypeProfile typeProfile = model.getContent();
+        if (typeProfile == null) {
+            return model;
+        }
+
+        String pid = typeProfile.getPid();
+
+        // Add link to validate
+        model.add(linkTo(methodOn(TypeProfileController.class).validate(pid)).withRel("validate"));
+
+        // Add link to inherited attributes
+        model.add(linkTo(methodOn(TypeProfileController.class).getInheritedAttributes(pid)).withRel("inheritedAttributes"));
+
+        // Add link to inheritance tree
+        model.add(linkTo(methodOn(TypeProfileController.class).getInheritanceTree(pid)).withRel("inheritanceTree"));
+
+        // Add link to operations
+        WebMvcLinkBuilder operationsLinkBuilder = linkTo(methodOn(TypeProfileController.class).getOperationsForTypeProfile(pid));
+        model.add(operationsLinkBuilder.withRel("operations"));
+
+        return model;
     }
 }

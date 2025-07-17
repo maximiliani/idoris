@@ -24,6 +24,7 @@ import edu.kit.datamanager.idoris.datatypes.web.v1.AtomicDataTypeController;
 import edu.kit.datamanager.idoris.datatypes.web.v1.TypeProfileController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.RepresentationModelProcessor;
 import org.springframework.stereotype.Component;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -32,9 +33,15 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 /**
  * Assembler for converting DataType entities to EntityModel objects with HATEOAS links.
  * This assembler delegates to specific assemblers based on the type of DataType.
+ * <p>
+ * This class combines the functionality of both an EntityModelAssembler and a
+ * RepresentationModelProcessor, handling all HATEOAS concerns for DataType entities
+ * in one place, according to Domain-Driven Design principles.
  */
 @Component
-public class DataTypeModelAssembler implements EntityModelAssembler<DataType> {
+public class DataTypeModelAssembler implements
+        EntityModelAssembler<DataType>,
+        RepresentationModelProcessor<EntityModel<DataType>> {
 
     @Autowired
     private AtomicDataTypeModelAssembler atomicDataTypeModelAssembler;
@@ -68,5 +75,31 @@ public class DataTypeModelAssembler implements EntityModelAssembler<DataType> {
 
             return entityModel;
         }
+    }
+
+    /**
+     * Processes an EntityModel of DataType to add additional HATEOAS links.
+     * This method adds type-specific operation links based on the DataType instance.
+     *
+     * @param model the EntityModel to process
+     * @return the processed EntityModel with additional links
+     */
+    @Override
+    public EntityModel<DataType> process(EntityModel<DataType> model) {
+        DataType dataType = model.getContent();
+        if (dataType == null) {
+            return model;
+        }
+
+        String pid = dataType.getPid();
+
+        // Add link to operations for this data type based on its type
+        if (dataType instanceof AtomicDataType) {
+            model.add(linkTo(methodOn(AtomicDataTypeController.class).getOperationsForAtomicDataType(pid)).withRel("operations"));
+        } else if (dataType instanceof TypeProfile) {
+            model.add(linkTo(methodOn(TypeProfileController.class).getOperationsForTypeProfile(pid)).withRel("operations"));
+        }
+
+        return model;
     }
 }

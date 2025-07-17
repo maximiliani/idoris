@@ -33,6 +33,8 @@ public class PIDGeneratedEvent<T extends AdministrativeMetadata> extends Abstrac
     private final T entity;
     private final String pid;
     private final boolean isNewPID;
+    private final String entityInternalId;
+    private final String entityType;
 
     /**
      * Creates a new PIDGeneratedEvent for the given entity and PID.
@@ -45,6 +47,8 @@ public class PIDGeneratedEvent<T extends AdministrativeMetadata> extends Abstrac
         this.entity = entity;
         this.pid = pid;
         this.isNewPID = isNewPID;
+        this.entityInternalId = entity.getInternalId();
+        this.entityType = entity.getClass().getSimpleName();
     }
 
     /**
@@ -83,5 +87,23 @@ public class PIDGeneratedEvent<T extends AdministrativeMetadata> extends Abstrac
      */
     public boolean isNewPID() {
         return isNewPID;
+    }
+
+    /**
+     * Gets the internal ID of the entity for which the PID was generated.
+     *
+     * @return the entity internal ID
+     */
+    public String getEntityInternalId() {
+        return entityInternalId;
+    }
+
+    /**
+     * Gets the type of the entity for which the PID was generated.
+     *
+     * @return the entity type
+     */
+    public String getEntityType() {
+        return entityType;
     }
 }

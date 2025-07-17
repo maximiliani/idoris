@@ -185,7 +185,7 @@ public class EntityChangeNotifier {
     public void handleEntityDeleted(EntityDeletedEvent<AdministrativeMetadata> event) {
         AdministrativeMetadata entity = event.getEntity();
         String entityType = event.getEntityType();
-        String entityPid = event.getEntityPid();
+        String entityPid = entity.getPid();
 
         log.debug("Handling EntityDeletedEvent for entity type: {}, PID: {}", entityType, entityPid);
 

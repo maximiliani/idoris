@@ -24,6 +24,6 @@
  */
 @org.springframework.modulith.ApplicationModule(
         displayName = "IDORIS PID Management",
-        allowedDependencies = {"core", "domain"}
+        allowedDependencies = {"core"}
 )
 package edu.kit.datamanager.idoris.pids;
