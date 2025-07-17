@@ -16,7 +16,7 @@
 
 package edu.kit.datamanager.idoris.attributes.entities;
 
-import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
+import edu.kit.datamanager.idoris.core.domain.entities.AdministrativeMetadata;
 import edu.kit.datamanager.idoris.datatypes.entities.DataType;
 import edu.kit.datamanager.idoris.rules.logic.RuleOutput;
 import edu.kit.datamanager.idoris.rules.logic.Visitor;

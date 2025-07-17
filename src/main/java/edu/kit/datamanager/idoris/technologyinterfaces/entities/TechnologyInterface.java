@@ -17,7 +17,7 @@
 package edu.kit.datamanager.idoris.technologyinterfaces.entities;
 
 import edu.kit.datamanager.idoris.attributes.entities.Attribute;
-import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
+import edu.kit.datamanager.idoris.core.domain.entities.AdministrativeMetadata;
 import edu.kit.datamanager.idoris.rules.logic.RuleOutput;
 import edu.kit.datamanager.idoris.rules.logic.Visitor;
 import lombok.AllArgsConstructor;

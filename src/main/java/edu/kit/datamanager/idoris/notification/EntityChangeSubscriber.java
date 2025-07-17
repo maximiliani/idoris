@@ -16,7 +16,7 @@
 
 package edu.kit.datamanager.idoris.notification;
 
-import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
+import edu.kit.datamanager.idoris.core.domain.entities.AdministrativeMetadata;
 
 /**
  * Interface for subscribers that want to be notified of entity changes.

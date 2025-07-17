@@ -19,7 +19,7 @@ package edu.kit.datamanager.idoris.pids;
 import com.google.common.base.Ascii;
 import edu.kit.datamanager.idoris.configuration.ApplicationProperties;
 import edu.kit.datamanager.idoris.configuration.TypedPIDMakerConfig;
-import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
+import edu.kit.datamanager.idoris.core.domain.entities.AdministrativeMetadata;
 import edu.kit.datamanager.idoris.pids.client.TypedPIDMakerClient;
 import edu.kit.datamanager.idoris.pids.client.model.PIDRecord;
 import edu.kit.datamanager.idoris.pids.client.model.PIDRecordEntry;

@@ -38,9 +38,11 @@ import org.springframework.validation.annotation.Validated;
 @Setter
 public class TypedPIDMakerConfig {
     /**
-     * Put metadata of the AdministrativeMetadata into the PID record.
-     *
-     * @see edu.kit.datamanager.idoris.domain.GenericIDORISEntity
+     * Determines whether the PID records should only contain a pointer to the entity in IDORIS
+     * or if they should contain meaningful metadata.
+     * <p>
+     * If set to true, the PID records will contain metadata.
+     * If set to false, the PID records will only contain a pointer to the entity in IDORIS.
      */
     private boolean meaningfulPIDRecords = true;
 

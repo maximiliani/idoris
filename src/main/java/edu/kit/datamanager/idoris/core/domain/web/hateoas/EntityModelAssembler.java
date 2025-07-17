@@ -16,7 +16,7 @@
 
 package edu.kit.datamanager.idoris.core.domain.web.hateoas;
 
-import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
+import edu.kit.datamanager.idoris.core.domain.entities.AdministrativeMetadata;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
 

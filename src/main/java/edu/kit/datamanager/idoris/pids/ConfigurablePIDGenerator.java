@@ -17,7 +17,7 @@
 package edu.kit.datamanager.idoris.pids;
 
 import edu.kit.datamanager.idoris.configuration.ApplicationProperties;
-import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
+import edu.kit.datamanager.idoris.core.domain.entities.AdministrativeMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;

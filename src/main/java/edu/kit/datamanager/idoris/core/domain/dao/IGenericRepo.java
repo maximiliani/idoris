@@ -16,7 +16,7 @@
 
 package edu.kit.datamanager.idoris.core.domain.dao;
 
-import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
+import edu.kit.datamanager.idoris.core.domain.entities.AdministrativeMetadata;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;

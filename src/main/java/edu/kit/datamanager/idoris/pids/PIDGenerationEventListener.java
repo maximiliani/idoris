@@ -16,7 +16,7 @@
 
 package edu.kit.datamanager.idoris.pids;
 
-import edu.kit.datamanager.idoris.core.domain.AdministrativeMetadata;
+import edu.kit.datamanager.idoris.core.domain.entities.AdministrativeMetadata;
 import edu.kit.datamanager.idoris.core.events.EntityCreatedEvent;
 import edu.kit.datamanager.idoris.core.events.EventPublisherService;
 import lombok.extern.slf4j.Slf4j;

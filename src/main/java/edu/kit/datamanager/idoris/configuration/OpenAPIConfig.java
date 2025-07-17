@@ -28,8 +28,13 @@ import org.springframework.context.annotation.Configuration;
 @OpenAPIDefinition(
         info = @Info(
                 title = "IDORIS API",
-                version = "1.0",
-                description = "API for IDORIS system"
+                version = "0.2.0",
+                description = "API for the Integrated Data Type and Operations Registry with Inheritance System (IDORIS). This API provides endpoints for managing data types, operations, and their relationships within IDORIS.",
+                contact = @io.swagger.v3.oas.annotations.info.Contact(
+                        name = "KIT Data Manager Team",
+                        email = "webmaster@datamanager.kit.edu",
+                        url = "https://kit-data-manager.github.io/webpage"
+                )
         )
 )
 public class OpenAPIConfig {
@@ -38,13 +43,14 @@ public class OpenAPIConfig {
         return new OpenAPI()
                 .info(new io.swagger.v3.oas.models.info.Info()
                         .title("IDORIS API")
-                        .version("1.0")
+                        .version("0.2.0")
                         .description("API documentation for IDORIS system")
                         .contact(new Contact()
                                 .name("KIT Data Manager Team")
-                                .email("webmaster@datamanager.kit.edu")))
+                                .email("webmaster@datamanager.kit.edu")
+                                .url("https://kit-data-manager.github.io/webpage")))
                 .externalDocs(new ExternalDocumentation()
-                        .description("IDORIS Documentation")
-                        .url("https://github.com/kit-data-manager/idoris"));
+                        .description("IDORIS GitHub Repository")
+                        .url("https://github.com/maximiliani/idoris"));
     }
 }

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package edu.kit.datamanager.idoris.core.domain;
+package edu.kit.datamanager.idoris.core.domain.entities;
 
-import edu.kit.datamanager.idoris.core.domain.entities.Reference;
+import edu.kit.datamanager.idoris.core.domain.VisitableElement;
 import edu.kit.datamanager.idoris.pids.ConfigurablePIDGenerator;
 import edu.kit.datamanager.idoris.users.entities.User;
 import lombok.*;
