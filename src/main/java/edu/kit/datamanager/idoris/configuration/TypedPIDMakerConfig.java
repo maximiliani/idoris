@@ -19,9 +19,6 @@ package edu.kit.datamanager.idoris.configuration;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -29,30 +26,9 @@ import org.springframework.validation.annotation.Validated;
 @Component
 @ConfigurationProperties("idoris.typed-pid-maker")
 @Validated
-@AutoConfigureAfter(value = ApplicationProperties.class)
-@ConditionalOnBean(value = ApplicationProperties.class)
-@ConditionalOnExpression(
-        "#{ '${idoris.pid-generation}' eq T(edu.kit.datamanager.idoris.configuration.ApplicationProperties.PIDGeneration).TYPED_PID_MAKER.name() }"
-)
 @Getter
 @Setter
 public class TypedPIDMakerConfig {
-    /**
-     * Determines whether the PID records should only contain a pointer to the entity in IDORIS
-     * or if they should contain meaningful metadata.
-     * <p>
-     * If set to true, the PID records will contain metadata.
-     * If set to false, the PID records will only contain a pointer to the entity in IDORIS.
-     */
-    private boolean meaningfulPIDRecords = true;
-
-    /**
-     * Update existing PID records with the latest metadata from the AdministrativeMetadata.
-     * If set to false, existing PID records will not be updated,
-     * but new records will still be created with the latest metadata.
-     */
-    private boolean updatePIDRecords = true;
-
     /**
      * The base URL for the Typed PID Maker service.
      * This is required when the service is enabled.

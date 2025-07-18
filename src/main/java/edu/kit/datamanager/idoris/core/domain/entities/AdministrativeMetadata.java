@@ -17,13 +17,11 @@
 package edu.kit.datamanager.idoris.core.domain.entities;
 
 import edu.kit.datamanager.idoris.core.domain.VisitableElement;
-import edu.kit.datamanager.idoris.pids.ConfigurablePIDGenerator;
 import edu.kit.datamanager.idoris.users.entities.User;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Version;
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
@@ -38,14 +36,6 @@ import java.util.Set;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Node("IDORIS")
 public abstract class AdministrativeMetadata extends VisitableElement implements Serializable {
-    /**
-     * @deprecated This field is deprecated and will be removed in a future release.
-     * Use PersistentIdentifierService to get the PID for an entity instead.
-     */
-    @Deprecated
-    @GeneratedValue(ConfigurablePIDGenerator.class)
-    String pid;
-
     String name;
 
     String description;

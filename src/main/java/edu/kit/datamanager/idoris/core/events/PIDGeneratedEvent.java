@@ -21,49 +21,49 @@ import lombok.Getter;
 import lombok.ToString;
 
 /**
- * Event that is published when a PID is generated for an entity.
- * This event carries the entity and the generated PID, and can be used by listeners
- * to perform additional operations like PID record creation, indexing, etc.
+ * Event that is published when an ID is generated for an entity.
+ * This event carries the entity and the generated ID, and can be used by listeners
+ * to perform additional operations like ID record creation, indexing, etc.
  *
- * @param <T> the type of entity for which the PID was generated, must extend AdministrativeMetadata
+ * @param <T> the type of entity for which the ID was generated, must extend AdministrativeMetadata
  */
 @Getter
 @ToString(callSuper = true)
 public class PIDGeneratedEvent<T extends AdministrativeMetadata> extends AbstractDomainEvent {
     private final T entity;
-    private final String pid;
-    private final boolean isNewPID;
+    private final String id;
+    private final boolean isNewID;
     private final String entityInternalId;
     private final String entityType;
 
     /**
-     * Creates a new PIDGeneratedEvent for the given entity and PID.
+     * Creates a new PIDGeneratedEvent for the given entity and ID.
      *
-     * @param entity   the entity for which the PID was generated
-     * @param pid      the generated PID
-     * @param isNewPID indicates whether this is a newly generated PID or an existing one
+     * @param entity  the entity for which the ID was generated
+     * @param id      the generated ID
+     * @param isNewID indicates whether this is a newly generated ID or an existing one
      */
-    public PIDGeneratedEvent(T entity, String pid, boolean isNewPID) {
+    public PIDGeneratedEvent(T entity, String id, boolean isNewID) {
         this.entity = entity;
-        this.pid = pid;
-        this.isNewPID = isNewPID;
+        this.id = id;
+        this.isNewID = isNewID;
         this.entityInternalId = entity.getInternalId();
         this.entityType = entity.getClass().getSimpleName();
     }
 
     /**
-     * Creates a new PIDGeneratedEvent for the given entity and PID.
-     * Assumes that the PID is newly generated.
+     * Creates a new PIDGeneratedEvent for the given entity and ID.
+     * Assumes that the ID is newly generated.
      *
-     * @param entity the entity for which the PID was generated
-     * @param pid    the generated PID
+     * @param entity the entity for which the ID was generated
+     * @param id     the generated ID
      */
-    public PIDGeneratedEvent(T entity, String pid) {
-        this(entity, pid, true);
+    public PIDGeneratedEvent(T entity, String id) {
+        this(entity, id, true);
     }
 
     /**
-     * Gets the entity for which the PID was generated.
+     * Gets the entity for which the ID was generated.
      *
      * @return the entity
      */
@@ -72,25 +72,25 @@ public class PIDGeneratedEvent<T extends AdministrativeMetadata> extends Abstrac
     }
 
     /**
-     * Gets the generated PID.
+     * Gets the generated ID.
      *
-     * @return the PID
+     * @return the ID
      */
-    public String getPid() {
-        return pid;
+    public String getId() {
+        return id;
     }
 
     /**
-     * Indicates whether this is a newly generated PID or an existing one.
+     * Indicates whether this is a newly generated ID or an existing one.
      *
-     * @return true if the PID was newly generated, false if it already existed
+     * @return true if the ID was newly generated, false if it already existed
      */
-    public boolean isNewPID() {
-        return isNewPID;
+    public boolean isNewID() {
+        return isNewID;
     }
 
     /**
-     * Gets the internal ID of the entity for which the PID was generated.
+     * Gets the internal ID of the entity for which the ID was generated.
      *
      * @return the entity internal ID
      */
@@ -99,7 +99,7 @@ public class PIDGeneratedEvent<T extends AdministrativeMetadata> extends Abstrac
     }
 
     /**
-     * Gets the type of the entity for which the PID was generated.
+     * Gets the type of the entity for which the ID was generated.
      *
      * @return the entity type
      */

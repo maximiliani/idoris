@@ -57,13 +57,13 @@ public interface IUserApi {
     /**
      * Gets a User entity by its ID.
      *
-     * @param id the ID of the User to retrieve
+     * @param id the PID or internal ID of the User to retrieve
      * @return the User entity
      */
     @GetMapping("/{id}")
     @Operation(
             summary = "Get user by ID",
-            description = "Retrieves a user by their internal ID",
+            description = "Retrieves a user by their PID or internal ID",
             responses = {
                     @ApiResponse(responseCode = "200", description = "User retrieved successfully",
                             content = @Content(mediaType = "application/hal+json",
@@ -72,7 +72,7 @@ public interface IUserApi {
             }
     )
     ResponseEntity<EntityModel<User>> getUserById(
-            @Parameter(description = "ID of the User", required = true)
+            @Parameter(description = "PID or internal ID of the User", required = true)
             @PathVariable String id);
 
     /**
@@ -194,14 +194,14 @@ public interface IUserApi {
     /**
      * Updates an existing User entity.
      *
-     * @param id   the ID of the User to update
+     * @param id   the PID or internal ID of the User to update
      * @param user the updated User entity
      * @return the updated User entity
      */
     @PutMapping("/{id}")
     @Operation(
             summary = "Update user",
-            description = "Updates an existing user",
+            description = "Updates an existing user by their PID or internal ID",
             responses = {
                     @ApiResponse(responseCode = "200", description = "User updated successfully",
                             content = @Content(mediaType = "application/hal+json",
@@ -210,7 +210,7 @@ public interface IUserApi {
             }
     )
     ResponseEntity<EntityModel<User>> updateUser(
-            @Parameter(description = "ID of the User", required = true)
+            @Parameter(description = "PID or internal ID of the User", required = true)
             @PathVariable String id,
             @Parameter(description = "Updated User", required = true)
             @RequestBody User user);
@@ -218,19 +218,19 @@ public interface IUserApi {
     /**
      * Deletes a User entity.
      *
-     * @param id the ID of the User to delete
+     * @param id the PID or internal ID of the User to delete
      * @return no content
      */
     @DeleteMapping("/{id}")
     @Operation(
             summary = "Delete user",
-            description = "Deletes a user by their internal ID",
+            description = "Deletes a user by their PID or internal ID",
             responses = {
                     @ApiResponse(responseCode = "204", description = "User deleted successfully"),
                     @ApiResponse(responseCode = "404", description = "User not found")
             }
     )
     ResponseEntity<Void> deleteUser(
-            @Parameter(description = "ID of the User", required = true)
+            @Parameter(description = "PID or internal ID of the User", required = true)
             @PathVariable String id);
 }

@@ -89,10 +89,10 @@ public class OperationController implements IOperationApi {
      * {@inheritDoc}
      */
     @Override
-    @GetMapping("/{pid}")
+    @GetMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
-            summary = "Get an Operation by PID",
-            description = "Returns an Operation entity by its PID",
+            summary = "Get an Operation by PID or internal ID",
+            description = "Returns an Operation entity by its PID or internal ID",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Operation found",
                             content = @Content(mediaType = "application/hal+json",
@@ -101,9 +101,9 @@ public class OperationController implements IOperationApi {
             }
     )
     public ResponseEntity<EntityModel<Operation>> getOperation(
-            @Parameter(description = "PID of the Operation", required = true)
-            @PathVariable String pid) {
-        return operationService.getOperation(pid)
+            @Parameter(description = "PID or internal ID of the Operation", required = true)
+            @PathVariable String id) {
+        return operationService.getOperation(id)
                 .map(operationModelAssembler::toModel)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -146,7 +146,7 @@ public class OperationController implements IOperationApi {
      * {@inheritDoc}
      */
     @Override
-    @PutMapping("/{pid}")
+    @PutMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Update an Operation",
             description = "Updates an existing Operation entity after validating it",
@@ -159,15 +159,23 @@ public class OperationController implements IOperationApi {
             }
     )
     public ResponseEntity<EntityModel<Operation>> updateOperation(
-            @Parameter(description = "PID of the Operation", required = true)
-            @PathVariable String pid,
+            @Parameter(description = "PID or internal ID of the Operation", required = true)
+            @PathVariable String id,
             @Parameter(description = "Updated Operation", required = true)
             @Valid @RequestBody Operation operation) {
-        if (!operationService.getOperation(pid).isPresent()) {
+        // Check if the entity exists
+        if (!operationService.getOperation(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        operation.setPid(pid);
+        // Get the existing entity to get its PID and internalId
+        Operation existing = operationService.getOperation(id).get();
+
+        // Set the PID from the existing entity
+        operation.setInternalId(existing.getId());
+
+        // Ensure internal ID is preserved
+        operation.setInternalId(existing.getInternalId());
 
         // Validate the operation using the ValidationPolicyValidator
         ValidationPolicyValidator validator = new ValidationPolicyValidator();
@@ -188,7 +196,7 @@ public class OperationController implements IOperationApi {
      * {@inheritDoc}
      */
     @Override
-    @DeleteMapping("/{pid}")
+    @DeleteMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Delete an Operation",
             description = "Deletes an Operation entity",
@@ -198,13 +206,13 @@ public class OperationController implements IOperationApi {
             }
     )
     public ResponseEntity<Void> deleteOperation(
-            @Parameter(description = "PID of the Operation", required = true)
-            @PathVariable String pid) {
-        if (!operationService.getOperation(pid).isPresent()) {
+            @Parameter(description = "PID or internal ID of the Operation", required = true)
+            @PathVariable String id) {
+        if (!operationService.getOperation(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        operationService.deleteOperation(pid);
+        operationService.deleteOperation(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -212,7 +220,7 @@ public class OperationController implements IOperationApi {
      * {@inheritDoc}
      */
     @Override
-    @GetMapping("/{pid}/validate")
+    @GetMapping("/{id}/validate")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Validate an Operation",
             description = "Validates an Operation entity and returns the validation result",
@@ -223,13 +231,13 @@ public class OperationController implements IOperationApi {
             }
     )
     public ResponseEntity<?> validate(
-            @Parameter(description = "PID of the Operation", required = true)
-            @PathVariable String pid) {
-        if (!operationService.getOperation(pid).isPresent()) {
+            @Parameter(description = "PID or internal ID of the Operation", required = true)
+            @PathVariable String id) {
+        if (!operationService.getOperation(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        Operation operation = operationService.getOperation(pid).get();
+        Operation operation = operationService.getOperation(id).get();
         ValidationPolicyValidator validator = new ValidationPolicyValidator();
         ValidationResult result = operation.execute(validator);
 
@@ -255,15 +263,15 @@ public class OperationController implements IOperationApi {
             }
     )
     public ResponseEntity<CollectionModel<EntityModel<Operation>>> getOperationsForDataType(
-            @Parameter(description = "PID of the data type", required = true)
-            @RequestParam String pid) {
-        List<EntityModel<Operation>> operations = StreamSupport.stream(operationService.getOperationsForDataType(pid).spliterator(), false)
+            @Parameter(description = "PID or internal ID of the data type", required = true)
+            @RequestParam String id) {
+        List<EntityModel<Operation>> operations = StreamSupport.stream(operationService.getOperationsForDataType(id).spliterator(), false)
                 .map(operationModelAssembler::toModel)
                 .collect(Collectors.toList());
 
         CollectionModel<EntityModel<Operation>> collectionModel = CollectionModel.of(
                 operations,
-                linkTo(methodOn(OperationController.class).getOperationsForDataType(pid)).withSelfRel()
+                linkTo(methodOn(OperationController.class).getOperationsForDataType(id)).withSelfRel()
         );
 
         return ResponseEntity.ok(collectionModel);
@@ -273,7 +281,7 @@ public class OperationController implements IOperationApi {
      * {@inheritDoc}
      */
     @Override
-    @PatchMapping("/{pid}")
+    @PatchMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Partially update an Operation",
             description = "Updates specific fields of an existing Operation entity",
@@ -286,11 +294,11 @@ public class OperationController implements IOperationApi {
             }
     )
     public ResponseEntity<EntityModel<Operation>> patchOperation(
-            @Parameter(description = "PID of the Operation", required = true)
-            @PathVariable String pid,
+            @Parameter(description = "PID or internal ID of the Operation", required = true)
+            @PathVariable String id,
             @Parameter(description = "Partial Operation with fields to update", required = true)
             @RequestBody Operation operationPatch) {
-        if (!operationService.getOperation(pid).isPresent()) {
+        if (!operationService.getOperation(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
@@ -301,11 +309,11 @@ public class OperationController implements IOperationApi {
                 operationPatch.getExecution() != null) {
 
             // Get the current entity
-            Operation existing = operationService.getOperation(pid).get();
+            Operation existing = operationService.getOperation(id).get();
 
             // Create a merged entity for validation
             Operation merged = new Operation();
-            merged.setPid(existing.getPid());
+            merged.setInternalId(existing.getId());
             merged.setName(operationPatch.getName() != null ? operationPatch.getName() : existing.getName());
             merged.setDescription(operationPatch.getDescription() != null ? operationPatch.getDescription() : existing.getDescription());
             merged.setExecutableOn(operationPatch.getExecutableOn() != null ? operationPatch.getExecutableOn() : existing.getExecutableOn());
@@ -323,7 +331,7 @@ public class OperationController implements IOperationApi {
             }
         }
 
-        Operation patchedOperation = operationService.patchOperation(pid, operationPatch);
+        Operation patchedOperation = operationService.patchOperation(id, operationPatch);
         EntityModel<Operation> entityModel = operationModelAssembler.toModel(patchedOperation);
         return ResponseEntity.ok(entityModel);
     }

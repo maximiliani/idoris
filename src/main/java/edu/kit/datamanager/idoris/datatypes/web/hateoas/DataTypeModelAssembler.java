@@ -68,9 +68,9 @@ public class DataTypeModelAssembler implements
 
             // Add self link based on the type
             if (dataType instanceof AtomicDataType) {
-                entityModel.add(linkTo(methodOn(AtomicDataTypeController.class).getAtomicDataType(dataType.getPid())).withSelfRel());
+                entityModel.add(linkTo(methodOn(AtomicDataTypeController.class).getAtomicDataType(dataType.getId())).withSelfRel());
             } else if (dataType instanceof TypeProfile) {
-                entityModel.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(dataType.getPid())).withSelfRel());
+                entityModel.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(dataType.getId())).withSelfRel());
             }
 
             return entityModel;
@@ -91,7 +91,7 @@ public class DataTypeModelAssembler implements
             return model;
         }
 
-        String pid = dataType.getPid();
+        String pid = dataType.getId();
 
         // Add link to operations for this data type based on its type
         if (dataType instanceof AtomicDataType) {

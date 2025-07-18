@@ -135,11 +135,25 @@ public class AttributeMappingService {
      *
      * @param pid the PID of the input attribute
      * @return a list of AttributeMapping entities
+     * @deprecated Use {@link #findByInputAttributeId(String)} instead
      */
     @Transactional(readOnly = true)
+    @Deprecated
     public List<AttributeMapping> findByInputAttributePid(String pid) {
         log.debug("Finding AttributeMappings by input attribute PID: {}", pid);
         return (List<AttributeMapping>) attributeMappingDao.findByInputAttributePid(pid);
+    }
+
+    /**
+     * Finds AttributeMapping entities by input attribute ID (either PID or internal ID).
+     *
+     * @param id the ID of the input attribute (either PID or internal ID)
+     * @return a list of AttributeMapping entities
+     */
+    @Transactional(readOnly = true)
+    public List<AttributeMapping> findByInputAttributeId(String id) {
+        log.debug("Finding AttributeMappings by input attribute ID: {}", id);
+        return (List<AttributeMapping>) attributeMappingDao.findByInputAttributeId(id);
     }
 
     /**
@@ -147,10 +161,24 @@ public class AttributeMappingService {
      *
      * @param pid the PID of the output attribute
      * @return a list of AttributeMapping entities
+     * @deprecated Use {@link #findByOutputAttributeId(String)} instead
      */
     @Transactional(readOnly = true)
+    @Deprecated
     public List<AttributeMapping> findByOutputAttributePid(String pid) {
         log.debug("Finding AttributeMappings by output attribute PID: {}", pid);
         return (List<AttributeMapping>) attributeMappingDao.findByOutputAttributePid(pid);
+    }
+
+    /**
+     * Finds AttributeMapping entities by output attribute ID (either PID or internal ID).
+     *
+     * @param id the ID of the output attribute (either PID or internal ID)
+     * @return a list of AttributeMapping entities
+     */
+    @Transactional(readOnly = true)
+    public List<AttributeMapping> findByOutputAttributeId(String id) {
+        log.debug("Finding AttributeMappings by output attribute ID: {}", id);
+        return (List<AttributeMapping>) attributeMappingDao.findByOutputAttributeId(id);
     }
 }

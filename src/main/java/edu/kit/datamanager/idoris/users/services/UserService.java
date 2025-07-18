@@ -38,9 +38,9 @@ public interface UserService {
     List<User> findAllUsers();
 
     /**
-     * Find a user by their internal ID.
+     * Find a user by their PID or internal ID.
      *
-     * @param id The internal ID of the user
+     * @param id The PID or internal ID of the user
      * @return Optional containing the user if found, empty otherwise
      */
     Optional<User> findUserById(String id);
@@ -94,7 +94,7 @@ public interface UserService {
     /**
      * Update an existing user.
      *
-     * @param id   The internal ID of the user to update
+     * @param id   The PID or internal ID of the user to update
      * @param user The updated user information
      * @return The updated user
      * @throws IllegalArgumentException if the user is not found
@@ -102,9 +102,9 @@ public interface UserService {
     User updateUser(String id, User user);
 
     /**
-     * Delete a user by their internal ID.
+     * Delete a user by their PID or internal ID.
      *
-     * @param id The internal ID of the user to delete
+     * @param id The PID or internal ID of the user to delete
      * @throws IllegalArgumentException if the user is not found
      */
     void deleteUser(String id);

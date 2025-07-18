@@ -19,8 +19,6 @@ package edu.kit.datamanager.idoris.pids.repositories;
 import edu.kit.datamanager.idoris.core.domain.entities.AdministrativeMetadata;
 import edu.kit.datamanager.idoris.pids.entities.PersistentIdentifier;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
-import org.springframework.data.neo4j.repository.query.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -70,14 +68,4 @@ public interface PersistentIdentifierRepository extends Neo4jRepository<Persiste
      * @return A list of PersistentIdentifiers that are not tombstones
      */
     List<PersistentIdentifier> findByTombstoneFalse();
-
-    /**
-     * Finds all PersistentIdentifiers that have a metadata entry with the given key and value.
-     *
-     * @param key   The key of the metadata entry
-     * @param value The value of the metadata entry
-     * @return A list of PersistentIdentifiers that have a metadata entry with the given key and value
-     */
-    @Query("MATCH (p:PersistentIdentifier) WHERE p.metadata[$key] = $value RETURN p")
-    List<PersistentIdentifier> findByMetadata(@Param("key") String key, @Param("value") String value);
 }

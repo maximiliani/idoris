@@ -57,9 +57,11 @@ public class AtomicDataTypeService {
     @Transactional
     public AtomicDataType createAtomicDataType(AtomicDataType atomicDataType) {
         log.debug("Creating AtomicDataType: {}", atomicDataType);
+        atomicDataType.setInternalId(null);
+        atomicDataType.setVersion(null);
         AtomicDataType saved = atomicDataTypeDao.save(atomicDataType);
         eventPublisher.publishEntityCreated(saved);
-        log.info("Created AtomicDataType with PID: {}", saved.getPid());
+        log.info("Created AtomicDataType with PID: {}", saved.getId());
         return saved;
     }
 
@@ -74,50 +76,50 @@ public class AtomicDataTypeService {
     public AtomicDataType updateAtomicDataType(AtomicDataType atomicDataType) {
         log.debug("Updating AtomicDataType: {}", atomicDataType);
 
-        if (atomicDataType.getPid() == null || atomicDataType.getPid().isEmpty()) {
+        if (atomicDataType.getId() == null || atomicDataType.getId().isEmpty()) {
             throw new IllegalArgumentException("AtomicDataType must have a PID to be updated");
         }
 
         // Get the current version before updating
-        AtomicDataType existing = atomicDataTypeDao.findById(atomicDataType.getPid())
-                .orElseThrow(() -> new IllegalArgumentException("AtomicDataType not found with PID: " + atomicDataType.getPid()));
+        AtomicDataType existing = atomicDataTypeDao.findById(atomicDataType.getId())
+                .orElseThrow(() -> new IllegalArgumentException("AtomicDataType not found with PID: " + atomicDataType.getId()));
 
         Long previousVersion = existing.getVersion();
 
         AtomicDataType saved = atomicDataTypeDao.save(atomicDataType);
         eventPublisher.publishEntityUpdated(saved, previousVersion);
-        log.info("Updated AtomicDataType with PID: {}", saved.getPid());
+        log.info("Updated AtomicDataType with PID: {}", saved.getId());
         return saved;
     }
 
     /**
      * Deletes an AtomicDataType entity.
      *
-     * @param pid the PID of the AtomicDataType to delete
+     * @param id the PID or internal ID of the AtomicDataType to delete
      * @throws IllegalArgumentException if the AtomicDataType does not exist
      */
     @Transactional
-    public void deleteAtomicDataType(String pid) {
-        log.debug("Deleting AtomicDataType with PID: {}", pid);
+    public void deleteAtomicDataType(String id) {
+        log.debug("Deleting AtomicDataType with ID: {}", id);
 
-        AtomicDataType atomicDataType = atomicDataTypeDao.findById(pid)
-                .orElseThrow(() -> new IllegalArgumentException("AtomicDataType not found with PID: " + pid));
+        AtomicDataType atomicDataType = atomicDataTypeDao.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("AtomicDataType not found with ID: " + id));
 
         atomicDataTypeDao.delete(atomicDataType);
         eventPublisher.publishEntityDeleted(atomicDataType);
-        log.info("Deleted AtomicDataType with PID: {}", pid);
+        log.info("Deleted AtomicDataType with ID: {}", id);
     }
 
     /**
-     * Retrieves an AtomicDataType entity by its PID.
+     * Retrieves an AtomicDataType entity by its PID or internal ID.
      *
-     * @param pid the PID of the AtomicDataType to retrieve
+     * @param id the PID or internal ID of the AtomicDataType to retrieve
      * @return an Optional containing the AtomicDataType, or empty if not found
      */
     @Transactional(readOnly = true)
-    public Optional<AtomicDataType> getAtomicDataType(String pid) {
-        log.debug("Retrieving AtomicDataType with PID: {}", pid);
-        return atomicDataTypeDao.findById(pid);
+    public Optional<AtomicDataType> getAtomicDataType(String id) {
+        log.debug("Retrieving AtomicDataType with ID: {}", id);
+        return atomicDataTypeDao.findById(id);
     }
 
     /**
@@ -134,21 +136,21 @@ public class AtomicDataTypeService {
     /**
      * Partially updates an existing AtomicDataType entity.
      *
-     * @param pid                 the PID of the AtomicDataType to patch
+     * @param id                  the PID or internal ID of the AtomicDataType to patch
      * @param atomicDataTypePatch the partial AtomicDataType entity with fields to update
      * @return the patched AtomicDataType entity
      * @throws IllegalArgumentException if the AtomicDataType does not exist
      */
     @Transactional
-    public AtomicDataType patchAtomicDataType(String pid, AtomicDataType atomicDataTypePatch) {
-        log.debug("Patching AtomicDataType with PID: {}, patch: {}", pid, atomicDataTypePatch);
-        if (pid == null || pid.isEmpty()) {
-            throw new IllegalArgumentException("AtomicDataType PID cannot be null or empty");
+    public AtomicDataType patchAtomicDataType(String id, AtomicDataType atomicDataTypePatch) {
+        log.debug("Patching AtomicDataType with ID: {}, patch: {}", id, atomicDataTypePatch);
+        if (id == null || id.isEmpty()) {
+            throw new IllegalArgumentException("AtomicDataType ID cannot be null or empty");
         }
 
         // Get the current entity
-        AtomicDataType existing = atomicDataTypeDao.findById(pid)
-                .orElseThrow(() -> new IllegalArgumentException("AtomicDataType not found with PID: " + pid));
+        AtomicDataType existing = atomicDataTypeDao.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("AtomicDataType not found with ID: " + id));
         Long previousVersion = existing.getVersion();
 
         // Apply non-null fields from the patch to the existing entity
@@ -189,7 +191,7 @@ public class AtomicDataTypeService {
         // Publish the patched event
         eventPublisher.publishEntityPatched(saved, previousVersion);
 
-        log.info("Patched AtomicDataType with PID: {}", saved.getPid());
+        log.info("Patched AtomicDataType with PID: {}", saved.getId());
         return saved;
     }
 }

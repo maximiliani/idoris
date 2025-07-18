@@ -35,6 +35,49 @@ public interface IAttributeMappingDao extends Neo4jRepository<AttributeMapping, 
     Iterable<AttributeMapping> findByInputAttributePid(String pid);
 
     /**
+     * Finds AttributeMapping entities by input attribute internal ID.
+     *
+     * @param internalId the internal ID of the input attribute
+     * @return an Iterable of AttributeMapping entities
+     */
+    @Query("MATCH (a:Attribute {internalId: $internalId})<-[:input]-(m:AttributeMapping) RETURN m")
+    Iterable<AttributeMapping> findByInputAttributeInternalId(String internalId);
+
+    /**
+     * Finds AttributeMapping entities by input attribute ID (either PID or internal ID).
+     * This method tries to find mappings using both PID and internal ID.
+     *
+     * @param id the ID of the input attribute (either PID or internal ID)
+     * @return an Iterable of AttributeMapping entities
+     */
+    default Iterable<AttributeMapping> findByInputAttributeId(String id) {
+        // Try both PID and internal ID
+        Iterable<AttributeMapping> byPid = findByInputAttributePid(id);
+        Iterable<AttributeMapping> byInternalId = findByInputAttributeInternalId(id);
+
+        // Combine the results
+        return () -> {
+            java.util.Iterator<AttributeMapping> pidIterator = byPid.iterator();
+            java.util.Iterator<AttributeMapping> internalIdIterator = byInternalId.iterator();
+
+            return new java.util.Iterator<AttributeMapping>() {
+                @Override
+                public boolean hasNext() {
+                    return pidIterator.hasNext() || internalIdIterator.hasNext();
+                }
+
+                @Override
+                public AttributeMapping next() {
+                    if (pidIterator.hasNext()) {
+                        return pidIterator.next();
+                    }
+                    return internalIdIterator.next();
+                }
+            };
+        };
+    }
+
+    /**
      * Finds AttributeMapping entities by output attribute PID.
      *
      * @param pid the PID of the output attribute
@@ -42,4 +85,47 @@ public interface IAttributeMappingDao extends Neo4jRepository<AttributeMapping, 
      */
     @Query("MATCH (a:Attribute {pid: $pid})<-[:output]-(m:AttributeMapping) RETURN m")
     Iterable<AttributeMapping> findByOutputAttributePid(String pid);
+
+    /**
+     * Finds AttributeMapping entities by output attribute internal ID.
+     *
+     * @param internalId the internal ID of the output attribute
+     * @return an Iterable of AttributeMapping entities
+     */
+    @Query("MATCH (a:Attribute {internalId: $internalId})<-[:output]-(m:AttributeMapping) RETURN m")
+    Iterable<AttributeMapping> findByOutputAttributeInternalId(String internalId);
+
+    /**
+     * Finds AttributeMapping entities by output attribute ID (either PID or internal ID).
+     * This method tries to find mappings using both PID and internal ID.
+     *
+     * @param id the ID of the output attribute (either PID or internal ID)
+     * @return an Iterable of AttributeMapping entities
+     */
+    default Iterable<AttributeMapping> findByOutputAttributeId(String id) {
+        // Try both PID and internal ID
+        Iterable<AttributeMapping> byPid = findByOutputAttributePid(id);
+        Iterable<AttributeMapping> byInternalId = findByOutputAttributeInternalId(id);
+
+        // Combine the results
+        return () -> {
+            java.util.Iterator<AttributeMapping> pidIterator = byPid.iterator();
+            java.util.Iterator<AttributeMapping> internalIdIterator = byInternalId.iterator();
+
+            return new java.util.Iterator<AttributeMapping>() {
+                @Override
+                public boolean hasNext() {
+                    return pidIterator.hasNext() || internalIdIterator.hasNext();
+                }
+
+                @Override
+                public AttributeMapping next() {
+                    if (pidIterator.hasNext()) {
+                        return pidIterator.next();
+                    }
+                    return internalIdIterator.next();
+                }
+            };
+        };
+    }
 }

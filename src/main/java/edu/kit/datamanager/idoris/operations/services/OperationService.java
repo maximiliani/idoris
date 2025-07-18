@@ -59,7 +59,7 @@ public class OperationService {
         log.debug("Creating Operation: {}", operation);
         Operation saved = operationDao.save(operation);
         eventPublisher.publishEntityCreated(saved);
-        log.info("Created Operation with PID: {}", saved.getPid());
+        log.info("Created Operation with PID: {}", saved.getId());
         return saved;
     }
 
@@ -74,50 +74,50 @@ public class OperationService {
     public Operation updateOperation(Operation operation) {
         log.debug("Updating Operation: {}", operation);
 
-        if (operation.getPid() == null || operation.getPid().isEmpty()) {
+        if (operation.getId() == null || operation.getId().isEmpty()) {
             throw new IllegalArgumentException("Operation must have a PID to be updated");
         }
 
         // Get the current version before updating
-        Operation existing = operationDao.findById(operation.getPid())
-                .orElseThrow(() -> new IllegalArgumentException("Operation not found with PID: " + operation.getPid()));
+        Operation existing = operationDao.findById(operation.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Operation not found with PID: " + operation.getId()));
 
         Long previousVersion = existing.getVersion();
 
         Operation saved = operationDao.save(operation);
         eventPublisher.publishEntityUpdated(saved, previousVersion);
-        log.info("Updated Operation with PID: {}", saved.getPid());
+        log.info("Updated Operation with PID: {}", saved.getId());
         return saved;
     }
 
     /**
      * Deletes an Operation entity.
      *
-     * @param pid the PID of the Operation to delete
+     * @param id the PID or internal ID of the Operation to delete
      * @throws IllegalArgumentException if the Operation does not exist
      */
     @Transactional
-    public void deleteOperation(String pid) {
-        log.debug("Deleting Operation with PID: {}", pid);
+    public void deleteOperation(String id) {
+        log.debug("Deleting Operation with ID: {}", id);
 
-        Operation operation = operationDao.findById(pid)
-                .orElseThrow(() -> new IllegalArgumentException("Operation not found with PID: " + pid));
+        Operation operation = operationDao.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Operation not found with ID: " + id));
 
         operationDao.delete(operation);
         eventPublisher.publishEntityDeleted(operation);
-        log.info("Deleted Operation with PID: {}", pid);
+        log.info("Deleted Operation with ID: {}", id);
     }
 
     /**
-     * Retrieves an Operation entity by its PID.
+     * Retrieves an Operation entity by its PID or internal ID.
      *
-     * @param pid the PID of the Operation to retrieve
+     * @param id the PID or internal ID of the Operation to retrieve
      * @return an Optional containing the Operation, or empty if not found
      */
     @Transactional(readOnly = true)
-    public Optional<Operation> getOperation(String pid) {
-        log.debug("Retrieving Operation with PID: {}", pid);
-        return operationDao.findById(pid);
+    public Optional<Operation> getOperation(String id) {
+        log.debug("Retrieving Operation with ID: {}", id);
+        return operationDao.findById(id);
     }
 
     /**
@@ -134,33 +134,33 @@ public class OperationService {
     /**
      * Retrieves all Operations for a DataType.
      *
-     * @param dataTypePid the PID of the DataType
+     * @param dataTypeId the ID of the DataType (either PID or internal ID)
      * @return an iterable of Operations for the DataType
      */
     @Transactional(readOnly = true)
-    public Iterable<Operation> getOperationsForDataType(String dataTypePid) {
-        log.debug("Retrieving Operations for DataType with PID: {}", dataTypePid);
-        return operationDao.getOperationsForDataType(dataTypePid);
+    public Iterable<Operation> getOperationsForDataType(String dataTypeId) {
+        log.debug("Retrieving Operations for DataType with ID: {}", dataTypeId);
+        return operationDao.getOperationsForDataType(dataTypeId);
     }
 
     /**
      * Partially updates an existing Operation entity.
      *
-     * @param pid            the PID of the Operation to patch
+     * @param id             the PID or internal ID of the Operation to patch
      * @param operationPatch the partial Operation entity with fields to update
      * @return the patched Operation entity
      * @throws IllegalArgumentException if the Operation does not exist
      */
     @Transactional
-    public Operation patchOperation(String pid, Operation operationPatch) {
-        log.debug("Patching Operation with PID: {}, patch: {}", pid, operationPatch);
-        if (pid == null || pid.isEmpty()) {
-            throw new IllegalArgumentException("Operation PID cannot be null or empty");
+    public Operation patchOperation(String id, Operation operationPatch) {
+        log.debug("Patching Operation with ID: {}, patch: {}", id, operationPatch);
+        if (id == null || id.isEmpty()) {
+            throw new IllegalArgumentException("Operation ID cannot be null or empty");
         }
 
         // Get the current entity
-        Operation existing = operationDao.findById(pid)
-                .orElseThrow(() -> new IllegalArgumentException("Operation not found with PID: " + pid));
+        Operation existing = operationDao.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Operation not found with ID: " + id));
         Long previousVersion = existing.getVersion();
 
         // Apply non-null fields from the patch to the existing entity
@@ -189,7 +189,7 @@ public class OperationService {
         // Publish the patched event
         eventPublisher.publishEntityPatched(saved, previousVersion);
 
-        log.info("Patched Operation with PID: {}", saved.getPid());
+        log.info("Patched Operation with PID: {}", saved.getId());
         return saved;
     }
 }

@@ -42,16 +42,16 @@ public class AttributeModelAssembler implements EntityModelAssembler<Attribute> 
         EntityModel<Attribute> entityModel = toModelWithoutLinks(attribute);
 
         // Add self link
-        entityModel.add(linkTo(methodOn(AttributeController.class).getAttribute(attribute.getPid())).withSelfRel());
+        entityModel.add(linkTo(methodOn(AttributeController.class).getAttribute(attribute.getId())).withSelfRel());
 
         // Add link to data type
         if (attribute.getDataType() != null) {
-            entityModel.add(linkTo(methodOn(AttributeController.class).getDataType(attribute.getPid())).withRel("dataType"));
+            entityModel.add(linkTo(methodOn(AttributeController.class).getDataType(attribute.getId())).withRel("dataType"));
         }
 
         // Add link to override attribute if it exists
         if (attribute.getOverride() != null) {
-            entityModel.add(linkTo(methodOn(AttributeController.class).getAttribute(attribute.getOverride().getPid())).withRel("override"));
+            entityModel.add(linkTo(methodOn(AttributeController.class).getAttribute(attribute.getOverride().getId())).withRel("override"));
         }
 
         // Add link to all attributes

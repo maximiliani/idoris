@@ -107,12 +107,21 @@ public class AttributeController implements IAttributeApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<EntityModel<Attribute>> updateAttribute(String pid, Attribute attribute) {
-        if (attributeService.getAttribute(pid).isEmpty()) {
+    public ResponseEntity<EntityModel<Attribute>> updateAttribute(String id, Attribute attribute) {
+        // Check if the entity exists
+        if (attributeService.getAttribute(id).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        attribute.setPid(pid);
+        // Get the existing entity to get its PID and internalId
+        Attribute existing = attributeService.getAttribute(id).get();
+
+        // Set the PID from the existing entity
+        attribute.setInternalId(existing.getId());
+
+        // Ensure internal ID is preserved
+        attribute.setInternalId(existing.getInternalId());
+
         Attribute updatedAttribute = attributeService.updateAttribute(attribute);
         EntityModel<Attribute> entityModel = attributeModelAssembler.toModel(updatedAttribute);
         return ResponseEntity.ok(entityModel);

@@ -50,7 +50,7 @@ public class TypeProfileModelAssembler implements
         EntityModel<TypeProfile> entityModel = toModelWithoutLinks(typeProfile);
 
         // Add self link
-        entityModel.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(typeProfile.getPid())).withSelfRel());
+        entityModel.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(typeProfile.getId())).withSelfRel());
 
         // Add link to all type profiles
         entityModel.add(linkTo(methodOn(TypeProfileController.class).getAllTypeProfiles()).withRel("typeProfiles"));
@@ -72,7 +72,7 @@ public class TypeProfileModelAssembler implements
             return model;
         }
 
-        String pid = typeProfile.getPid();
+        String pid = typeProfile.getId();
 
         // Add link to validate
         model.add(linkTo(methodOn(TypeProfileController.class).validate(pid)).withRel("validate"));

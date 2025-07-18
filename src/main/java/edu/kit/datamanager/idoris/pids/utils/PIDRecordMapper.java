@@ -28,10 +28,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Utility class for mapping between PersistentIdentifier entities and PIDRecord objects.
@@ -57,16 +59,6 @@ public class PIDRecordMapper {
     }
 
     /**
-     * Creates an empty PIDRecord with no entries.
-     * This is used when creating a new PID record in the Typed PID Maker service.
-     *
-     * @return An empty PIDRecord
-     */
-    public PIDRecord createEmptyPIDRecord() {
-        return new PIDRecord("", new ArrayList<>());
-    }
-
-    /**
      * Converts a PersistentIdentifier to a PIDRecord.
      * This method creates a PIDRecord with metadata from the PersistentIdentifier and its associated entity.
      *
@@ -75,6 +67,10 @@ public class PIDRecordMapper {
      */
     public PIDRecord toPIDRecord(PersistentIdentifier pid) {
         List<PIDRecordEntry> recordEntries = new ArrayList<>();
+        AdministrativeMetadata entity = pid.getEntity();
+
+        // Helmholtz Kernel Information Profile
+        recordEntries.add(new PIDRecordEntry("21.T11148/076759916209e5d62bd5", "21.T11148/b9b76f887845e32d29f7"));
 
         // Always add a pointer to the entity
         String baseUrl = getBaseUrl();
@@ -83,45 +79,37 @@ public class PIDRecordMapper {
         if (pid.isTombstone()) {
             // For tombstones, use a special URL that indicates the entity has been deleted
             doLocation = String.format("%s/tombstone/%s", baseUrl, pid.getPid());
-            recordEntries.add(new PIDRecordEntry("tombstone", "true"));
-            recordEntries.add(new PIDRecordEntry("deletedAt", pid.getDeletedAt().toString()));
+            recordEntries.add(new PIDRecordEntry("21.T11148/d1ec8ccbfa6de41da894", "TOMBSTONE")); //TODO: Add more tombstone information
+//            recordEntries.add(new PIDRecordEntry("deletedAt", pid.getDeletedAt().toString()));
         } else {
             // For active entities, use a URL that points to the entity
             doLocation = String.format("%s/pid/%s", baseUrl, pid.getPid());
         }
 
         log.debug("Using DO location: {}", doLocation);
-        recordEntries.add(new PIDRecordEntry("digitalObjectLocation", doLocation));
+        recordEntries.add(new PIDRecordEntry("21.T11148/b8457812905b83046284", doLocation));
 
-        // Add entity type information
-        recordEntries.add(new PIDRecordEntry("entityType", pid.getEntityType()));
+        // Add entity type information as digitalObjectType (currently hardcoded to "application/json")
+        recordEntries.add(new PIDRecordEntry("21.T11148/1c699a5d1b4ad3ba4956", "21.T11148/ca9fd0b2414177b79ac2"));
 
-        // Add custom metadata from the PersistentIdentifier
-        for (Map.Entry<String, String> entry : pid.getMetadata().entrySet()) {
-            recordEntries.add(new PIDRecordEntry(entry.getKey(), entry.getValue()));
+        // Add CC0 license information
+        recordEntries.add(new PIDRecordEntry("21.T11148/2f314c8fe5fb6a0063a8", "https://spdx.org/license/CC0-1.0/"));
+
+        // Add nested SHA-256 hash for the doLocation
+        String sha256Hash = "";
+        try {
+            // Calculate the SHA-256 hash of the doLocation as hex string
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : MessageDigest.getInstance("SHA-256").digest(doLocation.getBytes(StandardCharsets.UTF_8))) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            sha256Hash = hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
         }
-
-        // Only add additional metadata if configured to do so and the entity is not null (not a tombstone)
-        if (config.isMeaningfulPIDRecords() && pid.getEntity() != null) {
-            addAdministrativeMetadata(recordEntries, pid.getEntity());
-        }
-
-        // Create the PID record
-        PIDRecord pidRecord = new PIDRecord(pid.getPid(), recordEntries);
-        log.debug("Created PIDRecord: {}", pidRecord);
-        return pidRecord;
-    }
-
-    /**
-     * Adds administrative metadata from an AdministrativeMetadata entity to a list of PIDRecordEntry objects.
-     * This method is used to add metadata to a PID record based on the Helmholtz Kernel Information Profile.
-     *
-     * @param recordEntries The list of PIDRecordEntry objects to add metadata to
-     * @param entity        The AdministrativeMetadata entity to get metadata from
-     */
-    private void addAdministrativeMetadata(List<PIDRecordEntry> recordEntries, AdministrativeMetadata entity) {
-        // Helmholtz Kernel Information Profile
-        recordEntries.add(new PIDRecordEntry("21.T11148/076759916209e5d62bd5", "21.T11148/b9b76f887845e32d29f7"));
+        recordEntries.add(new PIDRecordEntry("21.T11148/82e2503c49209e987740", String.format("{\"sha256sum\": \"sha256 %s\"}", sha256Hash)));
 
         // Add basic metadata
         if (entity.getName() != null) {
@@ -175,6 +163,11 @@ public class PIDRecordMapper {
                 }
             });
         }
+
+        // Create the PID record
+        PIDRecord pidRecord = new PIDRecord(pid.getPid(), recordEntries);
+        log.debug("Created PIDRecord: {}", pidRecord);
+        return pidRecord;
     }
 
     /**

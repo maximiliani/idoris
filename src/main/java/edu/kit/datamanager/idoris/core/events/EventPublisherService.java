@@ -107,28 +107,28 @@ public class EventPublisherService {
     }
 
     /**
-     * Publishes a PID generated event.
+     * Publishes an ID generated event.
      *
-     * @param entity   the entity for which the PID was generated
-     * @param pid      the generated PID
-     * @param isNewPID indicates whether this is a newly generated PID or an existing one
-     * @param <T>      the type of entity
+     * @param entity  the entity for which the ID was generated
+     * @param id      the generated ID
+     * @param isNewID indicates whether this is a newly generated ID or an existing one
+     * @param <T>     the type of entity
      */
-    public <T extends AdministrativeMetadata> void publishPIDGenerated(T entity, String pid, boolean isNewPID) {
-        log.debug("Publishing PIDGeneratedEvent for entity: {}, PID: {}, isNewPID: {}", entity, pid, isNewPID);
-        eventPublisher.publishEvent(new PIDGeneratedEvent<>(entity, pid, isNewPID));
+    public <T extends AdministrativeMetadata> void publishIDGenerated(T entity, String id, boolean isNewID) {
+        log.debug("Publishing IDGeneratedEvent for entity: {}, ID: {}, isNewID: {}", entity, id, isNewID);
+        eventPublisher.publishEvent(new PIDGeneratedEvent<>(entity, id, isNewID));
     }
 
     /**
-     * Publishes a PID generated event.
-     * Assumes that the PID is newly generated.
+     * Publishes an ID generated event.
+     * Assumes that the ID is newly generated.
      *
-     * @param entity the entity for which the PID was generated
-     * @param pid    the generated PID
+     * @param entity the entity for which the ID was generated
+     * @param id     the generated ID
      * @param <T>    the type of entity
      */
-    public <T extends AdministrativeMetadata> void publishPIDGenerated(T entity, String pid) {
-        publishPIDGenerated(entity, pid, true);
+    public <T extends AdministrativeMetadata> void publishIDGenerated(T entity, String id) {
+        publishIDGenerated(entity, id, true);
     }
 
     /**

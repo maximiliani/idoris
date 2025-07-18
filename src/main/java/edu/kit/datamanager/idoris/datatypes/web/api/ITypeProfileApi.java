@@ -57,15 +57,15 @@ public interface ITypeProfileApi {
     ResponseEntity<CollectionModel<EntityModel<TypeProfile>>> getAllTypeProfiles();
 
     /**
-     * Gets a TypeProfile entity by its PID.
+     * Gets a TypeProfile entity by its PID or internal ID.
      *
-     * @param pid the PID of the TypeProfile to retrieve
+     * @param id the PID or internal ID of the TypeProfile to retrieve
      * @return the TypeProfile entity
      */
-    @GetMapping("/{pid}")
+    @GetMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
-            summary = "Get a TypeProfile by PID",
-            description = "Returns a TypeProfile entity by its PID",
+            summary = "Get a TypeProfile by PID or internal ID",
+            description = "Returns a TypeProfile entity by its PID or internal ID",
             responses = {
                     @ApiResponse(responseCode = "200", description = "TypeProfile found",
                             content = @Content(mediaType = "application/hal+json",
@@ -74,16 +74,16 @@ public interface ITypeProfileApi {
             }
     )
     ResponseEntity<EntityModel<TypeProfile>> getTypeProfile(
-            @Parameter(description = "PID of the TypeProfile", required = true)
-            @PathVariable String pid);
+            @Parameter(description = "PID or internal ID of the TypeProfile", required = true)
+            @PathVariable String id);
 
     /**
      * Gets operations for a TypeProfile.
      *
-     * @param pid the PID of the TypeProfile
+     * @param id the PID or internal ID of the TypeProfile
      * @return a collection of operations for the TypeProfile
      */
-    @GetMapping("/{pid}/operations")
+    @GetMapping("/{id}/operations")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get operations for a TypeProfile",
             description = "Returns a collection of operations that can be executed on a TypeProfile",
@@ -95,16 +95,16 @@ public interface ITypeProfileApi {
             }
     )
     ResponseEntity<CollectionModel<EntityModel<Operation>>> getOperationsForTypeProfile(
-            @Parameter(description = "PID of the TypeProfile", required = true)
-            @PathVariable String pid);
+            @Parameter(description = "PID or internal ID of the TypeProfile", required = true)
+            @PathVariable String id);
 
     /**
      * Validates a TypeProfile entity.
      *
-     * @param pid the PID of the TypeProfile to validate
+     * @param id the PID or internal ID of the TypeProfile to validate
      * @return the validation result
      */
-    @GetMapping("/{pid}/validate")
+    @GetMapping("/{id}/validate")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Validate a TypeProfile",
             description = "Validates a TypeProfile entity and returns the validation result",
@@ -115,16 +115,16 @@ public interface ITypeProfileApi {
             }
     )
     ResponseEntity<?> validate(
-            @Parameter(description = "PID of the TypeProfile", required = true)
-            @PathVariable String pid);
+            @Parameter(description = "PID or internal ID of the TypeProfile", required = true)
+            @PathVariable String id);
 
     /**
      * Gets inherited attributes for a TypeProfile.
      *
-     * @param pid the PID of the TypeProfile
+     * @param id the PID or internal ID of the TypeProfile
      * @return a collection of inherited attributes
      */
-    @GetMapping("/{pid}/inheritedAttributes")
+    @GetMapping("/{id}/inheritedAttributes")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get inherited attributes of a TypeProfile",
             description = "Returns a collection of attributes inherited by a TypeProfile",
@@ -136,8 +136,8 @@ public interface ITypeProfileApi {
             }
     )
     ResponseEntity<CollectionModel<EntityModel<Attribute>>> getInheritedAttributes(
-            @Parameter(description = "PID of the TypeProfile", required = true)
-            @PathVariable String pid);
+            @Parameter(description = "PID or internal ID of the TypeProfile", required = true)
+            @PathVariable String id);
 
     /**
      * Creates a new TypeProfile entity.
@@ -165,11 +165,11 @@ public interface ITypeProfileApi {
      * Updates an existing TypeProfile entity.
      * The entity is validated before saving.
      *
-     * @param pid         the PID of the TypeProfile to update
+     * @param id          the PID or internal ID of the TypeProfile to update
      * @param typeProfile the updated TypeProfile entity
      * @return the updated TypeProfile entity
      */
-    @PutMapping("/{pid}")
+    @PutMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Update a TypeProfile",
             description = "Updates an existing TypeProfile entity after validating it",
@@ -182,18 +182,18 @@ public interface ITypeProfileApi {
             }
     )
     ResponseEntity<EntityModel<TypeProfile>> updateTypeProfile(
-            @Parameter(description = "PID of the TypeProfile", required = true)
-            @PathVariable String pid,
+            @Parameter(description = "PID or internal ID of the TypeProfile", required = true)
+            @PathVariable String id,
             @Parameter(description = "Updated TypeProfile", required = true)
             @Valid @RequestBody TypeProfile typeProfile);
 
     /**
      * Deletes a TypeProfile entity.
      *
-     * @param pid the PID of the TypeProfile to delete
+     * @param id the PID or internal ID of the TypeProfile to delete
      * @return no content
      */
-    @DeleteMapping("/{pid}")
+    @DeleteMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Delete a TypeProfile",
             description = "Deletes a TypeProfile entity",
@@ -203,16 +203,16 @@ public interface ITypeProfileApi {
             }
     )
     ResponseEntity<Void> deleteTypeProfile(
-            @Parameter(description = "PID of the TypeProfile", required = true)
-            @PathVariable String pid);
+            @Parameter(description = "PID or internal ID of the TypeProfile", required = true)
+            @PathVariable String id);
 
     /**
      * Gets the inheritance tree of a TypeProfile.
      *
-     * @param pid the PID of the TypeProfile
+     * @param id the PID or internal ID of the TypeProfile
      * @return the inheritance tree
      */
-    @GetMapping("/{pid}/inheritanceTree")
+    @GetMapping("/{id}/inheritanceTree")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get inheritance tree of a TypeProfile",
             description = "Returns the inheritance tree of a TypeProfile",
@@ -223,17 +223,17 @@ public interface ITypeProfileApi {
             }
     )
     ResponseEntity<EntityModel<TypeProfileInheritance>> getInheritanceTree(
-            @Parameter(description = "PID of the TypeProfile", required = true)
-            @NotNull @PathVariable String pid);
+            @Parameter(description = "PID or internal ID of the TypeProfile", required = true)
+            @NotNull @PathVariable String id);
 
     /**
      * Partially updates a TypeProfile entity.
      *
-     * @param pid              the PID of the TypeProfile to patch
+     * @param id               the PID or internal ID of the TypeProfile to patch
      * @param typeProfilePatch the partial TypeProfile entity with fields to update
      * @return the patched TypeProfile entity
      */
-    @PatchMapping("/{pid}")
+    @PatchMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Partially update a TypeProfile",
             description = "Updates specific fields of an existing TypeProfile entity",
@@ -246,8 +246,8 @@ public interface ITypeProfileApi {
             }
     )
     ResponseEntity<EntityModel<TypeProfile>> patchTypeProfile(
-            @Parameter(description = "PID of the TypeProfile", required = true)
-            @PathVariable String pid,
+            @Parameter(description = "PID or internal ID of the TypeProfile", required = true)
+            @PathVariable String id,
             @Parameter(description = "Partial TypeProfile with fields to update", required = true)
             @RequestBody TypeProfile typeProfilePatch);
 }

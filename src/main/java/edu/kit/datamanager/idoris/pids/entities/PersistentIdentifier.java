@@ -26,8 +26,6 @@ import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Entity representing a Persistent Identifier (PID) in the system.
@@ -92,55 +90,6 @@ public class PersistentIdentifier {
      */
     @Relationship(value = "IDENTIFIES", direction = Relationship.Direction.OUTGOING)
     private AdministrativeMetadata entity;
-
-    /**
-     * Additional metadata stored in the PID record.
-     * This is a map of key-value pairs that can be used to store any additional information.
-     */
-    private Map<String, String> metadata = new HashMap<>();
-
-    /**
-     * Adds a metadata entry to this PID record.
-     *
-     * @param key   The key of the metadata entry
-     * @param value The value of the metadata entry
-     * @return This PID record for method chaining
-     */
-    public PersistentIdentifier addMetadata(String key, String value) {
-        metadata.put(key, value);
-        return this;
-    }
-
-    /**
-     * Removes a metadata entry from this PID record.
-     *
-     * @param key The key of the metadata entry to remove
-     * @return This PID record for method chaining
-     */
-    public PersistentIdentifier removeMetadata(String key) {
-        metadata.remove(key);
-        return this;
-    }
-
-    /**
-     * Clears all metadata entries from this PID record.
-     *
-     * @return This PID record for method chaining
-     */
-    public PersistentIdentifier clearMetadata() {
-        metadata.clear();
-        return this;
-    }
-
-    /**
-     * Gets the value of a metadata entry.
-     *
-     * @param key The key of the metadata entry
-     * @return The value of the metadata entry, or null if the key does not exist
-     */
-    public String getMetadataValue(String key) {
-        return metadata.get(key);
-    }
 
     /**
      * Marks this PID record as a tombstone, indicating that the entity it identifies has been deleted.

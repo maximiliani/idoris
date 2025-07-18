@@ -136,8 +136,8 @@ public class InheritanceValidator extends ValidationVisitor {
         if (typeProfile.getInheritsFrom() != null && typeProfile.getInheritsFrom().size() > 0) {
             for (TypeProfile parent : typeProfile.getInheritsFrom()) {
                 if (parent.isAbstract() && !typeProfile.isAbstract()) {
-                    result.addMessage("TypeProfile " + typeProfile.getPid() + " is not abstract, but inherits from the TypeProfile " +
-                            parent.getPid() + " that is abstract.", typeProfile, ERROR);
+                    result.addMessage("TypeProfile " + typeProfile.getId() + " is not abstract, but inherits from the TypeProfile " +
+                            parent.getId() + " that is abstract.", typeProfile, ERROR);
                 }
             }
         }

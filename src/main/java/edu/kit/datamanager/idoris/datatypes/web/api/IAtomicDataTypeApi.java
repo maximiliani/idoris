@@ -53,15 +53,15 @@ public interface IAtomicDataTypeApi {
     ResponseEntity<CollectionModel<EntityModel<AtomicDataType>>> getAllAtomicDataTypes();
 
     /**
-     * Gets an AtomicDataType entity by its PID.
+     * Gets an AtomicDataType entity by its PID or internal ID.
      *
-     * @param pid the PID of the AtomicDataType to retrieve
+     * @param id the PID or internal ID of the AtomicDataType to retrieve
      * @return the AtomicDataType entity
      */
-    @GetMapping("/{pid}")
+    @GetMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
-            summary = "Get an AtomicDataType by PID",
-            description = "Returns an AtomicDataType entity by its PID",
+            summary = "Get an AtomicDataType by PID or internal ID",
+            description = "Returns an AtomicDataType entity by its PID or internal ID",
             responses = {
                     @ApiResponse(responseCode = "200", description = "AtomicDataType found",
                             content = @Content(mediaType = "application/hal+json",
@@ -70,8 +70,8 @@ public interface IAtomicDataTypeApi {
             }
     )
     ResponseEntity<EntityModel<AtomicDataType>> getAtomicDataType(
-            @Parameter(description = "PID of the AtomicDataType", required = true)
-            @PathVariable String pid);
+            @Parameter(description = "PID or internal ID of the AtomicDataType", required = true)
+            @PathVariable String id);
 
     /**
      * Creates a new AtomicDataType entity.
@@ -99,11 +99,11 @@ public interface IAtomicDataTypeApi {
      * Updates an existing AtomicDataType entity.
      * The entity is validated before saving.
      *
-     * @param pid            the PID of the AtomicDataType to update
+     * @param id             the PID or internal ID of the AtomicDataType to update
      * @param atomicDataType the updated AtomicDataType entity
      * @return the updated AtomicDataType entity
      */
-    @PutMapping("/{pid}")
+    @PutMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Update an AtomicDataType",
             description = "Updates an existing AtomicDataType entity after validating it",
@@ -116,18 +116,18 @@ public interface IAtomicDataTypeApi {
             }
     )
     ResponseEntity<EntityModel<AtomicDataType>> updateAtomicDataType(
-            @Parameter(description = "PID of the AtomicDataType", required = true)
-            @PathVariable String pid,
+            @Parameter(description = "PID or internal ID of the AtomicDataType", required = true)
+            @PathVariable String id,
             @Parameter(description = "Updated AtomicDataType", required = true)
             @Valid @RequestBody AtomicDataType atomicDataType);
 
     /**
      * Deletes an AtomicDataType entity.
      *
-     * @param pid the PID of the AtomicDataType to delete
+     * @param id the PID or internal ID of the AtomicDataType to delete
      * @return no content
      */
-    @DeleteMapping("/{pid}")
+    @DeleteMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Delete an AtomicDataType",
             description = "Deletes an AtomicDataType entity",
@@ -137,16 +137,16 @@ public interface IAtomicDataTypeApi {
             }
     )
     ResponseEntity<Void> deleteAtomicDataType(
-            @Parameter(description = "PID of the AtomicDataType", required = true)
-            @PathVariable String pid);
+            @Parameter(description = "PID or internal ID of the AtomicDataType", required = true)
+            @PathVariable String id);
 
     /**
      * Gets operations for an AtomicDataType.
      *
-     * @param pid the PID of the AtomicDataType
+     * @param id the PID or internal ID of the AtomicDataType
      * @return a collection of operations for the AtomicDataType
      */
-    @GetMapping("/{pid}/operations")
+    @GetMapping("/{id}/operations")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get operations for an AtomicDataType",
             description = "Returns a collection of operations that can be executed on an AtomicDataType",
@@ -158,17 +158,17 @@ public interface IAtomicDataTypeApi {
             }
     )
     ResponseEntity<CollectionModel<EntityModel<edu.kit.datamanager.idoris.operations.entities.Operation>>> getOperationsForAtomicDataType(
-            @Parameter(description = "PID of the AtomicDataType", required = true)
-            @PathVariable String pid);
+            @Parameter(description = "PID or internal ID of the AtomicDataType", required = true)
+            @PathVariable String id);
 
     /**
      * Partially updates an AtomicDataType entity.
      *
-     * @param pid                 the PID of the AtomicDataType to patch
+     * @param id                  the PID or internal ID of the AtomicDataType to patch
      * @param atomicDataTypePatch the partial AtomicDataType entity with fields to update
      * @return the patched AtomicDataType entity
      */
-    @PatchMapping("/{pid}")
+    @PatchMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Partially update an AtomicDataType",
             description = "Updates specific fields of an existing AtomicDataType entity",
@@ -181,8 +181,8 @@ public interface IAtomicDataTypeApi {
             }
     )
     ResponseEntity<EntityModel<AtomicDataType>> patchAtomicDataType(
-            @Parameter(description = "PID of the AtomicDataType", required = true)
-            @PathVariable String pid,
+            @Parameter(description = "PID or internal ID of the AtomicDataType", required = true)
+            @PathVariable String id,
             @Parameter(description = "Partial AtomicDataType with fields to update", required = true)
             @RequestBody AtomicDataType atomicDataTypePatch);
 }

@@ -60,7 +60,7 @@ public class TypeProfileService {
         log.debug("Creating TypeProfile: {}", typeProfile);
         TypeProfile saved = typeProfileDao.save(typeProfile);
         eventPublisher.publishEntityCreated(saved);
-        log.info("Created TypeProfile with PID: {}", saved.getPid());
+        log.info("Created TypeProfile with PID: {}", saved.getId());
         return saved;
     }
 
@@ -74,45 +74,47 @@ public class TypeProfileService {
     @Transactional
     public TypeProfile updateTypeProfile(TypeProfile typeProfile) {
         log.debug("Updating TypeProfile: {}", typeProfile);
-        if (typeProfile.getPid() == null || typeProfile.getPid().isEmpty()) {
+        if (typeProfile.getId() == null || typeProfile.getId().isEmpty()) {
             throw new IllegalArgumentException("TypeProfile must have a PID to be updated");
         }
         // Get the current version before updating
-        TypeProfile existing = typeProfileDao.findById(typeProfile.getPid())
-                .orElseThrow(() -> new IllegalArgumentException("TypeProfile not found with PID: " + typeProfile.getPid()));
+        TypeProfile existing = typeProfileDao.findById(typeProfile.getId())
+                .orElseThrow(() -> new IllegalArgumentException("TypeProfile not found with PID: " + typeProfile.getId()));
         Long previousVersion = existing.getVersion();
         TypeProfile saved = typeProfileDao.save(typeProfile);
         eventPublisher.publishEntityUpdated(saved, previousVersion);
-        log.info("Updated TypeProfile with PID: {}", saved.getPid());
+        log.info("Updated TypeProfile with PID: {}", saved.getId());
         return saved;
     }
 
     /**
      * Deletes a TypeProfile entity.
      *
-     * @param pid the PID of the TypeProfile to delete
+     * @param id the PID or internal ID of the TypeProfile to delete
      * @throws IllegalArgumentException if the TypeProfile does not exist
      */
     @Transactional
-    public void deleteTypeProfile(String pid) {
-        log.debug("Deleting TypeProfile with PID: {}", pid);
-        TypeProfile typeProfile = typeProfileDao.findById(pid)
-                .orElseThrow(() -> new IllegalArgumentException("TypeProfile not found with PID: " + pid));
+    public void deleteTypeProfile(String id) {
+        log.debug("Deleting TypeProfile with ID: {}", id);
+
+        TypeProfile typeProfile = typeProfileDao.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("TypeProfile not found with ID: " + id));
+
         typeProfileDao.delete(typeProfile);
         eventPublisher.publishEntityDeleted(typeProfile);
-        log.info("Deleted TypeProfile with PID: {}", pid);
+        log.info("Deleted TypeProfile with ID: {}", id);
     }
 
     /**
-     * Retrieves a TypeProfile entity by its PID.
+     * Retrieves a TypeProfile entity by its PID or internal ID.
      *
-     * @param pid the PID of the TypeProfile to retrieve
+     * @param id the PID or internal ID of the TypeProfile to retrieve
      * @return an Optional containing the TypeProfile, or empty if not found
      */
     @Transactional(readOnly = true)
-    public Optional<TypeProfile> getTypeProfile(String pid) {
-        log.debug("Retrieving TypeProfile with PID: {}", pid);
-        return typeProfileDao.findById(pid);
+    public Optional<TypeProfile> getTypeProfile(String id) {
+        log.debug("Retrieving TypeProfile with ID: {}", id);
+        return typeProfileDao.findById(id);
     }
 
     /**
@@ -129,15 +131,17 @@ public class TypeProfileService {
     /**
      * Validates a TypeProfile entity.
      *
-     * @param pid the PID of the TypeProfile to validate
+     * @param id the PID or internal ID of the TypeProfile to validate
      * @return the validation result
      * @throws IllegalArgumentException if the TypeProfile does not exist
      */
     @Transactional(readOnly = true)
-    public ValidationResult validateTypeProfile(String pid) {
-        log.debug("Validating TypeProfile with PID: {}", pid);
-        TypeProfile typeProfile = typeProfileDao.findById(pid)
-                .orElseThrow(() -> new IllegalArgumentException("TypeProfile not found with PID: " + pid));
+    public ValidationResult validateTypeProfile(String id) {
+        log.debug("Validating TypeProfile with ID: {}", id);
+
+        TypeProfile typeProfile = typeProfileDao.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("TypeProfile not found with ID: " + id));
+
         ValidationPolicyValidator validator = new ValidationPolicyValidator();
         return typeProfile.execute(validator);
     }
@@ -145,38 +149,38 @@ public class TypeProfileService {
     /**
      * Retrieves all TypeProfiles in the inheritance chain of a TypeProfile.
      *
-     * @param pid the PID of the TypeProfile
+     * @param id the PID or internal ID of the TypeProfile
      * @return an Iterable of TypeProfiles in the inheritance chain
      * @throws IllegalArgumentException if the TypeProfile does not exist
      */
     @Transactional(readOnly = true)
-    public Iterable<TypeProfile> getInheritanceChain(String pid) {
-        log.debug("Retrieving inheritance chain for TypeProfile with PID: {}", pid);
-        // Check if the TypeProfile exists
-        if (!typeProfileDao.existsById(pid)) {
-            throw new IllegalArgumentException("TypeProfile not found with PID: " + pid);
-        }
-        return typeProfileDao.findAllTypeProfilesInInheritanceChain(pid);
+    public Iterable<TypeProfile> getInheritanceChain(String id) {
+        log.debug("Retrieving inheritance chain for TypeProfile with ID: {}", id);
+
+        TypeProfile typeProfile = typeProfileDao.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("TypeProfile not found with ID: " + id));
+
+        return typeProfileDao.findAllTypeProfilesInInheritanceChain(typeProfile.getId());
     }
 
     /**
      * Partially updates an existing TypeProfile entity.
      *
-     * @param pid              the PID of the TypeProfile to patch
+     * @param id               the PID or internal ID of the TypeProfile to patch
      * @param typeProfilePatch the partial TypeProfile entity with fields to update
      * @return the patched TypeProfile entity
      * @throws IllegalArgumentException if the TypeProfile does not exist
      */
     @Transactional
-    public TypeProfile patchTypeProfile(String pid, TypeProfile typeProfilePatch) {
-        log.debug("Patching TypeProfile with PID: {}, patch: {}", pid, typeProfilePatch);
-        if (pid == null || pid.isEmpty()) {
-            throw new IllegalArgumentException("TypeProfile PID cannot be null or empty");
+    public TypeProfile patchTypeProfile(String id, TypeProfile typeProfilePatch) {
+        log.debug("Patching TypeProfile with ID: {}, patch: {}", id, typeProfilePatch);
+        if (id == null || id.isEmpty()) {
+            throw new IllegalArgumentException("TypeProfile ID cannot be null or empty");
         }
 
         // Get the current entity
-        TypeProfile existing = typeProfileDao.findById(pid)
-                .orElseThrow(() -> new IllegalArgumentException("TypeProfile not found with PID: " + pid));
+        TypeProfile existing = typeProfileDao.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("TypeProfile not found with ID: " + id));
         Long previousVersion = existing.getVersion();
 
         // Apply non-null fields from the patch to the existing entity
@@ -199,7 +203,7 @@ public class TypeProfileService {
         // Publish the patched event
         eventPublisher.publishEntityPatched(saved, previousVersion);
 
-        log.info("Patched TypeProfile with PID: {}", saved.getPid());
+        log.info("Patched TypeProfile with PID: {}", saved.getId());
         return saved;
     }
 }

@@ -55,15 +55,15 @@ public interface IAttributeApi {
     ResponseEntity<CollectionModel<EntityModel<Attribute>>> getAllAttributes();
 
     /**
-     * Gets an Attribute entity by its PID.
+     * Gets an Attribute entity by its PID or internal ID.
      *
-     * @param pid the PID of the Attribute to retrieve
+     * @param id the PID or internal ID of the Attribute to retrieve
      * @return the Attribute entity
      */
-    @GetMapping("/{pid}")
+    @GetMapping("/{id}")
     @Operation(
-            summary = "Get an Attribute by PID",
-            description = "Returns an Attribute entity by its PID",
+            summary = "Get an Attribute by PID or internal ID",
+            description = "Returns an Attribute entity by its PID or internal ID",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Attribute found",
                             content = @Content(mediaType = "application/hal+json",
@@ -72,16 +72,16 @@ public interface IAttributeApi {
             }
     )
     ResponseEntity<EntityModel<Attribute>> getAttribute(
-            @Parameter(description = "PID of the Attribute", required = true)
-            @PathVariable String pid);
+            @Parameter(description = "PID or internal ID of the Attribute", required = true)
+            @PathVariable String id);
 
     /**
      * Gets the DataType of an Attribute.
      *
-     * @param pid the PID of the Attribute
+     * @param id the PID or internal ID of the Attribute
      * @return the DataType of the Attribute
      */
-    @GetMapping("/{pid}/dataType")
+    @GetMapping("/{id}/dataType")
     @Operation(
             summary = "Get the DataType of an Attribute",
             description = "Returns the DataType of an Attribute",
@@ -93,8 +93,8 @@ public interface IAttributeApi {
             }
     )
     ResponseEntity<EntityModel<DataType>> getDataType(
-            @Parameter(description = "PID of the Attribute", required = true)
-            @PathVariable String pid);
+            @Parameter(description = "PID or internal ID of the Attribute", required = true)
+            @PathVariable String id);
 
     /**
      * Creates a new Attribute entity.
@@ -120,11 +120,11 @@ public interface IAttributeApi {
     /**
      * Updates an existing Attribute entity.
      *
-     * @param pid       the PID of the Attribute to update
+     * @param id        the PID or internal ID of the Attribute to update
      * @param attribute the updated Attribute entity
      * @return the updated Attribute entity
      */
-    @PutMapping("/{pid}")
+    @PutMapping("/{id}")
     @Operation(
             summary = "Update an Attribute",
             description = "Updates an existing Attribute entity",
@@ -137,18 +137,18 @@ public interface IAttributeApi {
             }
     )
     ResponseEntity<EntityModel<Attribute>> updateAttribute(
-            @Parameter(description = "PID of the Attribute", required = true)
-            @PathVariable String pid,
+            @Parameter(description = "PID or internal ID of the Attribute", required = true)
+            @PathVariable String id,
             @Parameter(description = "Updated Attribute", required = true)
             @Valid @RequestBody Attribute attribute);
 
     /**
      * Deletes an Attribute entity.
      *
-     * @param pid the PID of the Attribute to delete
+     * @param id the PID or internal ID of the Attribute to delete
      * @return no content
      */
-    @DeleteMapping("/{pid}")
+    @DeleteMapping("/{id}")
     @Operation(
             summary = "Delete an Attribute",
             description = "Deletes an Attribute entity",
@@ -158,8 +158,8 @@ public interface IAttributeApi {
             }
     )
     ResponseEntity<Void> deleteAttribute(
-            @Parameter(description = "PID of the Attribute", required = true)
-            @PathVariable String pid);
+            @Parameter(description = "PID or internal ID of the Attribute", required = true)
+            @PathVariable String id);
 
     /**
      * Deletes orphaned Attribute entities.
@@ -180,11 +180,11 @@ public interface IAttributeApi {
     /**
      * Partially updates an Attribute entity.
      *
-     * @param pid            the PID of the Attribute to patch
+     * @param id             the PID or internal ID of the Attribute to patch
      * @param attributePatch the partial Attribute entity with fields to update
      * @return the patched Attribute entity
      */
-    @PatchMapping("/{pid}")
+    @PatchMapping("/{id}")
     @Operation(
             summary = "Partially update an Attribute",
             description = "Updates specific fields of an existing Attribute entity",
@@ -197,8 +197,8 @@ public interface IAttributeApi {
             }
     )
     ResponseEntity<EntityModel<Attribute>> patchAttribute(
-            @Parameter(description = "PID of the Attribute", required = true)
-            @PathVariable String pid,
+            @Parameter(description = "PID or internal ID of the Attribute", required = true)
+            @PathVariable String id,
             @Parameter(description = "Partial Attribute with fields to update", required = true)
             @RequestBody Attribute attributePatch);
 }

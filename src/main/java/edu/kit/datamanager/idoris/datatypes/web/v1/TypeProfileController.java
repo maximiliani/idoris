@@ -106,10 +106,10 @@ public class TypeProfileController implements ITypeProfileApi {
      * {@inheritDoc}
      */
     @Override
-    @GetMapping("/{pid}")
+    @GetMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
-            summary = "Get a TypeProfile by PID",
-            description = "Returns a TypeProfile entity by its PID",
+            summary = "Get a TypeProfile by PID or internal ID",
+            description = "Returns a TypeProfile entity by its PID or internal ID",
             responses = {
                     @ApiResponse(responseCode = "200", description = "TypeProfile found",
                             content = @Content(mediaType = "application/hal+json",
@@ -118,9 +118,9 @@ public class TypeProfileController implements ITypeProfileApi {
             }
     )
     public ResponseEntity<EntityModel<TypeProfile>> getTypeProfile(
-            @Parameter(description = "PID of the TypeProfile", required = true)
-            @PathVariable String pid) {
-        return typeProfileService.getTypeProfile(pid)
+            @Parameter(description = "PID or internal ID of the TypeProfile", required = true)
+            @PathVariable String id) {
+        return typeProfileService.getTypeProfile(id)
                 .map(typeProfileModelAssembler::toModel)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -130,7 +130,7 @@ public class TypeProfileController implements ITypeProfileApi {
      * {@inheritDoc}
      */
     @Override
-    @GetMapping("/{pid}/operations")
+    @GetMapping("/{id}/operations")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get operations for a TypeProfile",
             description = "Returns a collection of operations that can be executed on a TypeProfile",
@@ -142,22 +142,22 @@ public class TypeProfileController implements ITypeProfileApi {
             }
     )
     public ResponseEntity<CollectionModel<EntityModel<Operation>>> getOperationsForTypeProfile(
-            @Parameter(description = "PID of the TypeProfile", required = true)
-            @PathVariable String pid) {
-        if (!typeProfileService.getTypeProfile(pid).isPresent()) {
+            @Parameter(description = "PID or internal ID of the TypeProfile", required = true)
+            @PathVariable String id) {
+        if (!typeProfileService.getTypeProfile(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        List<EntityModel<Operation>> operations = StreamSupport.stream(operationService.getOperationsForDataType(pid).spliterator(), false)
+        List<EntityModel<Operation>> operations = StreamSupport.stream(operationService.getOperationsForDataType(id).spliterator(), false)
                 .map(operation -> EntityModel.of(operation,
-                        linkTo(methodOn(TypeProfileController.class).getOperationsForTypeProfile(pid)).withSelfRel(),
-                        linkTo(methodOn(TypeProfileController.class).getTypeProfile(pid)).withRel("typeProfile")))
+                        linkTo(methodOn(TypeProfileController.class).getOperationsForTypeProfile(id)).withSelfRel(),
+                        linkTo(methodOn(TypeProfileController.class).getTypeProfile(id)).withRel("typeProfile")))
                 .collect(Collectors.toList());
 
         CollectionModel<EntityModel<Operation>> collectionModel = CollectionModel.of(
                 operations,
-                linkTo(methodOn(TypeProfileController.class).getOperationsForTypeProfile(pid)).withSelfRel(),
-                linkTo(methodOn(TypeProfileController.class).getTypeProfile(pid)).withRel("typeProfile")
+                linkTo(methodOn(TypeProfileController.class).getOperationsForTypeProfile(id)).withSelfRel(),
+                linkTo(methodOn(TypeProfileController.class).getTypeProfile(id)).withRel("typeProfile")
         );
 
         return ResponseEntity.ok(collectionModel);
@@ -167,7 +167,7 @@ public class TypeProfileController implements ITypeProfileApi {
      * {@inheritDoc}
      */
     @Override
-    @GetMapping("/{pid}/validate")
+    @GetMapping("/{id}/validate")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Validate a TypeProfile",
             description = "Validates a TypeProfile entity and returns the validation result",
@@ -178,9 +178,9 @@ public class TypeProfileController implements ITypeProfileApi {
             }
     )
     public ResponseEntity<?> validate(
-            @Parameter(description = "PID of the TypeProfile", required = true)
-            @PathVariable String pid) {
-        ValidationResult result = typeProfileService.validateTypeProfile(pid);
+            @Parameter(description = "PID or internal ID of the TypeProfile", required = true)
+            @PathVariable String id) {
+        ValidationResult result = typeProfileService.validateTypeProfile(id);
         if (result.isValid()) {
             return ResponseEntity.ok(result);
         } else {
@@ -192,7 +192,7 @@ public class TypeProfileController implements ITypeProfileApi {
      * {@inheritDoc}
      */
     @Override
-    @GetMapping("/{pid}/inheritedAttributes")
+    @GetMapping("/{id}/inheritedAttributes")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get inherited attributes of a TypeProfile",
             description = "Returns a collection of attributes inherited by a TypeProfile",
@@ -204,21 +204,21 @@ public class TypeProfileController implements ITypeProfileApi {
             }
     )
     public ResponseEntity<CollectionModel<EntityModel<Attribute>>> getInheritedAttributes(
-            @Parameter(description = "PID of the TypeProfile", required = true)
-            @PathVariable String pid) {
-        Iterable<TypeProfile> inheritanceChain = typeProfileService.getInheritanceChain(pid);
+            @Parameter(description = "PID or internal ID of the TypeProfile", required = true)
+            @PathVariable String id) {
+        Iterable<TypeProfile> inheritanceChain = typeProfileService.getInheritanceChain(id);
         List<EntityModel<Attribute>> attributes = new ArrayList<>();
         inheritanceChain.forEach(typeProfile -> {
-            typeProfileService.getTypeProfile(typeProfile.getPid()).orElseThrow().getAttributes().forEach(profileAttribute -> {
+            typeProfileService.getTypeProfile(typeProfile.getId()).orElseThrow().getAttributes().forEach(profileAttribute -> {
                 EntityModel<Attribute> attribute = EntityModel.of(profileAttribute);
-                attribute.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(profileAttribute.getDataType().getPid())).withRel("dataType"));
+                attribute.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(profileAttribute.getDataType().getId())).withRel("dataType"));
                 attributes.add(attribute);
             });
         });
 
         CollectionModel<EntityModel<Attribute>> resources = CollectionModel.of(attributes);
-        resources.add(linkTo(methodOn(TypeProfileController.class).getInheritedAttributes(pid)).withSelfRel());
-        resources.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(pid)).withRel("typeProfile"));
+        resources.add(linkTo(methodOn(TypeProfileController.class).getInheritedAttributes(id)).withSelfRel());
+        resources.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(id)).withRel("typeProfile"));
 
         return ResponseEntity.ok(resources);
     }
@@ -264,7 +264,7 @@ public class TypeProfileController implements ITypeProfileApi {
      * {@inheritDoc}
      */
     @Override
-    @PutMapping("/{pid}")
+    @PutMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Update a TypeProfile",
             description = "Updates an existing TypeProfile entity after validating it",
@@ -277,15 +277,23 @@ public class TypeProfileController implements ITypeProfileApi {
             }
     )
     public ResponseEntity<EntityModel<TypeProfile>> updateTypeProfile(
-            @Parameter(description = "PID of the TypeProfile", required = true)
-            @PathVariable String pid,
+            @Parameter(description = "PID or internal ID of the TypeProfile", required = true)
+            @PathVariable String id,
             @Parameter(description = "Updated TypeProfile", required = true)
             @Valid @RequestBody TypeProfile typeProfile) {
-        if (!typeProfileService.getTypeProfile(pid).isPresent()) {
+        // Check if the entity exists
+        if (!typeProfileService.getTypeProfile(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        typeProfile.setPid(pid);
+        // Get the existing entity to get its PID and internalId
+        TypeProfile existing = typeProfileService.getTypeProfile(id).get();
+
+        // Set the PID from the existing entity
+        typeProfile.setInternalId(existing.getId());
+
+        // Ensure internal ID is preserved
+        typeProfile.setInternalId(existing.getInternalId());
 
         // Validate BEFORE saving
         ValidationResult validationResult = ruleService.executeRules(
@@ -309,7 +317,7 @@ public class TypeProfileController implements ITypeProfileApi {
      * {@inheritDoc}
      */
     @Override
-    @DeleteMapping("/{pid}")
+    @DeleteMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Delete a TypeProfile",
             description = "Deletes a TypeProfile entity",
@@ -319,13 +327,13 @@ public class TypeProfileController implements ITypeProfileApi {
             }
     )
     public ResponseEntity<Void> deleteTypeProfile(
-            @Parameter(description = "PID of the TypeProfile", required = true)
-            @PathVariable String pid) {
-        if (!typeProfileService.getTypeProfile(pid).isPresent()) {
+            @Parameter(description = "PID or internal ID of the TypeProfile", required = true)
+            @PathVariable String id) {
+        if (!typeProfileService.getTypeProfile(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        typeProfileService.deleteTypeProfile(pid);
+        typeProfileService.deleteTypeProfile(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -333,7 +341,7 @@ public class TypeProfileController implements ITypeProfileApi {
      * {@inheritDoc}
      */
     @Override
-    @PatchMapping("/{pid}")
+    @PatchMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Partially update a TypeProfile",
             description = "Updates specific fields of an existing TypeProfile entity",
@@ -346,22 +354,22 @@ public class TypeProfileController implements ITypeProfileApi {
             }
     )
     public ResponseEntity<EntityModel<TypeProfile>> patchTypeProfile(
-            @Parameter(description = "PID of the TypeProfile", required = true)
-            @PathVariable String pid,
+            @Parameter(description = "PID or internal ID of the TypeProfile", required = true)
+            @PathVariable String id,
             @Parameter(description = "Partial TypeProfile with fields to update", required = true)
             @RequestBody TypeProfile typeProfilePatch) {
-        if (!typeProfileService.getTypeProfile(pid).isPresent()) {
+        if (!typeProfileService.getTypeProfile(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
         // Validate the patch if it contains fields that need validation
         if (typeProfilePatch.getAttributes() != null || typeProfilePatch.getInheritsFrom() != null) {
             // Get the current entity
-            TypeProfile existing = typeProfileService.getTypeProfile(pid).get();
+            TypeProfile existing = typeProfileService.getTypeProfile(id).get();
 
             // Create a merged entity for validation
             TypeProfile merged = new TypeProfile();
-            merged.setPid(existing.getPid());
+            merged.setInternalId(existing.getId());
             merged.setName(typeProfilePatch.getName() != null ? typeProfilePatch.getName() : existing.getName());
             merged.setDescription(typeProfilePatch.getDescription() != null ? typeProfilePatch.getDescription() : existing.getDescription());
             merged.setAttributes(typeProfilePatch.getAttributes() != null ? typeProfilePatch.getAttributes() : existing.getAttributes());
@@ -380,7 +388,7 @@ public class TypeProfileController implements ITypeProfileApi {
             }
         }
 
-        TypeProfile patchedTypeProfile = typeProfileService.patchTypeProfile(pid, typeProfilePatch);
+        TypeProfile patchedTypeProfile = typeProfileService.patchTypeProfile(id, typeProfilePatch);
         EntityModel<TypeProfile> entityModel = typeProfileModelAssembler.toModel(patchedTypeProfile);
         return ResponseEntity.ok(entityModel);
     }
@@ -389,7 +397,7 @@ public class TypeProfileController implements ITypeProfileApi {
      * {@inheritDoc}
      */
     @Override
-    @GetMapping("/{pid}/inheritanceTree")
+    @GetMapping("/{id}/inheritanceTree")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get inheritance tree of a TypeProfile",
             description = "Returns the inheritance tree of a TypeProfile",
@@ -400,11 +408,11 @@ public class TypeProfileController implements ITypeProfileApi {
             }
     )
     public ResponseEntity<EntityModel<TypeProfileInheritance>> getInheritanceTree(
-            @Parameter(description = "PID of the TypeProfile", required = true)
-            @NotNull @PathVariable String pid) {
-        EntityModel<TypeProfileInheritance> resources = buildInheritanceTree(typeProfileService.getTypeProfile(pid).orElseThrow());
-        resources.add(linkTo(methodOn(TypeProfileController.class).getInheritanceTree(pid)).withSelfRel());
-        resources.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(pid)).withRel("typeProfile"));
+            @Parameter(description = "PID or internal ID of the TypeProfile", required = true)
+            @NotNull @PathVariable String id) {
+        EntityModel<TypeProfileInheritance> resources = buildInheritanceTree(typeProfileService.getTypeProfile(id).orElseThrow());
+        resources.add(linkTo(methodOn(TypeProfileController.class).getInheritanceTree(id)).withSelfRel());
+        resources.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(id)).withRel("typeProfile"));
 
         return ResponseEntity.ok(resources);
     }
@@ -419,7 +427,7 @@ public class TypeProfileController implements ITypeProfileApi {
         List<EntityModel<Attribute>> attributes = new ArrayList<>();
         typeProfile.getAttributes().forEach(profileAttribute -> {
             EntityModel<Attribute> attribute = EntityModel.of(profileAttribute);
-            attribute.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(profileAttribute.getDataType().getPid())).withRel("dataType"));
+            attribute.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(profileAttribute.getDataType().getId())).withRel("dataType"));
             attributes.add(attribute);
         });
 
@@ -429,17 +437,17 @@ public class TypeProfileController implements ITypeProfileApi {
         });
 
         EntityModel<TypeProfileInheritance> node = EntityModel.of(
-                new TypeProfileInheritance(typeProfile.getPid(),
+                new TypeProfileInheritance(typeProfile.getId(),
                         typeProfile.getName(),
                         typeProfile.getDescription(),
                         CollectionModel.of(attributes),
                         CollectionModel.of(inheritsFrom)));
 
         // Add links
-        node.add(linkTo(methodOn(TypeProfileController.class).getInheritanceTree(typeProfile.getPid())).withRel("inheritanceTree"));
-        node.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(typeProfile.getPid())).withRel("typeProfile"));
-        node.add(linkTo(methodOn(TypeProfileController.class).getInheritedAttributes(typeProfile.getPid())).withRel("inheritedAttributes"));
-        node.add(linkTo(methodOn(TypeProfileController.class).getOperationsForTypeProfile(typeProfile.getPid())).withRel("operations"));
+        node.add(linkTo(methodOn(TypeProfileController.class).getInheritanceTree(typeProfile.getId())).withRel("inheritanceTree"));
+        node.add(linkTo(methodOn(TypeProfileController.class).getTypeProfile(typeProfile.getId())).withRel("typeProfile"));
+        node.add(linkTo(methodOn(TypeProfileController.class).getInheritedAttributes(typeProfile.getId())).withRel("inheritedAttributes"));
+        node.add(linkTo(methodOn(TypeProfileController.class).getOperationsForTypeProfile(typeProfile.getId())).withRel("operations"));
 
         return node;
     }
@@ -459,7 +467,7 @@ public class TypeProfileController implements ITypeProfileApi {
     }
 
     public record TypeProfileInheritance(
-            String pid,
+            String id,
             String name,
             String description,
             CollectionModel<EntityModel<Attribute>> attributes,

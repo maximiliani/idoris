@@ -330,11 +330,6 @@ public class SyntaxValidator extends ValidationVisitor {
      * @param result   The validation result to add messages to
      */
     private void validateDataType(DataType dataType, ValidationResult result) {
-        if (dataType.getType() == null) {
-            result.addMessage("You MUST provide a type for the data type. Please select from: " +
-                    Arrays.toString(DataType.TYPES.values()), dataType, ERROR);
-        }
-
         if (dataType.getName() == null || dataType.getName().isEmpty()) {
             result.addMessage("For better human readability and understanding, you MUST provide a name for the data type.",
                     dataType, ERROR);

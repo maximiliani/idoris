@@ -75,8 +75,8 @@ public class TechnologyInterfaceController implements ITechnologyInterfaceApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<EntityModel<TechnologyInterface>> getTechnologyInterface(String pid) {
-        return technologyInterfaceService.getTechnologyInterface(pid)
+    public ResponseEntity<EntityModel<TechnologyInterface>> getTechnologyInterface(String id) {
+        return technologyInterfaceService.getTechnologyInterface(id)
                 .map(technologyInterfaceModelAssembler::toModel)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -86,8 +86,8 @@ public class TechnologyInterfaceController implements ITechnologyInterfaceApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<CollectionModel<EntityModel<Attribute>>> getAttributes(String pid) {
-        return technologyInterfaceService.getTechnologyInterface(pid)
+    public ResponseEntity<CollectionModel<EntityModel<Attribute>>> getAttributes(String id) {
+        return technologyInterfaceService.getTechnologyInterface(id)
                 .map(technologyInterface -> {
                     List<EntityModel<Attribute>> attributes = StreamSupport.stream(technologyInterface.getAttributes().spliterator(), false)
                             .map(attributeModelAssembler::toModel)
@@ -95,8 +95,8 @@ public class TechnologyInterfaceController implements ITechnologyInterfaceApi {
 
                     CollectionModel<EntityModel<Attribute>> collectionModel = CollectionModel.of(
                             attributes,
-                            linkTo(methodOn(TechnologyInterfaceController.class).getAttributes(pid)).withSelfRel(),
-                            linkTo(methodOn(TechnologyInterfaceController.class).getTechnologyInterface(pid)).withRel("technologyInterface")
+                            linkTo(methodOn(TechnologyInterfaceController.class).getAttributes(id)).withSelfRel(),
+                            linkTo(methodOn(TechnologyInterfaceController.class).getTechnologyInterface(id)).withRel("technologyInterface")
                     );
 
                     return ResponseEntity.ok(collectionModel);
@@ -108,8 +108,8 @@ public class TechnologyInterfaceController implements ITechnologyInterfaceApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<CollectionModel<EntityModel<Attribute>>> getOutputs(String pid) {
-        return technologyInterfaceService.getTechnologyInterface(pid)
+    public ResponseEntity<CollectionModel<EntityModel<Attribute>>> getOutputs(String id) {
+        return technologyInterfaceService.getTechnologyInterface(id)
                 .map(technologyInterface -> {
                     List<EntityModel<Attribute>> outputs = StreamSupport.stream(technologyInterface.getOutputs().spliterator(), false)
                             .map(attributeModelAssembler::toModel)
@@ -117,8 +117,8 @@ public class TechnologyInterfaceController implements ITechnologyInterfaceApi {
 
                     CollectionModel<EntityModel<Attribute>> collectionModel = CollectionModel.of(
                             outputs,
-                            linkTo(methodOn(TechnologyInterfaceController.class).getOutputs(pid)).withSelfRel(),
-                            linkTo(methodOn(TechnologyInterfaceController.class).getTechnologyInterface(pid)).withRel("technologyInterface")
+                            linkTo(methodOn(TechnologyInterfaceController.class).getOutputs(id)).withSelfRel(),
+                            linkTo(methodOn(TechnologyInterfaceController.class).getTechnologyInterface(id)).withRel("technologyInterface")
                     );
 
                     return ResponseEntity.ok(collectionModel);
@@ -140,12 +140,21 @@ public class TechnologyInterfaceController implements ITechnologyInterfaceApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<EntityModel<TechnologyInterface>> updateTechnologyInterface(String pid, TechnologyInterface technologyInterface) {
-        if (!technologyInterfaceService.getTechnologyInterface(pid).isPresent()) {
+    public ResponseEntity<EntityModel<TechnologyInterface>> updateTechnologyInterface(String id, TechnologyInterface technologyInterface) {
+        // Check if the entity exists
+        if (!technologyInterfaceService.getTechnologyInterface(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        technologyInterface.setPid(pid);
+        // Get the existing entity to get its PID and internalId
+        TechnologyInterface existing = technologyInterfaceService.getTechnologyInterface(id).get();
+
+        // Set the PID from the existing entity
+        technologyInterface.setInternalId(existing.getId());
+
+        // Ensure internal ID is preserved
+        technologyInterface.setInternalId(existing.getInternalId());
+
         TechnologyInterface updatedTechnologyInterface = technologyInterfaceService.updateTechnologyInterface(technologyInterface);
         EntityModel<TechnologyInterface> entityModel = technologyInterfaceModelAssembler.toModel(updatedTechnologyInterface);
         return ResponseEntity.ok(entityModel);
@@ -155,12 +164,12 @@ public class TechnologyInterfaceController implements ITechnologyInterfaceApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<Void> deleteTechnologyInterface(String pid) {
-        if (!technologyInterfaceService.getTechnologyInterface(pid).isPresent()) {
+    public ResponseEntity<Void> deleteTechnologyInterface(String id) {
+        if (!technologyInterfaceService.getTechnologyInterface(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        technologyInterfaceService.deleteTechnologyInterface(pid);
+        technologyInterfaceService.deleteTechnologyInterface(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -168,12 +177,12 @@ public class TechnologyInterfaceController implements ITechnologyInterfaceApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<EntityModel<TechnologyInterface>> patchTechnologyInterface(String pid, TechnologyInterface technologyInterfacePatch) {
-        if (!technologyInterfaceService.getTechnologyInterface(pid).isPresent()) {
+    public ResponseEntity<EntityModel<TechnologyInterface>> patchTechnologyInterface(String id, TechnologyInterface technologyInterfacePatch) {
+        if (!technologyInterfaceService.getTechnologyInterface(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        TechnologyInterface patchedTechnologyInterface = technologyInterfaceService.patchTechnologyInterface(pid, technologyInterfacePatch);
+        TechnologyInterface patchedTechnologyInterface = technologyInterfaceService.patchTechnologyInterface(id, technologyInterfacePatch);
         EntityModel<TechnologyInterface> entityModel = technologyInterfaceModelAssembler.toModel(patchedTechnologyInterface);
         return ResponseEntity.ok(entityModel);
     }

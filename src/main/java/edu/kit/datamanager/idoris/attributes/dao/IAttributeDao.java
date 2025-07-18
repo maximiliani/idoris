@@ -29,6 +29,5 @@ public interface IAttributeDao extends IGenericRepo<Attribute> {
             " WITH collect(DISTINCT x) as otherNodes, n" +
             " WHERE NOT n IN otherNodes" +
             " DETACH DELETE n")
-//    @RestResource(exported = false)
     void deleteOrphanedAttributes();
 }

@@ -59,7 +59,7 @@ public class AttributeService {
         log.debug("Creating Attribute: {}", attribute);
         Attribute saved = attributeDao.save(attribute);
         eventPublisher.publishEntityCreated(saved);
-        log.info("Created Attribute with PID: {}", saved.getPid());
+        log.info("Created Attribute with PID: {}", saved.getId());
         return saved;
     }
 
@@ -74,50 +74,50 @@ public class AttributeService {
     public Attribute updateAttribute(Attribute attribute) {
         log.debug("Updating Attribute: {}", attribute);
 
-        if (attribute.getPid() == null || attribute.getPid().isEmpty()) {
+        if (attribute.getId() == null || attribute.getId().isEmpty()) {
             throw new IllegalArgumentException("Attribute must have a PID to be updated");
         }
 
         // Get the current version before updating
-        Attribute existing = attributeDao.findById(attribute.getPid())
-                .orElseThrow(() -> new IllegalArgumentException("Attribute not found with PID: " + attribute.getPid()));
+        Attribute existing = attributeDao.findById(attribute.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Attribute not found with PID: " + attribute.getId()));
 
         Long previousVersion = existing.getVersion();
 
         Attribute saved = attributeDao.save(attribute);
         eventPublisher.publishEntityUpdated(saved, previousVersion);
-        log.info("Updated Attribute with PID: {}", saved.getPid());
+        log.info("Updated Attribute with PID: {}", saved.getId());
         return saved;
     }
 
     /**
      * Deletes an Attribute entity.
      *
-     * @param pid the PID of the Attribute to delete
+     * @param id the PID or internal ID of the Attribute to delete
      * @throws IllegalArgumentException if the Attribute does not exist
      */
     @Transactional
-    public void deleteAttribute(String pid) {
-        log.debug("Deleting Attribute with PID: {}", pid);
+    public void deleteAttribute(String id) {
+        log.debug("Deleting Attribute with ID: {}", id);
 
-        Attribute attribute = attributeDao.findById(pid)
-                .orElseThrow(() -> new IllegalArgumentException("Attribute not found with PID: " + pid));
+        Attribute attribute = attributeDao.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Attribute not found with ID: " + id));
 
         attributeDao.delete(attribute);
         eventPublisher.publishEntityDeleted(attribute);
-        log.info("Deleted Attribute with PID: {}", pid);
+        log.info("Deleted Attribute with ID: {}", id);
     }
 
     /**
-     * Retrieves an Attribute entity by its PID.
+     * Retrieves an Attribute entity by its PID or internal ID.
      *
-     * @param pid the PID of the Attribute to retrieve
+     * @param id the PID or internal ID of the Attribute to retrieve
      * @return an Optional containing the Attribute, or empty if not found
      */
     @Transactional(readOnly = true)
-    public Optional<Attribute> getAttribute(String pid) {
-        log.debug("Retrieving Attribute with PID: {}", pid);
-        return attributeDao.findById(pid);
+    public Optional<Attribute> getAttribute(String id) {
+        log.debug("Retrieving Attribute with ID: {}", id);
+        return attributeDao.findById(id);
     }
 
     /**
@@ -145,21 +145,21 @@ public class AttributeService {
     /**
      * Partially updates an existing Attribute entity.
      *
-     * @param pid            the PID of the Attribute to patch
+     * @param id             the PID or internal ID of the Attribute to patch
      * @param attributePatch the partial Attribute entity with fields to update
      * @return the patched Attribute entity
      * @throws IllegalArgumentException if the Attribute does not exist
      */
     @Transactional
-    public Attribute patchAttribute(String pid, Attribute attributePatch) {
-        log.debug("Patching Attribute with PID: {}, patch: {}", pid, attributePatch);
-        if (pid == null || pid.isEmpty()) {
-            throw new IllegalArgumentException("Attribute PID cannot be null or empty");
+    public Attribute patchAttribute(String id, Attribute attributePatch) {
+        log.debug("Patching Attribute with ID: {}, patch: {}", id, attributePatch);
+        if (id == null || id.isEmpty()) {
+            throw new IllegalArgumentException("Attribute ID cannot be null or empty");
         }
 
         // Get the current entity
-        Attribute existing = attributeDao.findById(pid)
-                .orElseThrow(() -> new IllegalArgumentException("Attribute not found with PID: " + pid));
+        Attribute existing = attributeDao.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Attribute not found with ID: " + id));
         Long previousVersion = existing.getVersion();
 
         // Apply non-null fields from the patch to the existing entity
@@ -194,7 +194,7 @@ public class AttributeService {
         // Publish the patched event
         eventPublisher.publishEntityPatched(saved, previousVersion);
 
-        log.info("Patched Attribute with PID: {}", saved.getPid());
+        log.info("Patched Attribute with PID: {}", saved.getId());
         return saved;
     }
 }

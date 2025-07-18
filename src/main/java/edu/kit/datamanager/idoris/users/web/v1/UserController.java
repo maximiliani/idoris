@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -130,7 +131,7 @@ public class UserController implements IUserApi {
     public ResponseEntity<EntityModel<ORCiDUser>> getORCiDUserByORCiD(String orcidStr) {
         try {
             // Convert ORCID string to URL
-            URL orcid = new URL("https://orcid.org/" + orcidStr);
+            URL orcid = URI.create("https://orcid.org/" + orcidStr).toURL();
             return userService.findORCiDUserByORCiD(orcid)
                     .map(user -> EntityModel.of(user,
                             linkTo(methodOn(UserController.class).getORCiDUserByORCiD(orcidStr)).withSelfRel(),

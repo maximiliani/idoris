@@ -86,7 +86,7 @@ public class AtomicDataTypeController implements IAtomicDataTypeApi {
             }
     )
     public ResponseEntity<CollectionModel<EntityModel<AtomicDataType>>> getAllAtomicDataTypes() {
-        List<EntityModel<AtomicDataType>> atomicDataTypes = StreamSupport.stream(atomicDataTypeService.getAllAtomicDataTypes().spliterator(), false)
+        List<EntityModel<AtomicDataType>> atomicDataTypes = atomicDataTypeService.getAllAtomicDataTypes().stream()
                 .map(atomicDataTypeModelAssembler::toModel)
                 .collect(Collectors.toList());
 
@@ -102,10 +102,10 @@ public class AtomicDataTypeController implements IAtomicDataTypeApi {
      * {@inheritDoc}
      */
     @Override
-    @GetMapping("/{pid}")
+    @GetMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
-            summary = "Get an AtomicDataType by PID",
-            description = "Returns an AtomicDataType entity by its PID",
+            summary = "Get an AtomicDataType by PID or internal ID",
+            description = "Returns an AtomicDataType entity by its PID or internal ID",
             responses = {
                     @ApiResponse(responseCode = "200", description = "AtomicDataType found",
                             content = @Content(mediaType = "application/hal+json",
@@ -114,9 +114,9 @@ public class AtomicDataTypeController implements IAtomicDataTypeApi {
             }
     )
     public ResponseEntity<EntityModel<AtomicDataType>> getAtomicDataType(
-            @Parameter(description = "PID of the AtomicDataType", required = true)
-            @PathVariable String pid) {
-        return atomicDataTypeService.getAtomicDataType(pid)
+            @Parameter(description = "PID or internal ID of the AtomicDataType", required = true)
+            @PathVariable String id) {
+        return atomicDataTypeService.getAtomicDataType(id)
                 .map(atomicDataTypeModelAssembler::toModel)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -164,7 +164,7 @@ public class AtomicDataTypeController implements IAtomicDataTypeApi {
      * {@inheritDoc}
      */
     @Override
-    @PutMapping("/{pid}")
+    @PutMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Update an AtomicDataType",
             description = "Updates an existing AtomicDataType entity after validating it",
@@ -177,15 +177,23 @@ public class AtomicDataTypeController implements IAtomicDataTypeApi {
             }
     )
     public ResponseEntity<EntityModel<AtomicDataType>> updateAtomicDataType(
-            @Parameter(description = "PID of the AtomicDataType", required = true)
-            @PathVariable String pid,
+            @Parameter(description = "PID or internal ID of the AtomicDataType", required = true)
+            @PathVariable String id,
             @Parameter(description = "Updated AtomicDataType", required = true)
             @Valid @RequestBody AtomicDataType atomicDataType) {
-        if (!atomicDataTypeService.getAtomicDataType(pid).isPresent()) {
+        // Check if the entity exists
+        if (!atomicDataTypeService.getAtomicDataType(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        atomicDataType.setPid(pid);
+        // Get the existing entity to get its PID and internalId
+        AtomicDataType existing = atomicDataTypeService.getAtomicDataType(id).get();
+
+        // Set the PID from the existing entity
+        atomicDataType.setInternalId(existing.getId());
+
+        // Ensure internal ID is preserved
+        atomicDataType.setInternalId(existing.getInternalId());
 
         // Validate BEFORE saving
         ValidationResult validationResult = ruleService.executeRules(
@@ -210,7 +218,7 @@ public class AtomicDataTypeController implements IAtomicDataTypeApi {
      * {@inheritDoc}
      */
     @Override
-    @DeleteMapping("/{pid}")
+    @DeleteMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Delete an AtomicDataType",
             description = "Deletes an AtomicDataType entity",
@@ -220,13 +228,13 @@ public class AtomicDataTypeController implements IAtomicDataTypeApi {
             }
     )
     public ResponseEntity<Void> deleteAtomicDataType(
-            @Parameter(description = "PID of the AtomicDataType", required = true)
-            @PathVariable String pid) {
-        if (!atomicDataTypeService.getAtomicDataType(pid).isPresent()) {
+            @Parameter(description = "PID or internal ID of the AtomicDataType", required = true)
+            @PathVariable String id) {
+        if (!atomicDataTypeService.getAtomicDataType(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        atomicDataTypeService.deleteAtomicDataType(pid);
+        atomicDataTypeService.deleteAtomicDataType(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -234,7 +242,7 @@ public class AtomicDataTypeController implements IAtomicDataTypeApi {
      * {@inheritDoc}
      */
     @Override
-    @PatchMapping("/{pid}")
+    @PatchMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Partially update an AtomicDataType",
             description = "Updates specific fields of an existing AtomicDataType entity",
@@ -247,11 +255,11 @@ public class AtomicDataTypeController implements IAtomicDataTypeApi {
             }
     )
     public ResponseEntity<EntityModel<AtomicDataType>> patchAtomicDataType(
-            @Parameter(description = "PID of the AtomicDataType", required = true)
-            @PathVariable String pid,
+            @Parameter(description = "PID or internal ID of the AtomicDataType", required = true)
+            @PathVariable String id,
             @Parameter(description = "Partial AtomicDataType with fields to update", required = true)
             @RequestBody AtomicDataType atomicDataTypePatch) {
-        if (!atomicDataTypeService.getAtomicDataType(pid).isPresent()) {
+        if (!atomicDataTypeService.getAtomicDataType(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
@@ -265,11 +273,11 @@ public class AtomicDataTypeController implements IAtomicDataTypeApi {
                 atomicDataTypePatch.getInheritsFrom() != null) {
 
             // Get the current entity
-            AtomicDataType existing = atomicDataTypeService.getAtomicDataType(pid).get();
+            AtomicDataType existing = atomicDataTypeService.getAtomicDataType(id).get();
 
             // Create a merged entity for validation
             AtomicDataType merged = new AtomicDataType();
-            merged.setPid(existing.getPid());
+            merged.setInternalId(existing.getId());
             merged.setName(atomicDataTypePatch.getName() != null ? atomicDataTypePatch.getName() : existing.getName());
             merged.setDescription(atomicDataTypePatch.getDescription() != null ? atomicDataTypePatch.getDescription() : existing.getDescription());
             merged.setDefaultValue(atomicDataTypePatch.getDefaultValue() != null ? atomicDataTypePatch.getDefaultValue() : existing.getDefaultValue());
@@ -294,7 +302,7 @@ public class AtomicDataTypeController implements IAtomicDataTypeApi {
             }
         }
 
-        AtomicDataType patchedAtomicDataType = atomicDataTypeService.patchAtomicDataType(pid, atomicDataTypePatch);
+        AtomicDataType patchedAtomicDataType = atomicDataTypeService.patchAtomicDataType(id, atomicDataTypePatch);
         EntityModel<AtomicDataType> entityModel = atomicDataTypeModelAssembler.toModel(patchedAtomicDataType);
         return ResponseEntity.ok(entityModel);
     }
@@ -303,7 +311,7 @@ public class AtomicDataTypeController implements IAtomicDataTypeApi {
      * {@inheritDoc}
      */
     @Override
-    @GetMapping("/{pid}/operations")
+    @GetMapping("/{id}/operations")
     @io.swagger.v3.oas.annotations.Operation(
             summary = "Get operations for an AtomicDataType",
             description = "Returns a collection of operations that can be executed on an AtomicDataType",
@@ -315,22 +323,22 @@ public class AtomicDataTypeController implements IAtomicDataTypeApi {
             }
     )
     public ResponseEntity<CollectionModel<EntityModel<Operation>>> getOperationsForAtomicDataType(
-            @Parameter(description = "PID of the AtomicDataType", required = true)
-            @PathVariable String pid) {
-        if (!atomicDataTypeService.getAtomicDataType(pid).isPresent()) {
+            @Parameter(description = "PID or internal ID of the AtomicDataType", required = true)
+            @PathVariable String id) {
+        if (!atomicDataTypeService.getAtomicDataType(id).isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        List<EntityModel<Operation>> operations = StreamSupport.stream(operationService.getOperationsForDataType(pid).spliterator(), false)
+        List<EntityModel<Operation>> operations = StreamSupport.stream(operationService.getOperationsForDataType(id).spliterator(), false)
                 .map(operation -> EntityModel.of(operation,
-                        linkTo(methodOn(AtomicDataTypeController.class).getOperationsForAtomicDataType(pid)).withSelfRel(),
-                        linkTo(methodOn(AtomicDataTypeController.class).getAtomicDataType(pid)).withRel("atomicDataType")))
+                        linkTo(methodOn(AtomicDataTypeController.class).getOperationsForAtomicDataType(id)).withSelfRel(),
+                        linkTo(methodOn(AtomicDataTypeController.class).getAtomicDataType(id)).withRel("atomicDataType")))
                 .collect(Collectors.toList());
 
         CollectionModel<EntityModel<Operation>> collectionModel = CollectionModel.of(
                 operations,
-                linkTo(methodOn(AtomicDataTypeController.class).getOperationsForAtomicDataType(pid)).withSelfRel(),
-                linkTo(methodOn(AtomicDataTypeController.class).getAtomicDataType(pid)).withRel("atomicDataType")
+                linkTo(methodOn(AtomicDataTypeController.class).getOperationsForAtomicDataType(id)).withSelfRel(),
+                linkTo(methodOn(AtomicDataTypeController.class).getAtomicDataType(id)).withRel("atomicDataType")
         );
 
         return ResponseEntity.ok(collectionModel);

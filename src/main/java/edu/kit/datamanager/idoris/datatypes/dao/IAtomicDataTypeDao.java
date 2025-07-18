@@ -20,6 +20,8 @@ import edu.kit.datamanager.idoris.core.domain.dao.IGenericRepo;
 import edu.kit.datamanager.idoris.datatypes.entities.AtomicDataType;
 import org.springframework.data.neo4j.repository.query.Query;
 
+import java.util.Optional;
+
 /**
  * Repository interface for AtomicDataType entities.
  */
@@ -31,5 +33,31 @@ public interface IAtomicDataTypeDao extends IGenericRepo<AtomicDataType> {
      * @return an Iterable of AtomicDataType entities in the inheritance chain
      */
     @Query("MATCH (d:AtomicDataType {pid: $pid})-[:inheritsFrom*]->(d2:AtomicDataType) RETURN d2")
-    Iterable<AtomicDataType> findAllInInheritanceChain(String pid);
+    Iterable<AtomicDataType> findAllInInheritanceChainByPid(String pid);
+
+    /**
+     * Finds all AtomicDataType entities in the inheritance chain of the given AtomicDataType.
+     *
+     * @param internalId the internal ID of the AtomicDataType
+     * @return an Iterable of AtomicDataType entities in the inheritance chain
+     */
+    @Query("MATCH (d:AtomicDataType {internalId: $internalId})-[:inheritsFrom*]->(d2:AtomicDataType) RETURN d2")
+    Iterable<AtomicDataType> findAllInInheritanceChainByInternalId(String internalId);
+
+    /**
+     * Finds all AtomicDataType entities in the inheritance chain of the given AtomicDataType.
+     * This method first tries to find the entity by PID, and if not found, tries to find it by internal ID.
+     *
+     * @param id the ID of the AtomicDataType (either PID or internal ID)
+     * @return an Iterable of AtomicDataType entities in the inheritance chain
+     */
+    default Iterable<AtomicDataType> findAllInInheritanceChain(String id) {
+        // First try to find by PID
+        Optional<AtomicDataType> byPid = findByPid(id);
+        if (byPid.isPresent()) {
+            return findAllInInheritanceChainByPid(id);
+        }
+        // If not found by PID, try to find by internal ID
+        return findAllInInheritanceChainByInternalId(id);
+    }
 }

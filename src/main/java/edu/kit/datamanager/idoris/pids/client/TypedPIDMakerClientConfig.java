@@ -16,10 +16,13 @@
 
 package edu.kit.datamanager.idoris.pids.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.kit.datamanager.idoris.configuration.TypedPIDMakerConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.support.RestClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
@@ -39,7 +42,7 @@ public class TypedPIDMakerClientConfig {
      * @return The TypedPIDMakerClient
      */
     @Bean
-    public TypedPIDMakerClient typedPIDMakerClient(TypedPIDMakerConfig config) {
+    public TypedPIDMakerClient typedPIDMakerClient(TypedPIDMakerConfig config, ObjectMapper objectMapper) {
         // Create a client HTTP request factory with the configured timeout
         org.springframework.http.client.ClientHttpRequestFactory requestFactory =
                 new org.springframework.http.client.SimpleClientHttpRequestFactory();
@@ -49,7 +52,17 @@ public class TypedPIDMakerClientConfig {
                 .requestFactory(requestFactory)
                 .defaultHeaders(headers -> headers.setAccept(java.util.List.of(org.springframework.http.MediaType.parseMediaType("application/vnd.datamanager.pid.simple+json"))))
                 .defaultStatusHandler(org.springframework.http.HttpStatusCode::isError, (request, response) -> {
-                    throw new org.springframework.web.client.RestClientException("Error response: " + response.getStatusCode());
+                    throw new org.springframework.web.client.RestClientException(String.format("Error response from Typed PID Maker: %s %s", response.getStatusCode(), response.getStatusText()));
+                })
+                .messageConverters(converters -> {
+                    // Add a custom converter for application/octet-stream to handle binary data
+                    converters.add(new MappingJackson2HttpMessageConverter(objectMapper) {
+                        @Override
+                        protected boolean canRead(MediaType mediaType) {
+                            return super.canRead(mediaType) ||
+                                    MediaType.APPLICATION_OCTET_STREAM.isCompatibleWith(mediaType);
+                        }
+                    });
                 })
                 .build();
 

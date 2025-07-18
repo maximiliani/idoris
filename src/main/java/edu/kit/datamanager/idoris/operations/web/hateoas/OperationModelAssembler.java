@@ -42,14 +42,14 @@ public class OperationModelAssembler implements EntityModelAssembler<Operation> 
         EntityModel<Operation> entityModel = toModelWithoutLinks(operation);
 
         // Add self link
-        entityModel.add(linkTo(methodOn(OperationController.class).getOperation(operation.getPid())).withSelfRel());
+        entityModel.add(linkTo(methodOn(OperationController.class).getOperation(operation.getId())).withSelfRel());
 
         // Add link to all operations
         entityModel.add(linkTo(methodOn(OperationController.class).getAllOperations()).withRel("operations"));
 
         // Add link to executable on data type
         if (operation.getExecutableOn() != null && operation.getExecutableOn().getDataType() != null) {
-            entityModel.add(linkTo(methodOn(OperationController.class).getOperation(operation.getExecutableOn().getDataType().getPid())).withRel("executableOn"));
+            entityModel.add(linkTo(methodOn(OperationController.class).getOperation(operation.getExecutableOn().getDataType().getId())).withRel("executableOn"));
         }
 
         return entityModel;

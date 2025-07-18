@@ -17,6 +17,9 @@
 package edu.kit.datamanager.idoris.pids.client;
 
 import edu.kit.datamanager.idoris.pids.client.model.PIDRecord;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
@@ -36,7 +39,8 @@ public interface TypedPIDMakerClient {
      * @return The created PID record
      */
     @PostExchange(value = "/", accept = "application/vnd.datamanager.pid.simple+json", contentType = "application/vnd.datamanager.pid.simple+json")
-    PIDRecord createPIDRecord(PIDRecord record);
+    @ResponseBody
+    PIDRecord createPIDRecord(@RequestBody PIDRecord record);
 
 
     /**
@@ -46,7 +50,8 @@ public interface TypedPIDMakerClient {
      * @return The PID record
      */
     @GetExchange(value = "/{pid}", accept = "application/vnd.datamanager.pid.simple+json")
-    PIDRecord getPIDRecord(String pid);
+    @ResponseBody
+    PIDRecord getPIDRecord(@PathVariable String pid);
 
     /**
      * Updates an existing PID record using the SimplePidRecord format.
@@ -56,5 +61,6 @@ public interface TypedPIDMakerClient {
      * @return The updated PID record
      */
     @PutExchange(value = "/{pid}", accept = "application/vnd.datamanager.pid.simple+json", contentType = "application/vnd.datamanager.pid.simple+json")
-    PIDRecord updatePIDRecord(String pid, PIDRecord record);
+    @ResponseBody
+    PIDRecord updatePIDRecord(@PathVariable String pid, @RequestBody PIDRecord record);
 }

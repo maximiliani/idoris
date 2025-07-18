@@ -20,6 +20,7 @@ import edu.kit.datamanager.idoris.configuration.TypedPIDMakerConfig;
 import edu.kit.datamanager.idoris.core.domain.entities.AdministrativeMetadata;
 import edu.kit.datamanager.idoris.pids.client.TypedPIDMakerClient;
 import edu.kit.datamanager.idoris.pids.client.model.PIDRecord;
+import edu.kit.datamanager.idoris.pids.client.model.PIDRecordEntry;
 import edu.kit.datamanager.idoris.pids.entities.PersistentIdentifier;
 import edu.kit.datamanager.idoris.pids.repositories.PersistentIdentifierRepository;
 import edu.kit.datamanager.idoris.pids.utils.PIDRecordMapper;
@@ -30,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -83,28 +85,46 @@ public class PersistentIdentifierService {
             return existingPid.get();
         }
 
-        // Create a new PID record in the Typed PID Maker service
-        PIDRecord record = mapper.createEmptyPIDRecord();
-        PIDRecord createdRecord = client.createPIDRecord(record);
-
-        // Create a new PersistentIdentifier entity
-        PersistentIdentifier pid = PersistentIdentifier.builder()
-                .pid(createdRecord.pid())
+        // Create a temporary PID entity to use with the mapper
+        PersistentIdentifier tempPid = PersistentIdentifier.builder()
+                .pid(null)
                 .entityType(entity.getClass().getSimpleName())
                 .entityInternalId(entity.getInternalId())
                 .entity(entity)
                 .tombstone(false)
                 .build();
 
+        // Use the mapper to create a PID record with administrative metadata
+        PIDRecord record = mapper.toPIDRecord(tempPid);
+
+        // Create the PID record in the Typed PID Maker service
+        PIDRecord createdRecord = client.createPIDRecord(record);
+
+        log.debug("Created first PID record: {}", createdRecord);
+
+        // Set the PID in the temporary PersistentIdentifier entity
+        tempPid.setPid(createdRecord.pid());
+
         // Save the PersistentIdentifier entity
-        PersistentIdentifier savedPid = repository.save(pid);
+        PersistentIdentifier savedPid = repository.save(tempPid);
 
-        // Update the PID record with metadata if configured to do so
-        if (config.isMeaningfulPIDRecords()) {
-            updatePIDRecord(savedPid);
-        }
+        // Update the entity with the saved PersistentIdentifier
+        List<PIDRecordEntry> entries = createdRecord.record().stream()
+                .map(entry -> {
+                    if (Objects.equals(entry.key(), "21.T11148/b8457812905b83046284")) {
+                        // Update the DO location to point to the saved PID
+                        String doLocation = String.format("%s/pid/%s", config.getBaseUrl(), createdRecord.pid());
+                        return new PIDRecordEntry(entry.key(), doLocation);
+                    }
+                    return entry;
+                })
+                .toList();
+        PIDRecord updatedRecord = new PIDRecord(createdRecord.pid(), entries);
+        // Update the PID record in the Typed PID Maker service with the saved PID
+        log.debug("Updating PID record with saved PID: {}", updatedRecord);
+        client.updatePIDRecord(savedPid.getPid(), updatedRecord);
 
-        log.info("Created PersistentIdentifier: {}", savedPid);
+        log.info("Created PersistentIdentifier: {} with record", savedPid);
         return savedPid;
     }
 
@@ -118,12 +138,6 @@ public class PersistentIdentifierService {
     @Transactional
     public PersistentIdentifier updatePIDRecord(PersistentIdentifier pid) {
         log.debug("Updating PID record for PersistentIdentifier: {}", pid);
-
-        // Skip update if not configured to do so
-        if (!config.isUpdatePIDRecords()) {
-            log.debug("Skipping PID record update because updatePIDRecords is false");
-            return pid;
-        }
 
         // Create a PID record with metadata from the entity
         PIDRecord record = mapper.toPIDRecord(pid);

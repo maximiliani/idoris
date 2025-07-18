@@ -55,15 +55,15 @@ public interface ITechnologyInterfaceApi {
     ResponseEntity<CollectionModel<EntityModel<TechnologyInterface>>> getAllTechnologyInterfaces();
 
     /**
-     * Gets a TechnologyInterface entity by its PID.
+     * Gets a TechnologyInterface entity by its PID or internal ID.
      *
-     * @param pid the PID of the TechnologyInterface to retrieve
+     * @param id the PID or internal ID of the TechnologyInterface to retrieve
      * @return the TechnologyInterface entity
      */
-    @GetMapping("/{pid}")
+    @GetMapping("/{id}")
     @Operation(
-            summary = "Get a TechnologyInterface by PID",
-            description = "Returns a TechnologyInterface entity by its PID",
+            summary = "Get a TechnologyInterface by PID or internal ID",
+            description = "Returns a TechnologyInterface entity by its PID or internal ID",
             responses = {
                     @ApiResponse(responseCode = "200", description = "TechnologyInterface found",
                             content = @Content(mediaType = "application/hal+json",
@@ -72,16 +72,16 @@ public interface ITechnologyInterfaceApi {
             }
     )
     ResponseEntity<EntityModel<TechnologyInterface>> getTechnologyInterface(
-            @Parameter(description = "PID of the TechnologyInterface", required = true)
-            @PathVariable String pid);
+            @Parameter(description = "PID or internal ID of the TechnologyInterface", required = true)
+            @PathVariable String id);
 
     /**
      * Gets the attributes of a TechnologyInterface.
      *
-     * @param pid the PID of the TechnologyInterface
+     * @param id the PID or internal ID of the TechnologyInterface
      * @return a collection of attributes
      */
-    @GetMapping("/{pid}/attributes")
+    @GetMapping("/{id}/attributes")
     @Operation(
             summary = "Get attributes of a TechnologyInterface",
             description = "Returns a collection of attributes of a TechnologyInterface",
@@ -93,16 +93,16 @@ public interface ITechnologyInterfaceApi {
             }
     )
     ResponseEntity<CollectionModel<EntityModel<Attribute>>> getAttributes(
-            @Parameter(description = "PID of the TechnologyInterface", required = true)
-            @PathVariable String pid);
+            @Parameter(description = "PID or internal ID of the TechnologyInterface", required = true)
+            @PathVariable String id);
 
     /**
      * Gets the outputs of a TechnologyInterface.
      *
-     * @param pid the PID of the TechnologyInterface
+     * @param id the PID or internal ID of the TechnologyInterface
      * @return a collection of outputs
      */
-    @GetMapping("/{pid}/outputs")
+    @GetMapping("/{id}/outputs")
     @Operation(
             summary = "Get outputs of a TechnologyInterface",
             description = "Returns a collection of outputs of a TechnologyInterface",
@@ -114,8 +114,8 @@ public interface ITechnologyInterfaceApi {
             }
     )
     ResponseEntity<CollectionModel<EntityModel<Attribute>>> getOutputs(
-            @Parameter(description = "PID of the TechnologyInterface", required = true)
-            @PathVariable String pid);
+            @Parameter(description = "PID or internal ID of the TechnologyInterface", required = true)
+            @PathVariable String id);
 
     /**
      * Creates a new TechnologyInterface entity.
@@ -141,11 +141,11 @@ public interface ITechnologyInterfaceApi {
     /**
      * Updates an existing TechnologyInterface entity.
      *
-     * @param pid                 the PID of the TechnologyInterface to update
+     * @param id                  the PID or internal ID of the TechnologyInterface to update
      * @param technologyInterface the updated TechnologyInterface entity
      * @return the updated TechnologyInterface entity
      */
-    @PutMapping("/{pid}")
+    @PutMapping("/{id}")
     @Operation(
             summary = "Update a TechnologyInterface",
             description = "Updates an existing TechnologyInterface entity",
@@ -158,18 +158,18 @@ public interface ITechnologyInterfaceApi {
             }
     )
     ResponseEntity<EntityModel<TechnologyInterface>> updateTechnologyInterface(
-            @Parameter(description = "PID of the TechnologyInterface", required = true)
-            @PathVariable String pid,
+            @Parameter(description = "PID or internal ID of the TechnologyInterface", required = true)
+            @PathVariable String id,
             @Parameter(description = "Updated TechnologyInterface", required = true)
             @Valid @RequestBody TechnologyInterface technologyInterface);
 
     /**
      * Deletes a TechnologyInterface entity.
      *
-     * @param pid the PID of the TechnologyInterface to delete
+     * @param id the PID or internal ID of the TechnologyInterface to delete
      * @return no content
      */
-    @DeleteMapping("/{pid}")
+    @DeleteMapping("/{id}")
     @Operation(
             summary = "Delete a TechnologyInterface",
             description = "Deletes a TechnologyInterface entity",
@@ -179,17 +179,17 @@ public interface ITechnologyInterfaceApi {
             }
     )
     ResponseEntity<Void> deleteTechnologyInterface(
-            @Parameter(description = "PID of the TechnologyInterface", required = true)
-            @PathVariable String pid);
+            @Parameter(description = "PID or internal ID of the TechnologyInterface", required = true)
+            @PathVariable String id);
 
     /**
      * Partially updates a TechnologyInterface entity.
      *
-     * @param pid                      the PID of the TechnologyInterface to patch
+     * @param id                       the PID or internal ID of the TechnologyInterface to patch
      * @param technologyInterfacePatch the partial TechnologyInterface entity with fields to update
      * @return the patched TechnologyInterface entity
      */
-    @PatchMapping("/{pid}")
+    @PatchMapping("/{id}")
     @Operation(
             summary = "Partially update a TechnologyInterface",
             description = "Updates specific fields of an existing TechnologyInterface entity",
@@ -202,8 +202,8 @@ public interface ITechnologyInterfaceApi {
             }
     )
     ResponseEntity<EntityModel<TechnologyInterface>> patchTechnologyInterface(
-            @Parameter(description = "PID of the TechnologyInterface", required = true)
-            @PathVariable String pid,
+            @Parameter(description = "PID or internal ID of the TechnologyInterface", required = true)
+            @PathVariable String id,
             @Parameter(description = "Partial TechnologyInterface with fields to update", required = true)
             @RequestBody TechnologyInterface technologyInterfacePatch);
 }

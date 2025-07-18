@@ -42,17 +42,17 @@ public class AtomicDataTypeModelAssembler implements EntityModelAssembler<Atomic
         EntityModel<AtomicDataType> entityModel = toModelWithoutLinks(atomicDataType);
 
         // Add self link
-        entityModel.add(linkTo(methodOn(AtomicDataTypeController.class).getAtomicDataType(atomicDataType.getPid())).withSelfRel());
+        entityModel.add(linkTo(methodOn(AtomicDataTypeController.class).getAtomicDataType(atomicDataType.getId())).withSelfRel());
 
         // Add link to all atomic data types
         entityModel.add(linkTo(methodOn(AtomicDataTypeController.class).getAllAtomicDataTypes()).withRel("atomicDataTypes"));
 
         // Add link to operations
-        entityModel.add(linkTo(methodOn(AtomicDataTypeController.class).getOperationsForAtomicDataType(atomicDataType.getPid())).withRel("operations"));
+        entityModel.add(linkTo(methodOn(AtomicDataTypeController.class).getOperationsForAtomicDataType(atomicDataType.getId())).withRel("operations"));
 
         // Add link to inherits from if present
         if (atomicDataType.getInheritsFrom() != null) {
-            entityModel.add(linkTo(methodOn(AtomicDataTypeController.class).getAtomicDataType(atomicDataType.getInheritsFrom().getPid())).withRel("inheritsFrom"));
+            entityModel.add(linkTo(methodOn(AtomicDataTypeController.class).getAtomicDataType(atomicDataType.getInheritsFrom().getId())).withRel("inheritsFrom"));
         }
 
         return entityModel;

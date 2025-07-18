@@ -59,7 +59,7 @@ public class TechnologyInterfaceService {
         log.debug("Creating TechnologyInterface: {}", technologyInterface);
         TechnologyInterface saved = technologyInterfaceDao.save(technologyInterface);
         eventPublisher.publishEntityCreated(saved);
-        log.info("Created TechnologyInterface with PID: {}", saved.getPid());
+        log.info("Created TechnologyInterface with PID: {}", saved.getId());
         return saved;
     }
 
@@ -74,50 +74,50 @@ public class TechnologyInterfaceService {
     public TechnologyInterface updateTechnologyInterface(TechnologyInterface technologyInterface) {
         log.debug("Updating TechnologyInterface: {}", technologyInterface);
 
-        if (technologyInterface.getPid() == null || technologyInterface.getPid().isEmpty()) {
+        if (technologyInterface.getId() == null || technologyInterface.getId().isEmpty()) {
             throw new IllegalArgumentException("TechnologyInterface must have a PID to be updated");
         }
 
         // Get the current version before updating
-        TechnologyInterface existing = technologyInterfaceDao.findById(technologyInterface.getPid())
-                .orElseThrow(() -> new IllegalArgumentException("TechnologyInterface not found with PID: " + technologyInterface.getPid()));
+        TechnologyInterface existing = technologyInterfaceDao.findById(technologyInterface.getId())
+                .orElseThrow(() -> new IllegalArgumentException("TechnologyInterface not found with PID: " + technologyInterface.getId()));
 
         Long previousVersion = existing.getVersion();
 
         TechnologyInterface saved = technologyInterfaceDao.save(technologyInterface);
         eventPublisher.publishEntityUpdated(saved, previousVersion);
-        log.info("Updated TechnologyInterface with PID: {}", saved.getPid());
+        log.info("Updated TechnologyInterface with PID: {}", saved.getId());
         return saved;
     }
 
     /**
      * Deletes a TechnologyInterface entity.
      *
-     * @param pid the PID of the TechnologyInterface to delete
+     * @param id the PID or internal ID of the TechnologyInterface to delete
      * @throws IllegalArgumentException if the TechnologyInterface does not exist
      */
     @Transactional
-    public void deleteTechnologyInterface(String pid) {
-        log.debug("Deleting TechnologyInterface with PID: {}", pid);
+    public void deleteTechnologyInterface(String id) {
+        log.debug("Deleting TechnologyInterface with ID: {}", id);
 
-        TechnologyInterface technologyInterface = technologyInterfaceDao.findById(pid)
-                .orElseThrow(() -> new IllegalArgumentException("TechnologyInterface not found with PID: " + pid));
+        TechnologyInterface technologyInterface = technologyInterfaceDao.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("TechnologyInterface not found with ID: " + id));
 
         technologyInterfaceDao.delete(technologyInterface);
         eventPublisher.publishEntityDeleted(technologyInterface);
-        log.info("Deleted TechnologyInterface with PID: {}", pid);
+        log.info("Deleted TechnologyInterface with ID: {}", id);
     }
 
     /**
-     * Retrieves a TechnologyInterface entity by its PID.
+     * Retrieves a TechnologyInterface entity by its PID or internal ID.
      *
-     * @param pid the PID of the TechnologyInterface to retrieve
+     * @param id the PID or internal ID of the TechnologyInterface to retrieve
      * @return an Optional containing the TechnologyInterface, or empty if not found
      */
     @Transactional(readOnly = true)
-    public Optional<TechnologyInterface> getTechnologyInterface(String pid) {
-        log.debug("Retrieving TechnologyInterface with PID: {}", pid);
-        return technologyInterfaceDao.findById(pid);
+    public Optional<TechnologyInterface> getTechnologyInterface(String id) {
+        log.debug("Retrieving TechnologyInterface with ID: {}", id);
+        return technologyInterfaceDao.findById(id);
     }
 
     /**
@@ -134,21 +134,21 @@ public class TechnologyInterfaceService {
     /**
      * Partially updates an existing TechnologyInterface entity.
      *
-     * @param pid                      the PID of the TechnologyInterface to patch
+     * @param id                       the PID or internal ID of the TechnologyInterface to patch
      * @param technologyInterfacePatch the partial TechnologyInterface entity with fields to update
      * @return the patched TechnologyInterface entity
      * @throws IllegalArgumentException if the TechnologyInterface does not exist
      */
     @Transactional
-    public TechnologyInterface patchTechnologyInterface(String pid, TechnologyInterface technologyInterfacePatch) {
-        log.debug("Patching TechnologyInterface with PID: {}, patch: {}", pid, technologyInterfacePatch);
-        if (pid == null || pid.isEmpty()) {
-            throw new IllegalArgumentException("TechnologyInterface PID cannot be null or empty");
+    public TechnologyInterface patchTechnologyInterface(String id, TechnologyInterface technologyInterfacePatch) {
+        log.debug("Patching TechnologyInterface with ID: {}, patch: {}", id, technologyInterfacePatch);
+        if (id == null || id.isEmpty()) {
+            throw new IllegalArgumentException("TechnologyInterface ID cannot be null or empty");
         }
 
         // Get the current entity
-        TechnologyInterface existing = technologyInterfaceDao.findById(pid)
-                .orElseThrow(() -> new IllegalArgumentException("TechnologyInterface not found with PID: " + pid));
+        TechnologyInterface existing = technologyInterfaceDao.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("TechnologyInterface not found with ID: " + id));
         Long previousVersion = existing.getVersion();
 
         // Apply non-null fields from the patch to the existing entity
@@ -174,7 +174,7 @@ public class TechnologyInterfaceService {
         // Publish the patched event
         eventPublisher.publishEntityPatched(saved, previousVersion);
 
-        log.info("Patched TechnologyInterface with PID: {}", saved.getPid());
+        log.info("Patched TechnologyInterface with PID: {}", saved.getId());
         return saved;
     }
 }

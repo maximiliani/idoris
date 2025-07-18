@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 /**
- * Event listener that generates PIDs for newly created entities.
+ * Event listener that generates IDs for newly created entities.
  * This listener subscribes to EntityCreatedEvent and uses the PersistentIdentifierService
  * to create PersistentIdentifier entities for newly created AdministrativeMetadata entities.
  */
@@ -54,7 +54,7 @@ public class MetadataEventListener {
 
     /**
      * Handles EntityCreatedEvent by creating a PersistentIdentifier for the entity.
-     * This method is executed in a new transaction to ensure that the PID creation is isolated
+     * This method is executed in a new transaction to ensure that the ID creation is isolated
      * from the transaction that created the entity.
      *
      * @param event the entity created event
@@ -76,15 +76,15 @@ public class MetadataEventListener {
         // Create a new PersistentIdentifier for the entity
         log.info("Creating PersistentIdentifier for entity: {}", entity);
         PersistentIdentifier pid = pidService.createPersistentIdentifier(entity);
-        log.info("Created PersistentIdentifier with PID: {} for entity: {}", pid.getPid(), entity);
+        log.info("Created PersistentIdentifier with ID: {} for entity: {}", pid.getPid(), entity);
 
-        // Publish a PID generated event
-        eventPublisher.publishPIDGenerated(entity, pid.getPid());
+        // Publish an ID generated event
+        eventPublisher.publishIDGenerated(entity, pid.getPid());
     }
 
     /**
      * Handles EntityUpdatedEvent by updating the PersistentIdentifier for the entity.
-     * This method is executed in a new transaction to ensure that the PID update is isolated
+     * This method is executed in a new transaction to ensure that the ID update is isolated
      * from the transaction that updated the entity.
      *
      * @param event the entity updated event
@@ -102,7 +102,7 @@ public class MetadataEventListener {
             PersistentIdentifier pid = existingPid.get();
             log.info("Updating PersistentIdentifier for entity: {}", entity);
             pidService.updatePIDRecord(pid);
-            log.info("Updated PersistentIdentifier with PID: {} for entity: {}", pid.getPid(), entity);
+            log.info("Updated PersistentIdentifier with ID: {} for entity: {}", pid.getPid(), entity);
         } else {
             log.warn("No PersistentIdentifier found for entity, cannot update: {}", entity);
         }
@@ -127,7 +127,7 @@ public class MetadataEventListener {
 
         if (optionalPid.isPresent()) {
             PersistentIdentifier pid = optionalPid.get();
-            log.info("Created tombstone for entity with PID: {}", pid.getPid());
+            log.info("Created tombstone for entity with ID: {}", pid.getPid());
         } else {
             log.warn("No PersistentIdentifier found for entity, cannot create tombstone: {}", entity);
         }

@@ -42,13 +42,13 @@ public class TechnologyInterfaceModelAssembler implements EntityModelAssembler<T
         EntityModel<TechnologyInterface> entityModel = toModelWithoutLinks(technologyInterface);
 
         // Add self link
-        entityModel.add(linkTo(methodOn(TechnologyInterfaceController.class).getTechnologyInterface(technologyInterface.getPid())).withSelfRel());
+        entityModel.add(linkTo(methodOn(TechnologyInterfaceController.class).getTechnologyInterface(technologyInterface.getId())).withSelfRel());
 
         // Add link to attributes
-        entityModel.add(linkTo(methodOn(TechnologyInterfaceController.class).getAttributes(technologyInterface.getPid())).withRel("attributes"));
+        entityModel.add(linkTo(methodOn(TechnologyInterfaceController.class).getAttributes(technologyInterface.getId())).withRel("attributes"));
 
         // Add link to outputs
-        entityModel.add(linkTo(methodOn(TechnologyInterfaceController.class).getOutputs(technologyInterface.getPid())).withRel("outputs"));
+        entityModel.add(linkTo(methodOn(TechnologyInterfaceController.class).getOutputs(technologyInterface.getId())).withRel("outputs"));
 
         // Add link to all technology interfaces
         entityModel.add(linkTo(methodOn(TechnologyInterfaceController.class).getAllTechnologyInterfaces()).withRel("technologyInterfaces"));

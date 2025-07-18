@@ -16,8 +16,6 @@
 
 package edu.kit.datamanager.idoris.datatypes.entities;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import edu.kit.datamanager.idoris.core.domain.entities.AdministrativeMetadata;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,14 +28,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 @Setter
 @AllArgsConstructor
 @RequiredArgsConstructor
-@JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION, property = "type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = AtomicDataType.class, name = "AtomicDataType"),
-        @JsonSubTypes.Type(value = TypeProfile.class, name = "TypeProfile"),
-})
 public abstract class DataType extends AdministrativeMetadata {
-    private TYPES type;
-
     private String defaultValue;
 
     public abstract boolean inheritsFrom(DataType dataType);
