@@ -24,6 +24,8 @@ import edu.kit.datamanager.idoris.pids.client.model.PIDRecordEntry;
 import edu.kit.datamanager.idoris.pids.entities.PersistentIdentifier;
 import edu.kit.datamanager.idoris.pids.repositories.PersistentIdentifierRepository;
 import edu.kit.datamanager.idoris.pids.utils.PIDRecordMapper;
+import io.micrometer.observation.annotation.Observed;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,6 +42,7 @@ import java.util.Optional;
  */
 @Service
 @Slf4j
+@Observed
 public class PersistentIdentifierService {
 
     private final PersistentIdentifierRepository repository;
@@ -75,6 +78,7 @@ public class PersistentIdentifierService {
      * @return The created PersistentIdentifier
      */
     @Transactional
+    @WithSpan
     public PersistentIdentifier createPersistentIdentifier(AdministrativeMetadata entity) {
         log.debug("Creating PersistentIdentifier for entity: {}", entity);
 
@@ -136,6 +140,7 @@ public class PersistentIdentifierService {
      * @return The updated PersistentIdentifier
      */
     @Transactional
+    @WithSpan
     public PersistentIdentifier updatePIDRecord(PersistentIdentifier pid) {
         log.debug("Updating PID record for PersistentIdentifier: {}", pid);
 
@@ -157,6 +162,7 @@ public class PersistentIdentifierService {
      * @return The updated PersistentIdentifier, or empty if no PID exists for the entity
      */
     @Transactional
+    @WithSpan
     public Optional<PersistentIdentifier> markAsTombstone(AdministrativeMetadata entity) {
         log.debug("Marking PersistentIdentifier as tombstone for entity: {}", entity);
 

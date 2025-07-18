@@ -23,6 +23,9 @@ import edu.kit.datamanager.idoris.core.events.EntityUpdatedEvent;
 import edu.kit.datamanager.idoris.core.events.EventPublisherService;
 import edu.kit.datamanager.idoris.pids.entities.PersistentIdentifier;
 import edu.kit.datamanager.idoris.pids.services.PersistentIdentifierService;
+import io.micrometer.observation.annotation.Observed;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -37,6 +40,7 @@ import java.util.Optional;
  */
 @Component
 @Slf4j
+@Observed
 public class MetadataEventListener {
     private final PersistentIdentifierService pidService;
     private final EventPublisherService eventPublisher;
@@ -61,6 +65,7 @@ public class MetadataEventListener {
      */
     @EventListener(classes = {EntityCreatedEvent.class})
     @Transactional
+    @WithSpan(kind = SpanKind.CONSUMER)
     public void handleEntityCreatedEvent(EntityCreatedEvent<AdministrativeMetadata> event) {
         AdministrativeMetadata entity = event.getEntity();
         log.debug("Handling EntityCreatedEvent for entity: {}", entity);
@@ -91,6 +96,7 @@ public class MetadataEventListener {
      */
     @EventListener(classes = {EntityUpdatedEvent.class})
     @Transactional
+    @WithSpan(kind = SpanKind.CONSUMER)
     public void handleEntityUpdatedEvent(EntityUpdatedEvent<AdministrativeMetadata> event) {
         AdministrativeMetadata entity = event.getEntity();
         log.debug("Handling EntityUpdatedEvent for entity: {}", entity);
@@ -118,6 +124,7 @@ public class MetadataEventListener {
      */
     @EventListener(classes = {EntityDeletedEvent.class})
     @Transactional
+    @WithSpan(kind = SpanKind.CONSUMER)
     public void handleEntityDeletedEvent(EntityDeletedEvent<AdministrativeMetadata> event) {
         AdministrativeMetadata entity = event.getEntity();
         log.debug("Handling EntityDeletedEvent for entity: {}", entity);

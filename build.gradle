@@ -54,6 +54,14 @@ repositories {
     maven {
         url = uri("https://repo.spring.io/milestone")
     }
+    // Add Sonatype snapshots repository for alpha versions
+    maven {
+        url = uri("https://oss.sonatype.org/content/repositories/snapshots")
+    }
+    // Add OpenTelemetry repository
+    maven {
+        url = uri("https://oss.jfrog.org/artifactory/oss-snapshot-local")
+    }
 }
 
 ext {
@@ -63,6 +71,10 @@ ext {
     errorproneJavacVersion = "9+181-r4173-1"
     httpClientVersion = "5.5"
     javersVersion = "7.3.7"
+    micrometerVersion = "1.12.5"
+    openTelemetryVersion = "1.49.0"
+    openTelemetryInstrumentationVersion = "2.16.0"
+    logbackVersion = "1.5.13"
     set("snippetsDir", file("build/generated-snippets"))
     set('springModulithVersion', "1.4.1")
 }
@@ -88,7 +100,7 @@ dependencies {
     runtimeOnly 'org.springframework.modulith:spring-modulith-runtime'
     runtimeOnly "org.springframework.modulith:spring-modulith-observability:${springModulithVersion}"
     runtimeOnly "org.springframework.modulith:spring-modulith-actuator:${springModulithVersion}"
-//    runtimeOnly "org.springframework.modulith:spring-modulith-starter-insights:${springModulithVersion}"
+    runtimeOnly "org.springframework.modulith:spring-modulith-starter-insight:${springModulithVersion}"
 
     /* OpenAPI */
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springDocVersion}"
@@ -97,6 +109,12 @@ dependencies {
 
     /* HTTP client */
     implementation "org.apache.httpcomponents.client5:httpclient5:${httpClientVersion}"
+
+
+    /* Observability */
+    implementation "io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter"
+    implementation 'io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations'
+    implementation "org.springframework.boot:spring-boot-starter-aop"
 
     /* Development helpers */
     implementation "org.springframework.boot:spring-boot-configuration-processor"
@@ -129,6 +147,7 @@ dependencies {
 dependencyManagement {
     imports {
         mavenBom "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"
+        mavenBom("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:2.17.1")
     }
 }
 

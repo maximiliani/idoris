@@ -17,6 +17,10 @@
 package edu.kit.datamanager.idoris.pids.client;
 
 import edu.kit.datamanager.idoris.pids.client.model.PIDRecord;
+import io.micrometer.observation.annotation.Observed;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -30,6 +34,7 @@ import org.springframework.web.service.annotation.PutExchange;
  * This interface defines the operations for interacting with the service.
  */
 @HttpExchange("/api/v1/pit/pid")
+@Observed
 public interface TypedPIDMakerClient {
 
     /**
@@ -40,7 +45,8 @@ public interface TypedPIDMakerClient {
      */
     @PostExchange(value = "/", accept = "application/vnd.datamanager.pid.simple+json", contentType = "application/vnd.datamanager.pid.simple+json")
     @ResponseBody
-    PIDRecord createPIDRecord(@RequestBody PIDRecord record);
+    @WithSpan(kind = SpanKind.CLIENT)
+    PIDRecord createPIDRecord(@SpanAttribute @RequestBody PIDRecord record);
 
 
     /**
@@ -51,7 +57,8 @@ public interface TypedPIDMakerClient {
      */
     @GetExchange(value = "/{pid}", accept = "application/vnd.datamanager.pid.simple+json")
     @ResponseBody
-    PIDRecord getPIDRecord(@PathVariable String pid);
+    @WithSpan(kind = SpanKind.CLIENT)
+    PIDRecord getPIDRecord(@SpanAttribute @PathVariable String pid);
 
     /**
      * Updates an existing PID record using the SimplePidRecord format.
@@ -62,5 +69,6 @@ public interface TypedPIDMakerClient {
      */
     @PutExchange(value = "/{pid}", accept = "application/vnd.datamanager.pid.simple+json", contentType = "application/vnd.datamanager.pid.simple+json")
     @ResponseBody
-    PIDRecord updatePIDRecord(@PathVariable String pid, @RequestBody PIDRecord record);
+    @WithSpan(kind = SpanKind.CLIENT)
+    PIDRecord updatePIDRecord(@SpanAttribute @PathVariable String pid, @SpanAttribute @RequestBody PIDRecord record);
 }
